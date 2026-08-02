@@ -1,0 +1,12 @@
+/* Embedded multi-size UI icons (built/synced into IconSets\ from Install\IconSources\).
+   RCDATA — not ICON. ICON resources compete with MAINICON for PE icon index 0;
+   Explorer/desktop/taskbar use index 0, which was DBKIND_STAGING. Keep only
+   DFend_icon.rc MAINICON as a real RT_GROUP_ICON for the app. */
+DBKIND_STANDARD RCDATA "IconSets\\DOSBoxKind\\dosbox-standard.ico"
+DBKIND_X        RCDATA "IconSets\\DOSBoxKind\\dosbox-x.ico"
+DBKIND_STAGING  RCDATA "IconSets\\DOSBoxKind\\dosbox-staging.ico"
+DBKIND_UNKNOWN  RCDATA "IconSets\\DOSBoxKind\\dosbox-unknown.ico"
+GENDOC          RCDATA "IconSets\\Modern\\gendoc.ico"
+DOCSICON        RCDATA "IconSets\\Modern\\docsicon.ico"
+GBCICON         RCDATA "IconSets\\Modern\\gbcicon.ico"
+EXODOSICON      RCDATA "IconSets\\Modern\\exodos.ico"

@@ -1,0 +1,56 @@
+# Delphi compiler-generated binaries
+*.exe
+*.dll
+*.bpl
+*.bpi
+*.dcp
+*.so
+*.apk
+*.drc
+*.map
+*.dres
+*.rsm
+*.tds
+*.dcu
+*.lib
+*.a
+*.o
+*.ocx
+
+# Delphi local / user-specific files
+*.local
+*.identcache
+*.projdata
+*.tvsconfig
+*.dsk
+*.dsv
+*.cfg
+
+# History and recovery folders
+__history/
+__recovery/
+*.~*
+
+# Castalia statistics (XE7+)
+*.stat
+
+# Optional: uncomment if you want to ignore these too
+# *.res
+# *.tlb
+# *.ddp
+# *.vlb
+# *.deployproj
+# *.obj
+
+# Platform output folders (uncomment the ones you use)
+# Win32/
+# Win64/
+# OSX64/
+# OSXARM64/
+# Android/
+# Android64/
+# iOSDevice64/
+# Linux64/
+
+# Boss package manager
+modules/

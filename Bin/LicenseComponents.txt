@@ -1,0 +1,81 @@
+Used as part of the DFendX source code:
+
+Parts of the DOSBox source code
+(for making short path names in DFendX the DOSBox way)
+written by the DOSBox Teams,
+translation to DFendX by Alexander Katz (skatz@svitonline.com)
+(http://www.dosbox.com/)
+
+Portable Network Graphics Delphi
+written by Gustavo Daud
+(http://pngdelphi.sourceforge.net/)
+
+GIF Graphics Object
+written by Anders Melander, Filip Larsen and Reinier Sterkenburg
+(http://www.torry.net/authorsmore.php?id=1034)
+
+SDeanComponents v2.60.00
+written by Sarah Dean (sdean12@sdean12.org)
+(http://www.SDean12.org/)
+
+TZipMaster 1.79
+written by Chris Vleghert and Eric W. Engler
+(http://www.delphizip.org)
+Related runtime DLL: DelZip179.dll (ZipMaster / DelZip package)
+
+TSevenZip 0.7.4a
+written by Ivo Andonov and Rainer Geigenberger (SevenZipVCL@rg-software.de)
+(http://www.rg-software.de)
+
+Bitmap Resampler 01.02
+written by Anders Melander (anders@melander.dk)
+
+
+Used as binary program / library by DFendX:
+
+MTOOLs for Bochs and Win32 and/or DOS
+written by Benjamin David Lunt
+(http://www.frontiernet.net/~fys/mtools.htm)
+
+mkdosfs.exe
+DOS filesystem image tool shipped as Bin\mkdosfs.exe
+(see also MTOOLs entry above)
+
+FreeDOS 1.0
+FreeDOS is a trademark of Jim Hall
+(http://www.freedos.org/)
+
+OggEnc v2.84 (libvorbis 1.2.0)
+(c) 2000-2005 Michael Smith & portions by John Edwards
+(http://www.vorbis.com/)
+
+Doszip Commander 1.41
+(c) 1996-2010 Hjort Nidudsson
+(http://sourceforge.net/projects/doszip)
+
+7-Zip LZMA / 7za.dll
+(c) Igor Pavlov
+(https://www.7-zip.org/)
+Runtime DLL: Bin\7za.dll
+(The Delphi wrapper TSevenZip is listed under source components above.)
+
+DelZip / ZipMaster runtime DLL
+DelZip179.dll (Bin\DelZip179.dll)
+See TZipMaster 1.79 above (http://www.delphizip.org)
+
+BASS audio library 2.4
+(c) 1999-2025 Un4seen Developments Ltd.
+(http://www.un4seen.com/)
+Full licence text: Bin\LicenseBASS.txt
+BASS is free for non-commercial use; commercial use requires a licence from Un4seen.
+Runtime: Bin\bass.dll
+
+BASS FLAC add-on
+(c) Un4seen Developments Ltd.
+(http://www.un4seen.com/)
+Runtime: Bin\bassflac.dll
+Full licence text: Bin\LicenseBASS.txt
+
+
+Artwork:
+See ATTRIBUTIONS.txt
