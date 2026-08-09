@@ -9,7 +9,7 @@ LangString LANGNAME_NeedAdminRightsUpdate ${LANG_RUSSIAN} "Без прав ад�
 LangString LANGNAME_WelcomeText ${LANG_RUSSIAN} "Этот мастер поможет вам выполнить установку ${PrgName}.\r\n\r\nDFendX - программа с открытыми исходными текстами, распространяется по лицензии GPL 3. (Вы можете ознакомиться с лицензионным соглашением, выбрав в программе пункт меню 'Справка|О программе...'.) DFendX не даёт никаких гарантий и обещаний.\r\n\r\nНажмите кнопку 'Далее' для продолжения."
 LangString LANGNAME_WelcomeTextUpdate ${LANG_RUSSIAN} "Этот мастер поможет вам выполнить обновление ${PrgName}.\r\n\r\nДля обновления необходима установленная программа DFendX !\r\n\r\nНажмите кнопку 'Далее' для продолжения."
 LangString LANGNAME_Next ${LANG_RUSSIAN} "Далее"
-LicenseLangString LANGNAME_License ${LANG_RUSSIAN} "..\Bin\License.txt"
+LicenseLangString LANGNAME_License ${LANG_RUSSIAN} "..\LICENSE"
 LangString LANGNAME_LICENSE_TITLE ${LANG_RUSSIAN} "Сведения"
 LangString LANGNAME_LICENSE_SUBTITLE ${LANG_RUSSIAN} "Дополнительные сведения о ${PrgName}"
 LangString LANGNAME_LICENSE_TOP ${LANG_RUSSIAN} "Пожалуйста, перед тем как продолжить, примите во внимание следующее:"
@@ -30,24 +30,17 @@ LangString LANGNAME_ConfirmDelUserData ${LANG_RUSSIAN} "Хотите ли вы �
 LangString LANGNAME_ConfirmDelPrgDir ${LANG_RUSSIAN} "В папке установки есть файлы, не созданные установщиком DFendX. Вы всё-таки хотите удалить папку $INSTDIR ?"
 
 LangString LANGNAME_NoInstallationFound ${LANG_RUSSIAN} "В указанной папке не обнаружено установленного DFendX , обновление невозможно."
-LangString LANGNAME_NotDFendXInstallation ${LANG_RUSSIAN} "This folder is not a DFendX installation. Need DFend.dat, DFend.exe, Bin\dfxvalidator.exe, and a DFendX File Description on DFend.exe."
+LangString LANGNAME_NotDFendXInstallation ${LANG_RUSSIAN} "Недопустимая установка DFendX."
+LangString LANGNAME_InstalledVersionNewer ${LANG_RUSSIAN} "Уже установлена более новая версия DFendX ($R8). Это обновление предназначено для версии ${VER_MAYOR}.${VER_MINOR1}.${VER_MINOR2} и не может использоваться для понижения версии."
 
-LangString LANGNAME_Tools ${LANG_RUSSIAN} "Инструменты"
-LangString LANGNAME_FreeDosTools ${LANG_RUSSIAN} "Утилиты FreeDOS для использования в DosBox"
-LangString LANGNAME_Doszip ${LANG_RUSSIAN} "Doszip Commander"
 LangString LANGNAME_DesktopShortcut ${LANG_RUSSIAN} "Ярлык на рабочем столе"
 
 LangString LANGNAME_InstallDFendReloaded ${LANG_RUSSIAN} "Установка основных компонентов DFendX"
 LangString LANGNAME_InstallStartMenu ${LANG_RUSSIAN} "Создание ярлыков в меню 'Пуск'"
-LangString LANGNAME_InstallFreeDOS ${LANG_RUSSIAN} "Установка FreeDOS"
-LangString LANGNAME_InstallDOSZip ${LANG_RUSSIAN} "Установка DOSZip Commander"
 LangString LANGNAME_InstallDesktopShortcut ${LANG_RUSSIAN} "Создание ярлыка на рабочем столе"
 
 LangString LANGNAME_UpdateDFendReloaded ${LANG_RUSSIAN} "Обновление основных компонентов DFendX"
 LangString LANGNAME_UpdateUninstaller ${LANG_RUSSIAN} "Обновление программы удаления"
 
 LangString DESC_DFend ${LANG_RUSSIAN} "DFendX - это пользовательский графический интерфейс для работы с DOS играми."
-LangString DESC_Tools ${LANG_RUSSIAN} "Инструменты для DOSBox."
-LangString DESC_FreeDosTools ${LANG_RUSSIAN} "Утилиты командной строки из пакета FreeDOS для использования в DOSBox."
-LangString DESC_Doszip ${LANG_RUSSIAN} "Doszip Commander - это клон Norton Commander для использования в DOSBox."
 LangString DESC_DesktopShortcut ${LANG_RUSSIAN} "Создаёт для DFendX ярлык на рабочем столе."

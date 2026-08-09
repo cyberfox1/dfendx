@@ -264,6 +264,7 @@ const NR_Author=1;
       NR_MenuViewIcons=31016;
       NR_MenuViewScreenshots=31017;
       NR_MenuViewQuickStarter=31018;
+      NR_MenuViewShowScreenshotPane=31019;
       NR_MenuRun=32001;
       NR_MenuRunGame=32002;
       NR_MenuRunSetup=32003;
@@ -443,7 +444,7 @@ const NR_Author=1;
       NR_ScreenshotPopupDelete=38113;
       NR_ScreenshotPopupDeleteAll=38114;
       NR_ScreenshotPopupUseAsBackground=38115;
-      NR_ScreenshotPopupUseInScreenshotList=38116;
+      NR_ScreenshotPopupSetAsTitleImage=38117;
 
       NR_SoundsPopupOpenExternal=38151;
       NR_SoundsPopupSaveMp3=38152;
@@ -586,6 +587,8 @@ const NR_Author=1;
       NR_ProfileEditorSoundMIDIMT32Mode=40634;
       NR_ProfileEditorSoundMIDIMT32Time=40635;
       NR_ProfileEditorSoundMIDIMT32Level=40636;
+      NR_ProfileEditorSoundMIDIMT32Model=40693;
+      NR_ProfileEditorSoundMIDIMT32RomDir=40694;
       NR_ProfileEditorSoundMIDIFluidSynthPath=40690;
       NR_ProfileEditorSoundMIDIFluidSynth=40691;
       NR_ProfileEditorSoundMIDIFluidSynthSoundfont=40692;
@@ -1051,8 +1054,6 @@ const NR_Author=1;
       NR_FontStyleForFavoritesUnderline=43937;
       NR_ScreenshotListViewWidth=43938;
       NR_ScreenshotListViewHeight=43939;
-      NR_ScreenshotListViewUseFirstScreenshot=43940;
-      NR_ScreenshotListViewUseFirstScreenshotInfo=43941;
       NR_SetupFormShowGridLines=43942;
       NR_SetupFormUseWindowsExeIcons=43943;
       NR_SetupFormNoteLinesInTooltips=43944;
@@ -1135,16 +1136,6 @@ const NR_Author=1;
       NR_SetupFormUserDefinedInterpretersParameters=44609;
       NR_SetupFormUserDefinedInterpretersExtensions=44610;
       NR_SetupFormUserDefinedInterpretersInfo=44611;
-
-      NR_SetupFormImageScaling=44650;
-      NR_SetupFormImageScalingLabel=44651;
-      NR_SetupFormImageScalingAlgorithmBox=44652;
-      NR_SetupFormImageScalingAlgorithmTriangle=44653;
-      NR_SetupFormImageScalingAlgorithmHermite=44654;
-      NR_SetupFormImageScalingAlgorithmBell=44655;
-      NR_SetupFormImageScalingAlgorithmBSpline=44656;
-      NR_SetupFormImageScalingAlgorithmLanczos3=44657;
-      NR_SetupFormImageScalingAlgorithmMitchell=44658;
 
       NR_SetupFormMoreEmulators=44700;
       NR_SetupFormMoreEmulatorsLabel=44701;
@@ -1230,6 +1221,8 @@ const NR_Author=1;
       NR_ViewImageFormBackgroundButtonHint=48005;
       NR_ViewImageFormZoomButton=48006;
       NR_ViewImageFormZoomButtonHint=48007;
+      NR_ViewImageFormTitleImageButton=48008;
+      NR_ViewImageFormTitleImageButtonHint=48009;
 
       NR_CreateConfForm=49001;
       NR_CreateConfFormProfMode=49002;
@@ -2016,6 +2009,8 @@ const NR_Author=1;
       NR_DataReaderDownloadInfo=96410;
       NR_DataReaderDownloadError=96411;
       NR_DataReaderSource=96412;
+      NR_DataReaderSetAPIKey=96413;
+      NR_DataReaderSetAPIKeyPrompt=96414;
 
       NR_InstallationSupport=96501;
       NR_InstallationSupportSourceFloppy=96502;
@@ -2507,6 +2502,7 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property MenuViewScreenshots : String index NR_MenuViewScreenshots read GetString write SetString;
     property MenuViewShowSearchBox : String index NR_MenuViewShowSearchBox read GetString write SetString;
     property MenuViewShowTooltips : String index NR_MenuViewShowTooltips read GetString write SetString;
+    property MenuViewShowScreenshotPane : String index NR_MenuViewShowScreenshotPane read GetString write SetString;
     property MenuViewQuickStarter : String index NR_MenuViewQuickStarter read GetString write SetString;
     property MenuRun : String index NR_MenuRun read GetString write SetString;
     property MenuRunGame : String index NR_MenuRunGame read GetString write SetString;
@@ -2685,7 +2681,7 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property ScreenshotPopupDelete : String index NR_ScreenshotPopupDelete read GetString write SetString;
     property ScreenshotPopupDeleteAll : String index NR_ScreenshotPopupDeleteAll read GetString write SetString;
     property ScreenshotPopupUseAsBackground : String index NR_ScreenshotPopupUseAsBackground read GetString write SetString;
-    property ScreenshotPopupUseInScreenshotList : String index NR_ScreenshotPopupUseInScreenshotList read GetString write SetString;
+    property ScreenshotPopupSetAsTitleImage : String index NR_ScreenshotPopupSetAsTitleImage read GetString write SetString;
     property SoundsPopupOpenExternal : String index NR_SoundsPopupOpenExternal read GetString write SetString;
 
     property SoundsPopupSaveMp3 : String index NR_SoundsPopupSaveMp3 read GetString write SetString;
@@ -2829,6 +2825,8 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property ProfileEditorSoundMIDIMT32Mode : String index NR_ProfileEditorSoundMIDIMT32Mode read GetString write SetString;
     property ProfileEditorSoundMIDIMT32Time : String index NR_ProfileEditorSoundMIDIMT32Time read GetString write SetString;
     property ProfileEditorSoundMIDIMT32Level : String index NR_ProfileEditorSoundMIDIMT32Level read GetString write SetString;
+    property ProfileEditorSoundMIDIMT32Model : String index NR_ProfileEditorSoundMIDIMT32Model read GetString write SetString;
+    property ProfileEditorSoundMIDIMT32RomDir : String index NR_ProfileEditorSoundMIDIMT32RomDir read GetString write SetString;
     property ProfileEditorSoundMIDIFluidSynthPath : String index NR_ProfileEditorSoundMIDIFluidSynthPath read GetString write SetString;
     property ProfileEditorSoundMIDIFluidSynth : String index NR_ProfileEditorSoundMIDIFluidSynth read GetString write SetString;
     property ProfileEditorSoundMIDIFluidSynthSoundfont : String index NR_ProfileEditorSoundMIDIFluidSynthSoundfont read GetString write SetString;
@@ -3287,8 +3285,6 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property FontStyleForFavoritesUnderline : String index NR_FontStyleForFavoritesUnderline read GetString write SetString;
     property ScreenshotListViewWidth : String index NR_ScreenshotListViewWidth read GetString write SetString;
     property ScreenshotListViewHeight : String index NR_ScreenshotListViewHeight read GetString write SetString;
-    property ScreenshotListViewUseFirstScreenshot : String index NR_ScreenshotListViewUseFirstScreenshot read GetString write SetString;
-    property ScreenshotListViewUseFirstScreenshotInfo : String index NR_ScreenshotListViewUseFirstScreenshotInfo read GetString write SetString;
     property SetupFormShowGridLines : String index NR_SetupFormShowGridLines read GetString write SetString;
     property SetupFormUseWindowsExeIcons : String index NR_SetupFormUseWindowsExeIcons read GetString write SetString;
     property SetupFormNoteLinesInTooltips : String index NR_SetupFormNoteLinesInTooltips read GetString write SetString;
@@ -3371,16 +3367,6 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property SetupFormUserDefinedInterpretersParameters : String index NR_SetupFormUserDefinedInterpretersParameters read GetString write SetString;
     property SetupFormUserDefinedInterpretersExtensions : String index NR_SetupFormUserDefinedInterpretersExtensions read GetString write SetString;
     property SetupFormUserDefinedInterpretersInfo : String index NR_SetupFormUserDefinedInterpretersInfo read GetString write SetString;
-
-    property SetupFormImageScaling : String index NR_SetupFormImageScaling read GetString write SetString;
-    property SetupFormImageScalingLabel : String index NR_SetupFormImageScalingLabel read GetString write SetString;
-    property SetupFormImageScalingAlgorithmBox : String index NR_SetupFormImageScalingAlgorithmBox read GetString write SetString;
-    property SetupFormImageScalingAlgorithmTriangle : String index NR_SetupFormImageScalingAlgorithmTriangle read GetString write SetString;
-    property SetupFormImageScalingAlgorithmHermite : String index NR_SetupFormImageScalingAlgorithmHermite read GetString write SetString;
-    property SetupFormImageScalingAlgorithmBell : String index NR_SetupFormImageScalingAlgorithmBell read GetString write SetString;
-    property SetupFormImageScalingAlgorithmBSpline : String index NR_SetupFormImageScalingAlgorithmBSpline read GetString write SetString;
-    property SetupFormImageScalingAlgorithmLanczos3 : String index NR_SetupFormImageScalingAlgorithmLanczos3 read GetString write SetString;
-    property SetupFormImageScalingAlgorithmMitchell : String index NR_SetupFormImageScalingAlgorithmMitchell read GetString write SetString;
 
     property SetupFormMoreEmulators : String index NR_SetupFormMoreEmulators read GetString write SetString;
     property SetupFormMoreEmulatorsLabel : String index NR_SetupFormMoreEmulatorsLabel read GetString write SetString;
@@ -3466,6 +3452,8 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property ViewImageFormBackgroundButtonHint : String index NR_ViewImageFormBackgroundButtonHint read GetString write SetString;
     property ViewImageFormZoomButton : String index NR_ViewImageFormZoomButton read GetString write SetString;
     property ViewImageFormZoomButtonHint : String index NR_ViewImageFormZoomButtonHint read GetString write SetString;
+    property ViewImageFormTitleImageButton : String index NR_ViewImageFormTitleImageButton read GetString write SetString;
+    property ViewImageFormTitleImageButtonHint : String index NR_ViewImageFormTitleImageButtonHint read GetString write SetString;
 
     property CreateConfForm : String index NR_CreateConfForm read GetString write SetString;
     property CreateConfFormProfMode : String index NR_CreateConfFormProfMode read GetString write SetString;
@@ -4250,6 +4238,8 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property DataReaderDownloadInfo : String index NR_DataReaderDownloadInfo read GetString write SetString;
     property DataReaderDownloadError : String index NR_DataReaderDownloadError read GetString write SetString;
     property DataReaderSource : String index NR_DataReaderSource read GetString write SetString;
+    property DataReaderSetAPIKey : String index NR_DataReaderSetAPIKey read GetString write SetString;
+    property DataReaderSetAPIKeyPrompt : String index NR_DataReaderSetAPIKeyPrompt read GetString write SetString;
 
     property InstallationSupport : String index NR_InstallationSupport read GetString write SetString;
     property InstallationSupportSourceFloppy : String index NR_InstallationSupportSourceFloppy read GetString write SetString;
@@ -4811,6 +4801,7 @@ begin
   AddStringRec(NR_MenuViewShowSearchBox,'Menu','View.ShowSearchBox','Show se&archbox');
   AddStringRec(NR_MenuViewShowExtraInfo,'Menu','View.ShowExtraInfo','Show &infocolumns in games list');
   AddStringRec(NR_MenuViewShowTooltips,'Menu','View.ShowTooltips','Show &tooltips in games list');
+  AddStringRec(NR_MenuViewShowScreenshotPane,'Menu','View.ShowScreenshotPane','Show title image &pane');
   AddStringRec(NR_MenuViewListNoIcons,'Menu','View.ListNoIcons','List (no icons)');
   AddStringRec(NR_MenuViewList,'Menu','View.List','List');
   AddStringRec(NR_MenuViewReportNoIcons,'Menu','View.ReportNoIcons','Report (no icons)');
@@ -4999,7 +4990,7 @@ begin
   AddStringRec(NR_ScreenshotPopupDelete,'Menu','ScreenshotPopup.Delete','&Delete');
   AddStringRec(NR_ScreenshotPopupDeleteAll,'Menu','ScreenshotPopup.DeleteAll','Delete &all');
   AddStringRec(NR_ScreenshotPopupUseAsBackground,'Menu','ScreenshotPopup.UseAsBackground','Use as &background...');
-  AddStringRec(NR_ScreenshotPopupUseInScreenshotList,'Menu','ScreenshotPopup.UseInScreenshotList','Use as screenshot in profiles list');
+  AddStringRec(NR_ScreenshotPopupSetAsTitleImage,'Menu','ScreenshotPopup.SetAsTitleImage','Set as &title image');
   AddStringRec(NR_SoundsPopupOpenExternal,'Menu','SoundsPopup.OpenExternal','Open in default media player...');
   AddStringRec(NR_SoundsPopupSaveMp3,'Menu','SoundsPopup.SaveMp3','Save as &mp3 file...');
   AddStringRec(NR_SoundsPopupSaveOgg,'Menu','SoundsPopup.SaveOgg','Save as &ogg file...');
@@ -5146,8 +5137,10 @@ begin
   AddStringRec(NR_ProfileEditorSoundMIDIMT32Mode,'ProfileEditorForm','Sound.MIDI.MT32.Mode','Mode');
   AddStringRec(NR_ProfileEditorSoundMIDIMT32Time,'ProfileEditorForm','Sound.MIDI.MT32.Time','Time');
   AddStringRec(NR_ProfileEditorSoundMIDIMT32Level,'ProfileEditorForm','Sound.MIDI.MT32.Level','Level');
+  AddStringRec(NR_ProfileEditorSoundMIDIMT32Model,'ProfileEditorForm','Sound.MIDI.MT32.Model','Model');
+  AddStringRec(NR_ProfileEditorSoundMIDIMT32RomDir,'ProfileEditorForm','Sound.MIDI.MT32.RomDir','ROM directory');
   AddStringRec(NR_ProfileEditorSoundMIDIFluidSynthPath,'ProfileEditorForm','Sound.MIDI.FluidSynthPath','FluidSynth path');
-  AddStringRec(NR_ProfileEditorSoundMIDIFluidSynth,'ProfileEditorForm','Sound.MIDI.FluidSynth','FluidSynth Settings');
+  AddStringRec(NR_ProfileEditorSoundMIDIFluidSynth,'ProfileEditorForm','Sound.MIDI.FluidSynth','Synth settings');
   AddStringRec(NR_ProfileEditorSoundMIDIFluidSynthSoundfont,'ProfileEditorForm','Sound.MIDI.FluidSynthSoundfont','Soundfont path');
   AddStringRec(NR_ProfileEditorSoundJoystickType,'ProfileEditorForm','Sound.Joystick.Type','Joystick type');
   AddStringRec(NR_ProfileEditorSoundJoystickTimed,'ProfileEditorForm','Sound.Joystick.Timed','Timed intervals for axis');
@@ -5604,8 +5597,6 @@ begin
   AddStringRec(NR_FontStyleForFavoritesUnderline,'SetupForm','FontStyleForFavorites.Underline','Underline');
   AddStringRec(NR_ScreenshotListViewWidth,'SetupForm','ScreenshotsModeListViewWidth','Width of the screenshots');
   AddStringRec(NR_ScreenshotListViewHeight,'SetupForm','ScreenshotsModeListViewHeight','Height of the screenshots');
-  AddStringRec(NR_ScreenshotListViewUseFirstScreenshot,'SetupForm','ScreenshotsModeListViewUseFirstScreenshot','Use screenshot with the following number if no screenshot is selected');
-  AddStringRec(NR_ScreenshotListViewUseFirstScreenshotInfo,'SetupForm','ScreenshotsModeListViewUseFirstScreenshot.Info','(1=Use first screenshot, 2=second screenshot etc.)');
   AddStringRec(NR_SetupFormShowGridLines,'SetupForm','ShowGridLinesInDetailsMode','Show grid lines in view style "report"');
   AddStringRec(NR_SetupFormUseWindowsExeIcons,'SetupForm','UseWindowsExeIcons','Use program file icon for Windows games profiles');
   AddStringRec(NR_SetupFormNoteLinesInTooltips,'SetupForm','NoteLinesInTooltips','Number of note lines in the tooltips in the games list');
@@ -5692,16 +5683,6 @@ begin
   AddStringRec(NR_SetupFormUserDefinedInterpretersExtensions,'SetupForm','UserDefinedInterpreters.Extensions','Extensions of the data files (use ; as separator)');
   AddStringRec(NR_SetupFormUserDefinedInterpretersInfo,'SetupForm','UserDefinedInterpreters.Info','On this page you can define DOS programs running inside DOSBox used for executing special data files. The profiles made for these interpreters are stored as DOSBox profiles.');
 
-  AddStringRec(NR_SetupFormImageScaling,'SetupForm','ImageScaling','Image scaling');
-  AddStringRec(NR_SetupFormImageScalingLabel,'SetupForm','ImageScaling.Label','Algorithm used for scaling images');
-  AddStringRec(NR_SetupFormImageScalingAlgorithmBox,'SetupForm','ImageScaling.Algorithm.Box','Box');
-  AddStringRec(NR_SetupFormImageScalingAlgorithmTriangle,'SetupForm','ImageScaling.Algorithm.Triangle','Triangle');
-  AddStringRec(NR_SetupFormImageScalingAlgorithmHermite,'SetupForm','ImageScaling.Algorithm.Hermite','Hermite');
-  AddStringRec(NR_SetupFormImageScalingAlgorithmBell,'SetupForm','ImageScaling.Algorithm.Bell','Bell');
-  AddStringRec(NR_SetupFormImageScalingAlgorithmBSpline,'SetupForm','ImageScaling.Algorithm.BSpline','B-spline');
-  AddStringRec(NR_SetupFormImageScalingAlgorithmLanczos3,'SetupForm','ImageScaling.Algorithm.Lanczos3','Lanczos3');
-  AddStringRec(NR_SetupFormImageScalingAlgorithmMitchell,'SetupForm','ImageScaling.Algorithm.Mitchell','Mitchell');
-
   AddStringRec(NR_SetupFormMoreEmulators,'SetupForm','MoreEmulators','Other emulators');
   AddStringRec(NR_SetupFormMoreEmulatorsLabel,'SetupForm','MoreEmulators.Label','Windows based emulator');
   AddStringRec(NR_SetupFormMoreEmulatorsAdd,'SetupForm','MoreEmulators.AddHint','Add emulator record');
@@ -5786,6 +5767,8 @@ begin
   AddStringRec(NR_ViewImageFormBackgroundButtonHint,'ViewImageForm','BackgroundImage.Hint','Uses the selected image as desktop background image.');
   AddStringRec(NR_ViewImageFormZoomButton,'ViewImageForm','Zoom','Zoom');
   AddStringRec(NR_ViewImageFormZoomButtonHint,'ViewImageForm','Zoom.Hint','Changes the zoom factor.');
+  AddStringRec(NR_ViewImageFormTitleImageButton,'ViewImageForm','TitleImage','As title image');
+  AddStringRec(NR_ViewImageFormTitleImageButtonHint,'ViewImageForm','TitleImage.Hint','Uses the selected image as the title image for this profile.');
 
   AddStringRec(NR_CreateConfForm,'CreateConfForm','Caption','Create conf files');
   AddStringRec(NR_CreateConfFormProfMode,'CreateConfForm','CaptionProf','Create prof files');
@@ -6602,6 +6585,8 @@ begin
   AddStringRec(NR_DataReaderDownloadInfo,'DataReader','Download.Info','Loading data from %s, please wait...');
   AddStringRec(NR_DataReaderDownloadError,'DataReader','Download.Error','Error reading data from %s');
   AddStringRec(NR_DataReaderSource,'DataReader','Source','Data source');
+  AddStringRec(NR_DataReaderSetAPIKey,'DataReader','SetAPIKey','Set API Key');
+  AddStringRec(NR_DataReaderSetAPIKeyPrompt,'DataReader','SetAPIKey.Prompt','Enter the API key for this data source:');
 
   AddStringRec(NR_InstallationSupport,'InstallationSupport','Caption','Install game from source media');
   AddStringRec(NR_InstallationSupportSourceFloppy,'InstallationSupport','Source.Floppy','Install from real floppy disks');

@@ -8,7 +8,7 @@ uses
      Menus, AppEvnts, ActiveX, GameDBUnit, GameDBToolsUnit, ViewFilesFrameUnit,
      LinkFileUnit, HelpTools, DOSBoxUnitHelpers, Vcl.WinXCtrls,
     ExoDOSDBUnit,
-    ToggleSwitchExUnit; { after WinXCtrls: interposer TToggleSwitch }
+    ToggleSwitchExUnit, System.ImageList; { after WinXCtrls: interposer TToggleSwitch }
 
 {
 }
@@ -142,6 +142,7 @@ type
     PopupMakeInstaller: TMenuItem;
     PopupOpenFileInDataFolder: TMenuItem;
     MenuViewsShowTooltips: TMenuItem;
+    MenuViewsShowScreenshotPane: TMenuItem;
     MenuHelpUpdates: TMenuItem;
     MenuProfileViewConfFile: TMenuItem;
     PopupViewConfFile: TMenuItem;
@@ -186,6 +187,7 @@ type
     TreeViewPopupEditUserFilters: TMenuItem;
     N24: TMenuItem;
     ScreenshotPopupUseAsBackground: TMenuItem;
+    ScreenshotPopupSetAsTitleImage: TMenuItem;
     ScreenshotPopupRename: TMenuItem;
     SoundPopupRename: TMenuItem;
     MenuExtrasCreateISOImage: TMenuItem;
@@ -260,8 +262,6 @@ type
     MenuViewsScreenshots: TMenuItem;
     PopupScreenshots: TMenuItem;
     ListviewScreenshotImageList: TImageList;
-    N29: TMenuItem;
-    ScreenshotPopupUseInScreenshotList: TMenuItem;
     PopupMakeZipArchive: TMenuItem;
     N30: TMenuItem;
     MenuProfileMakeZipArchive: TMenuItem;
@@ -381,6 +381,7 @@ type
     procedure ListViewDblClick(Sender: TObject);
     procedure ApplicationEventsMinimize(Sender: TObject);
     procedure ApplicationEventsRestore(Sender: TObject);
+    procedure ApplicationEventsActivate(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
     procedure ScreenshotListViewDblClick(Sender: TObject);
     procedure ScreenshotListViewKeyDown(Sender: TObject; var Key: Word;
@@ -391,8 +392,6 @@ type
     procedure DocListViewDblClick(Sender: TObject);
     procedure DocListViewKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
-    procedure DocListViewSelectItem(Sender: TObject; Item: TListItem;
-      Selected: Boolean);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure SearchEditChange(Sender: TObject);
     procedure ListViewInfoTip(Sender: TObject; Item: TListItem;
@@ -422,6 +421,7 @@ type
     procedure CaptureDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure ToolbarPopupClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormActivate(Sender: TObject);
     procedure FirstRunInfoButtonClick(Sender: TObject);
     procedure SoundtrackAutoplaySwitchClick(Sender: TObject);
     procedure GameNotesButtonWork(Sender: TObject);
@@ -451,6 +451,9 @@ type
     hEvent : THandle;
     FPostShowGateEnabled : Boolean;
     FGamesWereRunning : Boolean;
+    FScreenshotPaneSource : String;
+    FMainClosing : Boolean;
+    Procedure CloseScreenshotPaneEarly;
     Procedure AfterSetupDialog(ColWidths, UserCols : String);
     Procedure StartCaptureChangeNotify;
     Procedure StopCaptureChangeNotify;
@@ -464,8 +467,12 @@ type
     Procedure LoadSearchLinks;
     Procedure ProcessParams;
     Procedure UpdateProfileMediaTabs;
+    Procedure EnsureScreenshotPaneForm;
+    Procedure PositionScreenshotPane;
+    Procedure BringScreenshotPaneWithMain;
+    Procedure ApplyScreenshotPaneVisibility;
+    Procedure UpdateScreenshotPaneImage;
     Procedure ScrollMediaListToTop(const AListView : TListView);
-    Procedure LogMediaListLayout(const Name : String; const AListView : TListView);
     Function ImageMediaListView : TListView;
     Function FirstSoundtrackPath : String;
     Procedure UpdateAmbientSoundtrack;
@@ -480,6 +487,7 @@ type
     Procedure AddFromTemplateClick(Sender: TObject);
     Procedure PostShow(var Msg : TMessage); Message WM_USER+1;
     Procedure PostResize(var Msg : TMessage); Message WM_USER+2;
+    Procedure PostTitleImageChanged(var Msg : TMessage); Message WM_USER+3;
     Procedure LoadGUISetup(const PrgStart : Boolean);
     Procedure SetupToolbarHints;
     Procedure SyncSoundtrackAutoplaySwitch;
@@ -537,7 +545,7 @@ uses ShellAPI, ShlObj, ClipBrd, Math, CommCtrl, CommonHelpers, CommonTools, Lang
      MiniRunFormUnit, ScummVMUnit, ListScummVMGamesFormUnit,
      DragNDropErrorFormUnit, SimpleXMLUnit, OperationModeInfoFormUnit,
      ZipManagerUnit, ZipWaitInfoFormUnit, CopyProfileFormUnit,
-     PlayVideoFormUnit, ImageCacheUnit, ZipPackageUnit, WindowsProfileUnit,
+     ImageCacheUnit, ZipPackageUnit, WindowsProfileUnit,
      HelpConsts, BuildZipPackagesFormUnit, DOSBoxCountUnit, QuickStartFormUnit,
       ClassExtensions, SetupFrameWaveEncoderUnit, ZipFormHelpers, ZipInfoFormUnit,
      ScanGamesFolderFormUnit, MediaInterface, ScummVMToolsUnit,
@@ -547,17 +555,24 @@ uses ShellAPI, ShlObj, ClipBrd, Math, CommCtrl, CommonHelpers, CommonTools, Lang
      RenameAllScreenshotsFormUnit, MakeBootImageFromProfileFormUnit,
      CheatApplyFormUnit, CheatDBEditFormUnit, CheatSearchFormUnit,
      UpdateCheckFormUnit, ProgramUpdateCheckUnit, GameDBFilterUnit,
-     LoggingUnit, DOSBoxFailedFormUnit, DOSBoxLangEditFormUnit,
+     LoggingUnit,
+//{$IFDEF DEBUG}
+//     DiagnosticsUnits,
+//{$ENDIF}
+     DOSBoxFailedFormUnit, DOSBoxLangEditFormUnit,
      DOSBoxLangStartFormUnit, HistoryUnit, ExportGamesListFormUnit,
      DOSBoxOutputTestFormUnit, SingleInstanceUnit, SetupFrameZipPrgsUnit,
       DOSBoxTempUnit, System.Types, ExoDOSHelpers, DataReaderExoDOSUnit,
-      NewScreenshotsCacheUnit, FireDACSilentUnit, BassMedia, SetupFrameExoDOSUnit;
+      NewScreenshotsCacheUnit, FireDACSilentUnit, BassMedia, SetupFrameExoDOSUnit,
+      ScreenshotPaneFormUnit;
 
 {$R *.dfm}
 
 Var LastDOSBoxCount : Integer=0;
     LastLeft : Integer = -1;
     LastTop : Integer = -1;
+    ScreenshotPaneForm : TScreenshotPaneForm = nil;
+    DesiredLogLevel : TLogLevel;
 
 procedure TDFendReloadedMainForm.FormCreate(Sender: TObject);
 Var S : String;
@@ -680,11 +695,20 @@ Var G : TGame;
     S : String;
     St : TStringList;
     I : Integer;
+    CurrentExeVersion, CurrentINIVersion : String;
 begin
   If not JustStarted then exit;
   JustStarted:=False;
 
+  { Force INFO for FormShow/PostShow; restore DesiredLogLevel at end of PostShow. }
+  DesiredLogLevel:=GetLogLevel;
+  SetLogLevel(llInfo);
+
   LogInfo('### Start of FormShow ###');
+  //{$IFDEF DEBUG}
+  //{ Static Abbrevia smoke: zip CHANGES -> CHANGES.zip next to the exe. }
+  //RunPackagingDiagnostics;
+  //{$ENDIF}
   LastDragDropEffect:=DROPEFFECT_NONE;
   RegisterDragDrop(Handle,Self);
   RegisterDragDrop(GameNotesEdit.Handle,Self);
@@ -730,6 +754,8 @@ begin
   SyncSoundtrackAutoplaySwitch;
 
   LogInfo('FormShow: FirstRun='+BoolToStr(PrgSetup.FirstRun,True)+' binarycache='+BoolToStr(PrgSetup.BinaryCache,True));
+  CurrentExeVersion:=GetNormalFileVersionAsString;
+  CurrentINIVersion:=PrgSetup.DFendVersion;
   If PrgSetup.FirstRun then begin
     LogInfo('First run: Building default template');
     BuildDefaultProfile;
@@ -749,18 +775,18 @@ begin
     LoadGUISetup(False);
     LogInfo('First run: Selecting new "DOSBox DOS" profile');
     SelectGame(G);
-    PrgSetup.DFendVersion:=GetNormalFileVersionAsString;
+    PrgSetup.DFendVersion:=CurrentExeVersion;
   end else begin
-    LogInfo('Upgrade: stored version='+PrgSetup.DFendVersion+' exe version='+GetNormalFileVersionAsString);
-    If PrgSetup.DFendVersion<>GetNormalFileVersionAsString then begin
+    LogInfo('Upgrade: stored version='+CurrentINIVersion+' exe version='+CurrentExeVersion);
+    If CurrentINIVersion<>CurrentExeVersion then begin
       LogInfo('Upgrade: version mismatch - running upgrade path');
       Enabled:=False;
       try
-        UpdateUserDataFolderAndSettingsAfterUpgrade(GameDB,VersionToInt(PrgSetup.DFendVersion));
+        UpdateUserDataFolderAndSettingsAfterUpgrade(GameDB,VersionToInt(CurrentINIVersion),CurrentINIVersion);
       finally
         Enabled:=True;
       end;
-      PrgSetup.DFendVersion:=GetNormalFileVersionAsString;
+      PrgSetup.DFendVersion:=CurrentExeVersion;
       LogInfo('Upgrade: Searching tools');
       FastSearchAllTools;
       LogInfo('Upgrade: Calling LoadGUISetup');
@@ -794,6 +820,10 @@ procedure TDFendReloadedMainForm.FormDestroy(Sender: TObject);
 Var I : Integer;
     S1, S2 : String;
 begin
+  { Hide/free title pane before any wait so it never outlives the main UI. }
+  FMainClosing:=True;
+  CloseScreenshotPaneEarly;
+
   While FreeDOSInitThreadRunning or TemplatesInitThreadRunning do Sleep(50);
 
   LogInfo('Freeing screenshots cache');
@@ -888,6 +918,7 @@ begin
   MenuViewsShowSearchBox.Caption:=LanguageSetup.MenuViewShowSearchBox;
   MenuViewsShowExtraInfo.Caption:=LanguageSetup.MenuViewShowExtraInfo;
   MenuViewsShowTooltips.Caption:=LanguageSetup.MenuViewShowTooltips;
+  MenuViewsShowScreenshotPane.Caption:=LanguageSetup.MenuViewShowScreenshotPane;
   MenuViewsSimpleListNoIcons.Caption:=LanguageSetup.MenuViewListNoIcons;
   MenuViewsSimpleList.Caption:=LanguageSetup.MenuViewList;
   MenuViewsListNoIcons.Caption:=LanguageSetup.MenuViewReportNoIcons;
@@ -915,6 +946,7 @@ begin
   MenuProfileAddFromTemplate.Caption:=LanguageSetup.MenuProfileAddFromTemplate;
   MenuProfileAddWithWizard.Caption:=LanguageSetup.MenuProfileAddWithWizard;
   MenuProfileAddFromExoDOS.Caption:=LanguageSetup.MenuProfileAddFromExoDOS;
+  MenuProfileAddFromExoDOS.Visible:=PrgSetup.HasValidExoInstallation;
   MenuProfileImportZip.Caption:=LanguageSetup.MenuFileImportZIP;
   MenuProfileAddInstallationSupport.Caption:=LanguageSetup.MenuProfileAddWithInstallationSupport;
   MenuProfileDownloadPackages.Caption:=LanguageSetup.MenuFileImportDownload;
@@ -999,8 +1031,13 @@ begin
   MenuHelpAbandonware.Caption:=LanguageSetup.MenuHelpAbandonware;
   MenuHelpHomepage.Caption:=LanguageSetup.MenuHelpHomepage;
   MenuHelpUpdates.Caption:=LanguageSetup.MenuHelpUpdates;
+  {$IFDEF DEBUG}
+  MenuHelpUpdates.Visible:=True;
+  MenuHelpUpdates.Enabled:=True;
+  {$ELSE}
   MenuHelpUpdates.Visible:=False;
   MenuHelpUpdates.Enabled:=False;
+  {$ENDIF}
   MenuHelpStatistics.Caption:=LanguageSetup.MenuHelpStatistics;
   MenuHelpOperationMode.Caption:=LanguageSetup.MenuHelpOperationMode;
   MenuHelpHelp.Caption:=LanguageSetup.MenuHelpHelp;
@@ -1018,6 +1055,7 @@ begin
   AddButtonMenuAddFromTemplate.Caption:=LanguageSetup.MenuProfileAddFromTemplate;
   AddButtonMenuAddWithWizard.Caption:=LanguageSetup.MenuProfileAddWithWizard;
   AddButtonMenuAddFromExoDOS.Caption:=LanguageSetup.MenuProfileAddFromExoDOS;
+  AddButtonMenuAddFromExoDOS.Visible:=PrgSetup.HasValidExoInstallation;
   AddButtonMenuImportZip.Caption:=LanguageSetup.MenuFileImportZIP;
   AddButtonMenuAddInstallationSupport.Caption:=LanguageSetup.MenuProfileAddWithInstallationSupport;
   AddButtonMenuDownloadPackages.Caption:=LanguageSetup.MenuFileImportDownload;
@@ -1088,6 +1126,8 @@ begin
   ExoExtraTab.TabVisible:=PrgSetup.HasValidExoInstallation;
   DocTab.Caption:='Docs';
   DocTab.TabVisible:=PrgSetup.HasValidExoInstallation;
+  MenuProfileAddFromExoDOS.Visible:=PrgSetup.HasValidExoInstallation;
+  AddButtonMenuAddFromExoDOS.Visible:=PrgSetup.HasValidExoInstallation;
   SoundInfoPanel.Caption:=LanguageSetup.CaptureSoundsInfo;
   VideoInfoPanel.Caption:=LanguageSetup.CaptureVideosInfo;
   GameNotesPanel.Caption:=LanguageSetup.CaptureNotes;
@@ -1105,7 +1145,7 @@ begin
   ScreenshotPopupDelete.Caption:=LanguageSetup.ScreenshotPopupDelete;
   ScreenshotPopupDeleteAll.Caption:=LanguageSetup.ScreenshotPopupDeleteAll;
   ScreenshotPopupUseAsBackground.Caption:=LanguageSetup.ScreenshotPopupUseAsBackground;
-  ScreenshotPopupUseInScreenshotList.Caption:=LanguageSetup.ScreenshotPopupUseInScreenshotList;
+  ScreenshotPopupSetAsTitleImage.Caption:=LanguageSetup.ScreenshotPopupSetAsTitleImage;
 
   SoundPopupOpen.Caption:=LanguageSetup.ScreenshotPopupOpen;
   SoundPopupOpenExternal.Caption:=LanguageSetup.SoundsPopupOpenExternal;
@@ -1262,6 +1302,8 @@ begin
   ExoExtraListView.DoubleBuffered:=True;
   TreeView.DoubleBuffered:=True;
   ExoExtraTab.TabVisible:=PrgSetup.HasValidExoInstallation;
+  MenuProfileAddFromExoDOS.Visible:=PrgSetup.HasValidExoInstallation;
+  AddButtonMenuAddFromExoDOS.Visible:=PrgSetup.HasValidExoInstallation;
 
   LogInfo('Setting up hotkeys');
   MenuRunGame.ShortCut:=ShortCut(VK_Return,[]);
@@ -1358,6 +1400,8 @@ begin
 
   ListView.ShowHint:=PrgSetup.ShowTooltips;
   MenuViewsShowTooltips.Checked:=PrgSetup.ShowTooltips;
+  MenuViewsShowScreenshotPane.Checked:=PrgSetup.ShowScreenshotPane;
+  ApplyScreenshotPaneVisibility;
 
   SearchEdit.OnChange:=nil;
   SearchEdit.Text:=LanguageSetup.Search;
@@ -1509,10 +1553,12 @@ begin
   LogInfo('Set window state (2)');
   Case PrgSetup.StartWindowSize of
     0 : begin
-          {nothing}
-          {Fix height for smaller screens}
+          { Default size (not restore): screen center, then shift left ~1/4 form width
+            so the title/screenshot pane has room on the right. }
           Height:=Min(Height,Screen.WorkAreaHeight);
           If Top+Height>Screen.WorkAreaHeight then Top:=Screen.WorkAreaHeight-Height;
+          Left:=Left-(Width div 4);
+          If Left<Screen.WorkAreaLeft then Left:=Screen.WorkAreaLeft;
           {To fix misaligend ListView when stating maximized}
           If WindowState=wsMaximized then begin
             WindowState:=wsNormal;
@@ -1587,10 +1633,11 @@ begin
 
   LogInfo('### End of PostShow ###'+#13);
 
-  { Orig always turned logging off here. Keep it on for DEBUG builds. }
-  {$IFNDEF DEBUG}
-  LogInfo('*** Turning log off ***'+#13,False);
-  {$ENDIF}
+  If DesiredLogLevel=llOff then begin
+    LogInfo('*** Turning log off ***'+#13);
+    SetLogLevel(llOff);
+  end else
+    SetLogLevel(DesiredLogLevel);
   finally
     FPostShowGateEnabled:=False;
   end;
@@ -2035,13 +2082,13 @@ begin
         If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
         If ScreenshotListView.Selected<>nil then J:=ScreenshotListView.Selected.Index else J:=-1;
         For I:=0 to ScreenshotListView.Items.Count-1 do begin
-          If I<J then St1.Add(GetExoListItemFilePath(ScreenshotListView.Items[I],S));
-          If I>J then St2.Add(GetExoListItemFilePath(ScreenshotListView.Items[I],S));
+          If I<J then St1.Add(GetImageListItemFilePath(ScreenshotListView.Items[I],S));
+          If I>J then St2.Add(GetImageListItemFilePath(ScreenshotListView.Items[I],S));
         end;
         If J<0 then begin
           If St2.Count>0 then begin S:=St2[0]; St2.Delete(0); end else S:='';
         end else begin
-          S:=GetExoListItemFilePath(ScreenshotListView.Items[J],S);
+          S:=GetImageListItemFilePath(ScreenshotListView.Items[J],S);
         end;
         ShowNonModalImageDialog(self,S,St1,St2);
       finally
@@ -2062,7 +2109,7 @@ begin
   If CaptureDir<>'' then CaptureDir:=MakeAbsPath(CaptureDir,PrgSetup.BaseDir);
   For I:=0 to SoundListView.Items.Count-1 do begin
     If Pos('SOUNDTRACK',ExtUpperCase(SoundListView.Items[I].Caption))=0 then continue;
-    P:=GetExoListItemFilePath(SoundListView.Items[I],CaptureDir);
+    P:=GetImageListItemFilePath(SoundListView.Items[I],CaptureDir);
     If (P<>'') and FileExists(P) then begin
       result:=P;
       exit;
@@ -2107,65 +2154,6 @@ begin
 
   ListView_EnsureVisible(AListView.Handle,0,False);
   AListView.Items[0].MakeVisible(False);
-end;
-
-Procedure TDFendReloadedMainForm.LogMediaListLayout(const Name : String; const AListView : TListView);
-Var I : Integer;
-    Origin : TPoint;
-    Style : LongInt;
-    P : TPoint;
-    R : TRect;
-    Y0, YLast : Integer;
-begin
-  if (AListView=nil) or (not AListView.HandleAllocated) then begin
-    LogInfo('MediaLayout['+Name+']: list nil or no handle');
-    exit;
-  end;
-
-  Style:=GetWindowLong(AListView.Handle,GWL_STYLE);
-  if not ListView_GetOrigin(AListView.Handle,Origin) then begin
-    Origin.X:=-1;
-    Origin.Y:=-1;
-  end;
-
-  LogInfo('MediaLayout['+Name+']: count='+IntToStr(AListView.Items.Count)
-    +' ViewStyle='+IntToStr(Ord(AListView.ViewStyle))
-    +' OwnerDraw='+BoolToStr(AListView.OwnerDraw,True)
-    +' AutoArrange='+BoolToStr(AListView.IconOptions.AutoArrange,True)
-    +' Arrangement='+IntToStr(Ord(AListView.IconOptions.Arrangement))
-    +' SortType='+IntToStr(Ord(AListView.SortType))
-    +' Origin=('+IntToStr(Origin.X)+','+IntToStr(Origin.Y)+')'
-    +' Style=$'+IntToHex(Style,8)
-    +' LVS_AUTOARRANGE='+BoolToStr((Style and LVS_AUTOARRANGE)<>0,True)
-    +' LVS_ALIGNLEFT='+BoolToStr((Style and LVS_ALIGNLEFT)<>0,True)
-    +' LVS_OWNERDRAWFIXED='+BoolToStr((Style and LVS_OWNERDRAWFIXED)<>0,True)
-    +' AlignMask=$'+IntToHex(Style and LVS_ALIGNMASK,4)
-    +' ClientW='+IntToStr(AListView.ClientWidth)
-    +' ClientH='+IntToStr(AListView.ClientHeight));
-
-  if AListView.Items.Count=0 then exit;
-
-  Y0:=AListView.Items[0].Position.Y;
-  YLast:=AListView.Items[AListView.Items.Count-1].Position.Y;
-  LogInfo('MediaLayout['+Name+']: posY[0]='+IntToStr(Y0)
-    +' posY[last]='+IntToStr(YLast)
-    +' invertedY='+BoolToStr(Y0>YLast,True));
-
-  for I:=0 to AListView.Items.Count-1 do begin
-    P:=AListView.Items[I].Position;
-    if ListView_GetItemRect(AListView.Handle,I,R,LVIR_BOUNDS) then
-      LogInfo('MediaLayout['+Name+']: #'+IntToStr(I)
-        +' cap="'+AListView.Items[I].Caption+'"'
-        +' img='+IntToStr(AListView.Items[I].ImageIndex)
-        +' pos=('+IntToStr(P.X)+','+IntToStr(P.Y)+')'
-        +' rect=('+IntToStr(R.Left)+','+IntToStr(R.Top)+','+IntToStr(R.Right)+','+IntToStr(R.Bottom)+')')
-    else
-      LogInfo('MediaLayout['+Name+']: #'+IntToStr(I)
-        +' cap="'+AListView.Items[I].Caption+'"'
-        +' img='+IntToStr(AListView.Items[I].ImageIndex)
-        +' pos=('+IntToStr(P.X)+','+IntToStr(P.Y)+')'
-        +' rect=fail');
-  end;
 end;
 
 Procedure TDFendReloadedMainForm.UpdateProfileMediaTabs;
@@ -2222,7 +2210,6 @@ begin
   end;
   ScreenshotListViewSelectItem(self,nil,False);
   ScrollMediaListToTop(ScreenshotListView);
-  LogMediaListLayout('Screenshots',ScreenshotListView);
 
   { ----- Sounds tab -----
     Source A: CaptureFolder (non-eXo sounds from game profile)
@@ -2248,7 +2235,6 @@ begin
   SoundInfoPanel.Height:=IfThen(SoundInfoPanel.Visible,17,0);
   SoundListViewSelectItem(self,nil,False);
   ScrollMediaListToTop(SoundListView);
-  LogMediaListLayout('Sounds',SoundListView);
 
   { ----- Videos tab -----
     Source A: CaptureFolder (non-eXo videos from game profile)
@@ -2272,7 +2258,6 @@ begin
   VideoInfoPanel.Height:=IfThen(VideoInfoPanel.Visible,17,0);
   VideoListViewSelectItem(self,nil,False);
   ScrollMediaListToTop(VideoListView);
-  LogMediaListLayout('Videos',VideoListView);
 
   { ----- Extras tab -----
     Source A: MediaDB Images category, NOT (Kind LIKE 'Screenshot -%')
@@ -2288,7 +2273,7 @@ begin
   end;
   ScreenshotListViewSelectItem(ExoExtraListView,nil,False);
   ScrollMediaListToTop(ExoExtraListView);
-  LogMediaListLayout('Extras',ExoExtraListView);
+  UpdateScreenshotPaneImage;
 
   { ----- Docs tab -----
     Source A: MediaDB manuals category
@@ -2303,9 +2288,132 @@ begin
   end;
   ScreenshotListViewSelectItem(DocListView,nil,False);
   ScrollMediaListToTop(DocListView);
-  LogMediaListLayout('Documents',DocListView);
   finally
     MediaDB.Free;
+  end;
+end;
+
+Procedure TDFendReloadedMainForm.CloseScreenshotPaneEarly;
+begin
+  if ScreenshotPaneForm=nil then exit;
+  if ScreenshotPaneForm.HandleAllocated then
+    ShowWindow(ScreenshotPaneForm.Handle,SW_HIDE);
+  ScreenshotPaneForm.Hide;
+  ScreenshotPaneForm.ClearImage;
+  FreeAndNil(ScreenshotPaneForm);
+  FScreenshotPaneSource:='';
+end;
+
+Procedure TDFendReloadedMainForm.EnsureScreenshotPaneForm;
+begin
+  if FMainClosing or (csDestroying in ComponentState) then exit;
+  if ScreenshotPaneForm=nil then begin
+    ScreenshotPaneForm:=TScreenshotPaneForm.Create(Self);
+    { Once: Windows owner HWND via CreateParams WndParent (owned window). }
+    if HandleAllocated then
+      ScreenshotPaneForm.BindOwnerWindow(Self);
+  end else if HandleAllocated then
+    ScreenshotPaneForm.BindOwnerWindow(Self); { no-op after first bind }
+end;
+
+Procedure TDFendReloadedMainForm.PositionScreenshotPane;
+var
+  P : TPoint;
+begin
+  if ScreenshotPaneForm=nil then exit;
+  P:=Panel1.ClientToScreen(Point(0,0));
+  ScreenshotPaneForm.PositionBeside(Self,P.Y);
+end;
+
+Procedure TDFendReloadedMainForm.BringScreenshotPaneWithMain;
+begin
+  if FMainClosing or (csDestroying in ComponentState) then exit;
+  if (not Assigned(PrgSetup)) or (not PrgSetup.ShowScreenshotPane) then exit;
+  { Do not create here — pane is created when the first title image is ready. }
+  if ScreenshotPaneForm=nil then exit;
+  if WindowState=wsMinimized then exit;
+  if not HandleAllocated then exit;
+  PositionScreenshotPane;
+  if not ScreenshotPaneForm.HandleAllocated then
+    ScreenshotPaneForm.HandleNeeded;
+  { Do not SetWindowLongPtr(GWLP_HWNDPARENT) here — that was greying/breaking the HWND.
+    Owner is set at bind/create; only re-show and pin Z next to main. }
+  ShowWindow(ScreenshotPaneForm.Handle,SW_SHOWNOACTIVATE);
+  ScreenshotPaneForm.Visible:=True;
+  SetWindowPos(ScreenshotPaneForm.Handle,Handle,0,0,0,0,
+    SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_SHOWWINDOW);
+end;
+
+Procedure TDFendReloadedMainForm.ApplyScreenshotPaneVisibility;
+begin
+  if not PrgSetup.ShowScreenshotPane then begin
+    if ScreenshotPaneForm<>nil then begin
+      ScreenshotPaneForm.Hide;
+      ScreenshotPaneForm.ClearImage;
+    end;
+    exit;
+  end;
+  { Preference only — create/show waits for first title image (UpdateScreenshotPaneImage). }
+  if ScreenshotPaneForm<>nil then BringScreenshotPaneWithMain;
+end;
+
+Procedure TDFendReloadedMainForm.UpdateScreenshotPaneImage;
+var
+  CaptureDir, Candidate : String;
+  Game : TGame;
+  B : TBitmap;
+begin
+  if FMainClosing or (csDestroying in ComponentState) then exit;
+  if not PrgSetup.ShowScreenshotPane then begin
+    if ScreenshotPaneForm<>nil then ScreenshotPaneForm.ClearImage;
+    exit;
+  end;
+
+  CaptureDir:='';
+  Game:=nil;
+  if (ListView.Selected<>nil) and (ListView.Selected.Data<>nil) then
+    Game:=TGame(ListView.Selected.Data);
+  if Game<>nil then begin
+    CaptureDir:=Trim(Game.CaptureFolder);
+    if CaptureDir<>'' then CaptureDir:=MakeAbsPath(CaptureDir,PrgSetup.BaseDir);
+  end;
+
+  B:=nil;
+  FScreenshotPaneSource:='';
+
+  { Prefer profile SelectedTitleImage if it still thumbs successfully. }
+  if (Game<>nil) and Assigned(ScreenshotsCache) then begin
+    Candidate:=ResolveSelectedTitleImagePath(Game);
+    if Candidate<>'' then begin
+      B:=ScreenshotsCache.GetThumbnail(Candidate,ScreenshotPaneFixedWidth,ScreenshotPaneFixedHeight);
+      if B<>nil then
+        FScreenshotPaneSource:=Candidate;
+    end;
+  end;
+
+  { Otherwise run pick algo and remember result on the profile. }
+  if B=nil then begin
+    FScreenshotPaneSource:=PickScreenshotPaneSourceFromLists(ScreenshotListView,ExoExtraListView,CaptureDir);
+    if (Game<>nil) and (FScreenshotPaneSource<>'') then begin
+      Game.SelectedTitleImage:=MakeRelPath(FScreenshotPaneSource,PrgSetup.BaseDir);
+      Game.StoreAllValues;
+    end;
+    if (FScreenshotPaneSource<>'') and Assigned(ScreenshotsCache) and FileExists(FScreenshotPaneSource) then
+      B:=ScreenshotsCache.GetThumbnail(FScreenshotPaneSource,ScreenshotPaneFixedWidth,ScreenshotPaneFixedHeight);
+  end;
+
+  if B=nil then begin
+    if ScreenshotPaneForm<>nil then ScreenshotPaneForm.ClearImage;
+    exit;
+  end;
+  try
+    EnsureScreenshotPaneForm;
+    if ScreenshotPaneForm=nil then exit;
+    PositionScreenshotPane;
+    if not ScreenshotPaneForm.Visible then ScreenshotPaneForm.Show;
+    ScreenshotPaneForm.SetBitmap(B);
+  finally
+    B.Free;
   end;
 end;
 
@@ -2522,8 +2630,7 @@ begin
     If (T<>'') and (T<>'INTERNAL') then begin PlaySoundDialog(Owner,FileName,nil,nil); exit; end;
   end;
   If (T='.AVI') or (T='.MPG') or (T='.MPEG') or (T='.WMV') or (T='.ASF') then begin
-    T:=Trim(ExtUpperCase(PrgSetup.VideoPlayer));
-    If (T<>'') and (T<>'INTERNAL') then begin PlayVideoDialog(Owner,FileName,nil,nil); exit; end;
+    If OpenMediaFile(PrgSetup.VideoPlayer,FileName) then exit;
   end;
   If (T='.TXT') or (T='.NFO') or (T='.DIZ') or (T='.1ST') or (T='.INI') then begin
     OpenFileInEditor(FileName);
@@ -2890,6 +2997,8 @@ begin
   MenuViewsShowSearchBox.Checked:=PrgSetup.ShowSearchBox;
   MenuViewsShowTooltips.Checked:=PrgSetup.ShowTooltips;
   ListView.ShowHint:=PrgSetup.ShowTooltips;
+  MenuViewsShowScreenshotPane.Checked:=PrgSetup.ShowScreenshotPane;
+  ApplyScreenshotPaneVisibility;
 
   TreeView.OnChange:=TreeViewChange;
 
@@ -3404,6 +3513,12 @@ begin
                PrgSetup.ShowTooltips:=not PrgSetup.ShowTooltips;
                MenuViewsShowTooltips.Checked:=PrgSetup.ShowTooltips;
                ListView.ShowHint:=PrgSetup.ShowTooltips;
+             end;
+      2016 : begin
+               PrgSetup.ShowScreenshotPane:=not PrgSetup.ShowScreenshotPane;
+               MenuViewsShowScreenshotPane.Checked:=PrgSetup.ShowScreenshotPane;
+               ApplyScreenshotPaneVisibility;
+               if PrgSetup.ShowScreenshotPane then UpdateScreenshotPaneImage;
              end;
       2006 : begin PrgSetup.ListViewStyle:='SimpleListNoIcons'; InitViewStyle; end;
       2007 : begin PrgSetup.ListViewStyle:='SimpleList'; InitViewStyle; end;
@@ -4048,6 +4163,7 @@ Var B, ExtrasMode : Boolean;
     I,J : Integer;
     St1,St2 : TStringList;
     LV : TListView;
+    Thumb : TBitmap;
 begin
   If Sender=ExoExtraListView then
     ScreenshotPopupMenu.PopupComponent:=ExoExtraListView
@@ -4064,7 +4180,6 @@ begin
   ScreenshotPopupUseAsBackground.Enabled:=B;
   ScreenshotPopupRename.Enabled:=B and (not ExtrasMode);
   ScreenshotPopupDelete.Enabled:=B and (not ExtrasMode);
-  ScreenshotPopupUseInScreenshotList.Enabled:=B and (not ExtrasMode);
   { Shared menu with Screenshots: capture folder is meaningless for eXo-only Extras. }
   ScreenshotPopupOpenCaptureFolder.Visible:=not ExtrasMode;
   If ExtrasMode then begin
@@ -4077,9 +4192,6 @@ begin
     ScreenshotPopupImport.Enabled:=(S<>'');
     ScreenshotPopupRenameAll.Enabled:=(S<>'');
     ScreenshotPopupDeleteAll.Enabled:=(S<>'');
-  end;
-  If not ScreenshotPopupUseInScreenshotList.Enabled then ScreenshotPopupUseInScreenshotList.Checked:=False else begin
-    ScreenshotPopupUseInScreenshotList.Checked:=(LV.Selected<>nil) and (ListView.Selected<>nil) and ((Trim(ExtUpperCase(LV.Selected.Caption))=Trim(ExtUpperCase(TGame(ListView.Selected.Data).ScreenshotListScreenshot))));
   end;
 
   S:=Trim(ExtUpperCase(PrgSetup.ImageViewer));
@@ -4096,18 +4208,39 @@ begin
         If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
         If LV.Selected<>nil then J:=LV.Selected.Index else J:=-1;
         For I:=0 to LV.Items.Count-1 do begin
-          If I<J then St1.Add(GetExoListItemFilePath(LV.Items[I],S));
-          If I>J then St2.Add(GetExoListItemFilePath(LV.Items[I],S));
+          If I<J then St1.Add(GetImageListItemFilePath(LV.Items[I],S));
+          If I>J then St2.Add(GetImageListItemFilePath(LV.Items[I],S));
         end;
         If J<0 then begin
           If St2.Count>0 then begin S:=St2[0]; St2.Delete(0); end else S:='';
         end else begin
-          S:=GetExoListItemFilePath(LV.Items[J],S);
+          S:=GetImageListItemFilePath(LV.Items[J],S);
         end;
         ShowNonModalImageDialog(self,S,St1,St2);
       finally
         St1.Free;
         St2.Free;
+      end;
+    end;
+  end;
+
+  { Preview only on left-click / keyboard select — not right-click (context menu). }
+  if Selected and PrgSetup.ShowScreenshotPane and Assigned(ScreenshotsCache) and (Item<>nil)
+     and ((GetKeyState(VK_RBUTTON) and $8000)=0) then begin
+    S:='';
+    if (ListView.Selected<>nil) and (ListView.Selected.Data<>nil) then begin
+      S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
+      if S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
+    end;
+    S:=GetImageListItemFilePath(Item,S);
+    if (S<>'') and FileExists(S) then begin
+      Thumb:=ScreenshotsCache.GetThumbnailNoCache(S,ScreenshotPaneFixedWidth,ScreenshotPaneFixedHeight);
+      if Thumb<>nil then
+      try
+        EnsureScreenshotPaneForm;
+        ScreenshotPaneForm.SetBitmap(Thumb);
+      finally
+        Thumb.Free;
       end;
     end;
   end;
@@ -4187,10 +4320,6 @@ begin
     DocListViewDblClick(Self);
 end;
 
-procedure TDFendReloadedMainForm.DocListViewSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
-begin
-end;
-
 procedure TDFendReloadedMainForm.ScreenshotListViewKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 Var ExtrasMode : Boolean;
 begin
@@ -4252,18 +4381,18 @@ begin
           If (ListView.Selected=nil) or (ListView.Selected.Data=nil) then exit;
           S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
           If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
-          T:=GetExoListItemFilePath(LV.Selected,S);
+          T:=GetImageListItemFilePath(LV.Selected,S);
           If T='' then exit;
           St1:=TStringList.Create;
           St2:=TStringList.Create;
           try
             For I:=0 to LV.Items.Count-1 do begin
-              If I<LV.Selected.Index then St1.Add(GetExoListItemFilePath(LV.Items[I],S));
-              If I>LV.Selected.Index then St2.Add(GetExoListItemFilePath(LV.Items[I],S));
+              If I<LV.Selected.Index then St1.Add(GetImageListItemFilePath(LV.Items[I],S));
+              If I>LV.Selected.Index then St2.Add(GetImageListItemFilePath(LV.Items[I],S));
             end;
             If PrgSetup.NonModalViewer
-              then ShowNonModalImageDialog(self,T,St1,St2)
-              else ShowImageDialog(self,T,St1,St2);
+              then ShowNonModalImageDialog(self,T,St1,St2,ListView.Selected.Data)
+              else ShowImageDialog(self,T,St1,St2,ListView.Selected.Data);
           finally
             St1.Free;
             St2.Free;
@@ -4276,7 +4405,7 @@ begin
           If (ListView.Selected=nil) or (ListView.Selected.Data=nil) then exit;
           S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
           If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
-          T:=GetExoListItemFilePath(LV.Selected,S);
+          T:=GetImageListItemFilePath(LV.Selected,S);
           If T='' then exit;
           P:=LoadImageFromFile(T);
           try
@@ -4289,7 +4418,7 @@ begin
           If (ListView.Selected=nil) or (ListView.Selected.Data=nil) then exit;
           S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
           If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
-          T:=GetExoListItemFilePath(LV.Selected,S);
+          T:=GetImageListItemFilePath(LV.Selected,S);
           If T='' then exit;
           ScreenshotSaveDialog.FileName:='';
           ScreenshotSaveDialog.Title:=LanguageSetup.ViewImageFormSaveTitle;
@@ -4343,7 +4472,7 @@ begin
           If (ListView.Selected=nil) or (ListView.Selected.Data=nil) then exit;
           S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
           If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
-          T:=GetExoListItemFilePath(LV.Selected,S);
+          T:=GetImageListItemFilePath(LV.Selected,S);
           If T='' then exit;
           If not ShowWallpaperStyleDialog(self,WPStype) then exit;
           SetDesktopWallpaper(T,WPStype);
@@ -4370,21 +4499,11 @@ begin
             ScreenshotListViewSelectItem(LV,LV.Selected,LV.Selected<>nil);
           end;
         end;
-    9 : begin
-          If ExtrasMode then exit;
-          If (LV.Selected<>nil) and (ListView.Selected<>nil) then begin
-            S:=LV.Selected.Caption;
-            If Trim(ExtUpperCase(S))=Trim(ExtUpperCase(TGame(ListView.Selected.Data).ScreenshotListScreenshot))
-            then TGame(ListView.Selected.Data).ScreenshotListScreenshot:=''
-            else TGame(ListView.Selected.Data).ScreenshotListScreenshot:=S;
-            TreeViewChange(Sender,TreeView.Selected);
-          end;
-        end;
     10: If LV.Selected<>nil then begin
           If (ListView.Selected=nil) or (ListView.Selected.Data=nil) then exit;
           S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
           If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
-          T:=GetExoListItemFilePath(LV.Selected,S);
+          T:=GetImageListItemFilePath(LV.Selected,S);
           If T='' then exit;
           S:=Trim(ExtUpperCase(PrgSetup.ImageViewer));
           If (S<>'') and (S<>'INTERNAL') then begin
@@ -4394,6 +4513,19 @@ begin
             exit;
           end;
           ShellExecute(Handle,'open',PChar('"'+T+'"'),nil,nil,SW_SHOW);
+        end;
+    12: If LV.Selected<>nil then begin
+          If (ListView.Selected=nil) or (ListView.Selected.Data=nil) then exit;
+          G:=TGame(ListView.Selected.Data);
+          S:=Trim(G.CaptureFolder);
+          If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
+          T:=GetImageListItemFilePath(LV.Selected,S);
+          If T='' then exit;
+          G.SelectedTitleImage:=MakeRelPath(T,PrgSetup.BaseDir);
+          G.StoreAllValues;
+          If PrgSetup.ShowScreenshotPane then UpdateScreenshotPaneImage;
+          { List screenshot-mode icons use SelectedTitleImage; refresh when visible. }
+          If MenuViewsScreenshots.Checked then TreeViewChange(Sender,TreeView.Selected);
         end;
     11: If (not ExtrasMode) and (ListView.Selected<>nil) then
           If RenameMediaFiles(self,TGame(ListView.Selected.Data),GameDB,rfScreenshots) then TreeViewChange(Sender,TreeView.Selected);
@@ -4423,7 +4555,7 @@ begin
           end;
           S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
           If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
-          T:=GetExoListItemFilePath(SoundListView.Selected,S);
+          T:=GetImageListItemFilePath(SoundListView.Selected,S);
           LogInfo('SoundMenuWork Open: path="'+T+'" captureDir="'+S+
             '" subItems='+IntToStr(SoundListView.Selected.SubItems.Count)+
             ' exists='+BoolToStr((T<>'') and FileExists(T),True)+
@@ -4436,8 +4568,8 @@ begin
           St2:=TStringList.Create;
           try
             For I:=0 to SoundListView.Items.Count-1 do begin
-              If (I<SoundListView.Selected.Index) then St1.Add(GetExoListItemFilePath(SoundListView.Items[I],S));
-              If (I>SoundListView.Selected.Index) then St2.Add(GetExoListItemFilePath(SoundListView.Items[I],S));
+              If (I<SoundListView.Selected.Index) then St1.Add(GetImageListItemFilePath(SoundListView.Items[I],S));
+              If (I>SoundListView.Selected.Index) then St2.Add(GetImageListItemFilePath(SoundListView.Items[I],S));
             end;
             LogInfo('SoundMenuWork Open: calling PlaySoundDialog');
             PlaySoundDialog(self,T,St1,St2);
@@ -4453,7 +4585,7 @@ begin
     2 : If SoundListView.Selected<>nil then begin
           S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
           If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
-          T:=GetExoListItemFilePath(SoundListView.Selected,S);
+          T:=GetImageListItemFilePath(SoundListView.Selected,S);
           If T='' then exit;
           S:=T;
           T:=Trim(ExtUpperCase(PrgSetup.SoundPlayer));
@@ -4607,7 +4739,6 @@ Var S,T : String;
     G : TGame;
     I : Integer;
     SaveDialog : TSaveDialog;
-    St1,St2 : TStringList;
 begin
   Case (Sender as TComponent).Tag of
     0 : begin
@@ -4615,20 +4746,10 @@ begin
           If (ListView.Selected=nil) or (ListView.Selected.Data=nil) then exit;
           S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
           If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
-          T:=GetExoListItemFilePath(VideoListView.Selected,S);
+          T:=GetImageListItemFilePath(VideoListView.Selected,S);
           If (T='') or (not FileExists(T)) then exit;
-          St1:=TStringList.Create;
-          St2:=TStringList.Create;
-          try
-            For I:=0 to VideoListView.Items.Count-1 do begin
-              If I<VideoListView.Selected.Index then St1.Add(GetExoListItemFilePath(VideoListView.Items[I],S));
-              If I>VideoListView.Selected.Index then St2.Add(GetExoListItemFilePath(VideoListView.Items[I],S));
-            end;
-            PlayVideoDialog(self,T,St1,St2);
-          finally
-            St1.Free;
-            St2.Free;
-          end;
+          If not OpenMediaFile(PrgSetup.VideoPlayer,T) then
+            ShellExecute(Handle,'open',PChar(T),nil,PChar(ExtractFilePath(T)),SW_SHOW);
           { Opening a video must not refresh the profile / media lists
             (that restarts ambient soundtrack via UpdateProfileMediaTabs). }
         end;
@@ -4637,9 +4758,10 @@ begin
           If (ListView.Selected=nil) or (ListView.Selected.Data=nil) then exit;
           S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
           If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
-          T:=GetExoListItemFilePath(VideoListView.Selected,S);
+          T:=GetImageListItemFilePath(VideoListView.Selected,S);
           If (T='') or (not FileExists(T)) then exit;
-          PlayVideoDialog(self,T,nil,nil);
+          If not OpenMediaFile(PrgSetup.VideoPlayer,T) then
+            ShellExecute(Handle,'open',PChar(T),nil,PChar(ExtractFilePath(T)),SW_SHOW);
         end;
     3 : If VideoListView.Selected<>nil then begin
           S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
@@ -4854,6 +4976,14 @@ begin
   If Assigned(VideoListView) then VideoListView.Arrange(arAlignLeft);
 end;
 
+Procedure TDFendReloadedMainForm.PostTitleImageChanged(var Msg : TMessage);
+begin
+  { From image viewer "As title image" — refresh pane without circular unit uses. }
+  if PrgSetup.ShowScreenshotPane then UpdateScreenshotPaneImage;
+  { Screenshot-mode list icons use SelectedTitleImage. }
+  if MenuViewsScreenshots.Checked then TreeViewChange(Self,TreeView.Selected);
+end;
+
 procedure TDFendReloadedMainForm.FormResize(Sender: TObject);
 begin
   If JustStarted then exit;
@@ -4867,13 +4997,17 @@ begin
   SaveMaximizedState:=(WindowState=wsMaximized);
 
   If (ListView<>nil) and (ListView.ViewStyle=vsSmallIcon) then ListView.Arrange(arDefault);
+  if (ScreenshotPaneForm<>nil) and ScreenshotPaneForm.Visible then
+    BringScreenshotPaneWithMain;
 end;
 
 procedure TDFendReloadedMainForm.ApplicationEventsMinimize(Sender: TObject);
 begin
+  { Pane is a separate HWND; hide whenever the app minimizes or goes to tray. }
+  if ScreenshotPaneForm<>nil then ScreenshotPaneForm.Hide;
   If PrgSetup.MinimizeToTray then begin
     TrayIcon.Visible:=True;
-    If Assigned(QuickStartForm) then QuickStartForm.Visible:=False;    
+    If Assigned(QuickStartForm) then QuickStartForm.Visible:=False;
     Visible:=False;
   end;
 
@@ -4893,6 +5027,14 @@ begin
   end else begin
     if (not SaveMaximizedState) and (WindowState<>wsMaximized) then BoundsRect:=SaveBoundsRect;
   end;
+  BringScreenshotPaneWithMain;
+end;
+
+procedure TDFendReloadedMainForm.ApplicationEventsActivate(Sender: TObject);
+begin
+  { Taskbar click / alt-tab back into the app — pane is a separate HWND and
+    does not automatically rejoin the main window's Z-order without this. }
+  BringScreenshotPaneWithMain;
 end;
 
 procedure TDFendReloadedMainForm.TrayIconDblClick(Sender: TObject);
@@ -5311,6 +5453,8 @@ begin
   LastTop:=Top;
   LastLeft:=Left;
   FormResize(self);
+  if (ScreenshotPaneForm<>nil) and ScreenshotPaneForm.Visible then
+    BringScreenshotPaneWithMain;
 end;
 
 procedure TDFendReloadedMainForm.ZipInfoNotify(Sender: TObject);
@@ -5325,7 +5469,14 @@ end;
 
 procedure TDFendReloadedMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  FMainClosing:=True;
+  CloseScreenshotPaneEarly;
   If Action=caHide then HTMLhelpRouter.Free;
+end;
+
+procedure TDFendReloadedMainForm.FormActivate(Sender: TObject);
+begin
+  BringScreenshotPaneWithMain;
 end;
 
 procedure TDFendReloadedMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);

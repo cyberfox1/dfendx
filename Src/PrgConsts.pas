@@ -19,7 +19,21 @@ type
     mliVideo = 38
   );
 
+  { Application log verbosity (PrgSetup.LogLevel / [ProgramSets] LogLevel). }
+  TLogLevel = (
+    llOff = 0,
+    llInfo = 1,
+    llWarning = 2,
+    llCritical = 3
+  );
+
 const
+  { INI string values for TLogLevel / PrgSetup.LogLevel. }
+  LogLevelOff = 'OFF';
+  LogLevelInfo = 'INFO';
+  LogLevelWarning = 'WARNING';
+  LogLevelCritical = 'CRITICAL';
+
   DosBoxKindStandard = 'standard';
   DosBoxKindX        = 'x';
   DosBoxKindStaging  = 'staging';

@@ -36,8 +36,6 @@ type
     ListOpenInDefaultViewer: TMenuItem;
     TreeCreateFolder: TMenuItem;
     ListCreateFolder: TMenuItem;
-    N1: TMenuItem;
-    ListUseInScreenshotList: TMenuItem;
     procedure SetupDataDirButtonClick(Sender: TObject);
     procedure ButtonWork(Sender: TObject);
     procedure TreeChange(Sender: TObject; Node: TTreeNode);
@@ -75,7 +73,7 @@ type
 implementation
 
 uses ShellAPI, VistaToolsUnit, LanguageSetupUnit, CommonHelpers, CommonTools, PrgSetupUnit,
-     ViewImageFormUnit, PlaySoundFormUnit, PlayVideoFormUnit, GameDBToolsUnit,
+     ViewImageFormUnit, PlaySoundFormUnit, GameDBToolsUnit,
      ClassExtensions, IconLoaderUnit;
 
 {$R *.dfm}
@@ -144,7 +142,6 @@ begin
   ListRename.Caption:=LanguageSetup.ViewDataFilesRename;
   ListDelete.Caption:=LanguageSetup.ViewDataFilesDelete;
   ListExplorer.Caption:=LanguageSetup.ViewDataFilesOpen;
-  ListUseInScreenshotList.Caption:=LanguageSetup.ScreenshotPopupUseInScreenshotList;
 
   UserIconLoader.DialogImage(DI_Folder,ImageList,0);
   UserIconLoader.DialogImage(DI_SelectFolder,ImageList,1);
@@ -419,16 +416,6 @@ begin
     ListOpenInDefaultViewer.Visible:=(T='') or (T='INTERNAL');
   end;
 
-  If OpenFileButton.Enabled then begin
-    S:=ExtUpperCase(ExtractFileExt(List.Selected.Caption));
-    ListUseInScreenshotList.Visible:=(S='.JPG') or (S='.JPEG') or (S='.BMP') or (S='.PNG') or (S='.GIF');
-    If ListUseInScreenshotList.Visible then begin
-      S:=GetCurrentPath+List.Selected.Caption;
-      ListUseInScreenshotList.Checked:=((Trim(ExtUpperCase(S))=Trim(ExtUpperCase(MakeAbsPath(Game.ScreenshotListScreenshot,PrgSetup.BaseDir)))));
-    end;
-  end else begin
-    ListUseInScreenshotList.Visible:=False;
-  end;
 end;
 
 procedure TViewFilesFrame.ListDblClick(Sender: TObject);
@@ -458,8 +445,7 @@ begin
     If (not ForceExternalViewer) or ((T<>'') and (T<>'INTERNAL')) then begin PlaySoundDialog(Owner,S+List.Selected.Caption,nil,nil); exit; end;
   end;
   If (T='.AVI') or (T='.MPG') or (T='.MPEG') or (T='.WMV') or (T='.ASF') then begin
-    T:=Trim(ExtUpperCase(PrgSetup.VideoPlayer));
-    If (not ForceExternalViewer) or ((T<>'') and (T<>'INTERNAL')) then begin PlayVideoDialog(Owner,S+List.Selected.Caption,nil,nil); exit; end;
+    If OpenMediaFile(PrgSetup.VideoPlayer,S+List.Selected.Caption) then exit;
   end;
   If (T='.TXT') or (T='.NFO') or (T='.DIZ') or (T='.1ST') or (T='.INI') then begin
     OpenFileInEditor(S+List.Selected.Caption);
@@ -552,13 +538,6 @@ begin
            ButtonWork(UpdateButton);
          end;
     34 : RunFile(True);
-    35 : If List.Selected<>nil then begin
-          S:=GetCurrentPath+List.Selected.Caption;
-          If Trim(ExtUpperCase(S))=Trim(ExtUpperCase(MakeAbsPath(Game.ScreenshotListScreenshot,PrgSetup.BaseDir)))
-            then Game.ScreenshotListScreenshot:=''
-            else Game.ScreenshotListScreenshot:=MakeRelPath(S,PrgSetup.BaseDir);
-          If Assigned(FOnUpdateGamesList) then FOnUpdateGamesList(self);
-        end;
   end;
 end;
 

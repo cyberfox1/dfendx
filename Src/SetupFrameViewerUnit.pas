@@ -98,12 +98,12 @@ begin
     end;
   end;
 
+  { No in-process video player: INTERNAL/empty use shell default. }
+  VideosRadioButton1.Visible:=False;
   S:=Trim(ExtUpperCase(PrgSetup.VideoPlayer));
-  If (S='INTERNAL') or (S='') then VideosRadioButton1.Checked:=True else begin
-    If S='DEFAULT' then VideosRadioButton2.Checked:=True else begin
-      VideosRadioButton3.Checked:=True;
-      VideosEdit.Text:=MakeRelPath(PrgSetup.VideoPlayer,PrgSetup.BaseDir);
-    end;
+  If (S='INTERNAL') or (S='') or (S='DEFAULT') then VideosRadioButton2.Checked:=True else begin
+    VideosRadioButton3.Checked:=True;
+    VideosEdit.Text:=MakeRelPath(PrgSetup.VideoPlayer,PrgSetup.BaseDir);
   end;
 
   UserIconLoader.DialogImage(DI_SelectFile,ImagesButton);
@@ -161,7 +161,7 @@ begin
   SoundsEdit.Text:='';
   SoundsRadioButton1.Checked:=True;
   VideosEdit.Text:='';
-  VideosRadioButton1.Checked:=True;
+  VideosRadioButton2.Checked:=True;
 end;
 
 procedure TSetupFrameViewer.SaveSetup;
@@ -175,7 +175,6 @@ begin
   If SoundsRadioButton2.Checked then PrgSetup.SoundPlayer:='Default';
   If SoundsRadioButton3.Checked then PrgSetup.SoundPlayer:=MakeRelPath(SoundsEdit.Text,PrgSetup.BaseDir);
 
-  If VideosRadioButton1.Checked then PrgSetup.VideoPlayer:='Internal';
   If VideosRadioButton2.Checked then PrgSetup.VideoPlayer:='Default';
   If VideosRadioButton3.Checked then PrgSetup.VideoPlayer:=MakeRelPath(VideosEdit.Text,PrgSetup.BaseDir);
 end;

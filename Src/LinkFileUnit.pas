@@ -335,24 +335,11 @@ end;
 { global }
 
 Procedure OpenLink(const Link, GameNamePlaceHolder, RealGameName : String);
-Var S,T,U : String;
-    I : Integer;
+Var S : String;
 begin
-  S:=ExtUpperCase(Link);
-  T:=ExtUpperCase(GameNamePlaceHolder);
-  I:=Pos(T,S);
-  If I=0 then exit;
-
-  S:=Copy(Link,1,I-1);
-  T:=Copy(Link,I+length(GameNamePlaceHolder),MaxInt);
-
-  For I:=1 to length(RealGameName) do begin
-    If Pos(RealGameName[I],'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890')<>0
-      then U:=U+RealGameName[I]
-      else U:=U+'%'+IntToHex(Ord(RealGameName[I]),2);
-  end;
-
-  ShellExecute(Application.MainForm.Handle,'open',PChar(S+U+T),nil,nil,SW_SHOW);
+  S := ResolveGameLinkURL(Link, GameNamePlaceHolder, RealGameName);
+  If S = '' then exit;
+  ShellExecute(Application.MainForm.Handle,'open',PChar(S),nil,nil,SW_SHOW);
 end;
 
 end.

@@ -12,9 +12,6 @@ type
     HeightLabel: TLabel;
     WidthEdit: TSpinEdit;
     HeightEdit: TSpinEdit;
-    UseFirstScreenshotCheckBox: TCheckBox;
-    UseFirstScreenshotEdit: TSpinEdit;
-    UseFirstScreenshotLabel: TLabel;
   private
     { Private-Deklarationen }
   public
@@ -32,7 +29,7 @@ type
 
 implementation
 
-uses Math, LanguageSetupUnit, VistaToolsUnit, PrgSetupUnit, CommonTools, HelpConsts;
+uses LanguageSetupUnit, VistaToolsUnit, PrgSetupUnit, CommonTools, HelpConsts;
 
 {$R *.dfm}
 
@@ -47,12 +44,9 @@ procedure TSetupFrameGamesListScreenshotModeAppearance.InitGUIAndLoadSetup(var I
 begin
   NoFlicker(WidthEdit);
   NoFlicker(HeightEdit);
-  NoFlicker(UseFirstScreenshotCheckBox);
 
   WidthEdit.Value:=PrgSetup.ScreenshotListViewWidth;
   HeightEdit.Value:=PrgSetup.ScreenshotListViewHeight;
-  UseFirstScreenshotCheckBox.Checked:=PrgSetup.ScreenshotListUseFirstScreenshot;
-  UseFirstScreenshotEdit.Value:=Max(1,Min(99,PrgSetup.ScreenshotListUseFirstScreenshotNr));
 end;
 
 procedure TSetupFrameGamesListScreenshotModeAppearance.BeforeChangeLanguage;
@@ -63,8 +57,6 @@ procedure TSetupFrameGamesListScreenshotModeAppearance.LoadLanguage;
 begin
   WidthLabel.Caption:=LanguageSetup.ScreenshotListViewWidth;
   HeightLabel.Caption:=LanguageSetup.ScreenshotListViewHeight;
-  UseFirstScreenshotCheckBox.Caption:=LanguageSetup.ScreenshotListViewUseFirstScreenshot;
-  UseFirstScreenshotLabel.Caption:=LanguageSetup.ScreenshotListViewUseFirstScreenshotInfo;
 
   HelpContext:=ID_FileOptionsListInScreenshotMode;
 end;
@@ -85,16 +77,12 @@ procedure TSetupFrameGamesListScreenshotModeAppearance.RestoreDefaults;
 begin
   WidthEdit.Value:=150;
   HeightEdit.Value:=100;
-  UseFirstScreenshotCheckBox.Checked:=True;
-  UseFirstScreenshotEdit.Value:=1;
 end;
 
 procedure TSetupFrameGamesListScreenshotModeAppearance.SaveSetup;
 begin
   PrgSetup.ScreenshotListViewWidth:=WidthEdit.Value;
   PrgSetup.ScreenshotListViewHeight:=HeightEdit.Value;
-  PrgSetup.ScreenshotListUseFirstScreenshot:=UseFirstScreenshotCheckBox.Checked;
-  PrgSetup.ScreenshotListUseFirstScreenshotNr:=UseFirstScreenshotEdit.Value;
 end;
 
 end.

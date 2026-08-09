@@ -1,4 +1,5 @@
-* Working metadata update URL
-* MT32 support
+* DosBOXPure Unleashed support
+* Restore program update checking
+- 7zip dll version upgrade
 - 64-bit build
 ? WinXP support

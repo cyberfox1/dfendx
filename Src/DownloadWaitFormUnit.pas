@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ComCtrls, StdCtrls, Buttons, IdHTTP, IdComponent, IdFTP;
+  Dialogs, ComCtrls, StdCtrls, Buttons;
 
 type
   TDownloadWaitForm = class(TForm)
@@ -15,12 +15,10 @@ type
   private
     { Private-Deklarationen }
     FWorkEvent1WorkSize : Int64;
-    Procedure WorkEvent(ASender: TObject; AWorkMode: TWorkMode; AWorkCount: Int64);
+    Procedure ApplyByteProgress(const AWorkCount: Int64);
   public
     { Public-Deklarationen }
     Canceled : Boolean;
-    HTTP : TIdHTTP;
-    FTP : TIdFTP;
   end;
 
 var
@@ -38,9 +36,9 @@ Function MetaLinkDownload(const AOwner : TComponent; const ASize : Integer; cons
 
 implementation
 
-uses XMLDoc, XMLIntf, IdCookie, IdCookieManager, Math,
+uses XMLDoc, XMLIntf, Math,
      CommonHelpers, CommonTools, VistaToolsUnit, LanguageSetupUnit, PackageDBToolsUnit,
-     PrgConsts, GameDBToolsUnit, GameDBToolsHelpers, HTTPDownloadHelpers;
+     PrgConsts, PrgSetupUnit, GameDBToolsUnit, GameDBToolsHelpers, HTTPDownloadHelpers;
 
 {$R *.dfm}
 
@@ -52,8 +50,6 @@ begin
   Font.Charset:=CharsetNameToFontCharSet(LanguageSetup.CharsetName);
 
   Canceled:=False;
-  HTTP:=nil;
-  FTP:=nil;
   FWorkEvent1WorkSize:=0;
 
   AbortButton.DoubleBuffered:=True;
@@ -66,8 +62,9 @@ begin
   AbortButton.Enabled:=False;
 end;
 
-procedure TDownloadWaitForm.WorkEvent(ASender: TObject; AWorkMode: TWorkMode; AWorkCount: Int64);
+procedure TDownloadWaitForm.ApplyByteProgress(const AWorkCount: Int64);
 begin
+  { UI only. Cancel is Canceled + helper OnCancelQuery (no Indy Disconnect/Abort). }
   ProgressBar.Position:=AWorkCount;
   If DownloadWaitForm.ProgressBar.Max>1 then begin
     If FWorkEvent1WorkSize>100000000 then begin
@@ -83,10 +80,6 @@ begin
   Invalidate;
   Paint;
   Application.ProcessMessages;
-
-  If Canceled then begin
-    If Assigned(FTP) then FTP.Abort else begin If Assigned(HTTP) then HTTP.Disconnect; end;
-  end;
 end;
 
 { global }
@@ -173,7 +166,7 @@ begin
       else DownloadWaitForm.ProgressBar.Max:=FProgressTotal;
     DownloadWaitForm.FWorkEvent1WorkSize:=FProgressTotal;
   end;
-  DownloadWaitForm.WorkEvent(nil,wmRead,FProgressCurrent);
+  DownloadWaitForm.ApplyByteProgress(FProgressCurrent);
 end;
 
 Function THTTPThread.HelperCancelQuery : Boolean;
@@ -184,7 +177,7 @@ end;
 Procedure THTTPThread.Execute;
 Var Helper : THTTPDownloadHelper;
 begin
-  Helper:=THTTPDownloadHelper.Create(FURL,FReferer,FDestFile,FSize);
+  Helper:=THTTPDownloadHelper.Create(FURL,FReferer,FDestFile,PrgSetup.HTTPUserAgent,FSize);
   try
     Helper.OnProgress:=HelperProgress;
     Helper.OnCancelQuery:=HelperCancelQuery;

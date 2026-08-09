@@ -1,10 +1,11 @@
 @echo off
 REM Sources:  Install\IconSources\
 REM Built:    IconSets\  (runtime + embed inputs)
-REM           root *.res  (linked by DFend.dpr)
-REM RC files: repo root
+REM           Src\*.res  (linked by Src\DFend.dpr)
+REM RC files: Src\  (paths ..\IconSets\...)
 setlocal EnableExtensions
 cd /d "%~dp0.."
+set "REPO=%CD%"
 
 set "RC=C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rc.exe"
 if not exist "%RC%" goto :no_rc
@@ -16,6 +17,10 @@ exit /b 1
 
 if not exist "Install\IconSources" (
   echo ERROR: missing Install\IconSources
+  exit /b 1
+)
+if not exist "Src\icon_assets.rc" (
+  echo ERROR: missing Src\icon_assets.rc
   exit /b 1
 )
 
@@ -43,7 +48,8 @@ if exist "Install\IconSources\Media\*" copy /y "Install\IconSources\Media\*" "Ic
 REM App icon
 if exist "Install\IconSources\DFend_Icon.ico" copy /y "Install\IconSources\DFend_Icon.ico" "IconSets\App\DFend_Icon.ico" >nul
 
-echo === Compile resources -^> root *.res ===
+echo === Compile resources -^> Src\*.res ===
+cd /d "%REPO%\Src"
 "%RC%" /fo icon_assets.res icon_assets.rc
 if errorlevel 1 exit /b 1
 "%RC%" /fo DFend_icon.res DFend_icon.rc
@@ -51,5 +57,5 @@ if errorlevel 1 exit /b 1
 "%RC%" /fo toobig_thumb.res toobig_thumb.rc
 if errorlevel 1 exit /b 1
 
-for %%A in (icon_assets.res DFend_icon.res toobig_thumb.res) do echo OK: %%~nxA %%~zA bytes
+for %%A in (icon_assets.res DFend_icon.res toobig_thumb.res) do echo OK: Src\%%~nxA %%~zA bytes
 exit /b 0

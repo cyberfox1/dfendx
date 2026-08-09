@@ -99,7 +99,7 @@ type
     Procedure ApplyFrameSkipControls;
     { Fill render combo from ConfOpt for current kind, then select PreferredValue. }
     Procedure ApplyRenderList(const PreferredValue : String = '');
-    { X only: PC-98 / DOS/V entries; PreferredValue re-selected after list update. }
+    { X only: PC-98 / DOS/V / Olivetti / 3270PC entries; PreferredValue re-selected after list update. }
     Procedure ApplyXMachineTypesToVideoList(const PreferredValue : String = '');
     Function MapKeyToDisplay(const Key : String) : String;
     Function DisplayToMapKey(const Display : String) : String;
@@ -612,15 +612,17 @@ begin
     If Pos('(',Want)>0 then Want:=Trim(Copy(Want,1,Pos('(',Want)-1));
   end;
   SelTok:=Trim(ExtUpperCase(Want));
+  { X-only machine tokens (also in DefaultValuesVideo). Strip then re-append so
+    order is always classic list, then PC98, DOS/V, olivetti, pc3270. }
+  RemoveVideoListMachineToken(VideoCardComboBox.Items,'PC98');
+  RemoveVideoListMachineToken(VideoCardComboBox.Items,'DOS/V');
+  RemoveVideoListMachineToken(VideoCardComboBox.Items,'olivetti');
+  RemoveVideoListMachineToken(VideoCardComboBox.Items,'pc3270');
   If Kind=dbkX then begin
-    { Agreed list labels: PC98 and DOS/V (stored token is text before paren, or full). }
-    If not VideoListHasMachineToken(VideoCardComboBox.Items,'PC98') then
-      VideoCardComboBox.Items.Add('PC98');
-    If not VideoListHasMachineToken(VideoCardComboBox.Items,'DOS/V') then
-      VideoCardComboBox.Items.Add('DOS/V');
-  end else begin
-    RemoveVideoListMachineToken(VideoCardComboBox.Items,'PC98');
-    RemoveVideoListMachineToken(VideoCardComboBox.Items,'DOS/V');
+    VideoCardComboBox.Items.Add('PC98');
+    VideoCardComboBox.Items.Add('DOS/V');
+    VideoCardComboBox.Items.Add('olivetti (Olivetti M24 / AT&T 6300)');
+    VideoCardComboBox.Items.Add('pc3270 (IBM 3270 PC)');
   end;
   { List first, then match profile / preferred token. }
   VideoCardComboBox.ItemIndex:=-1;

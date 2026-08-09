@@ -9,7 +9,7 @@ LangString LANGNAME_NeedAdminRightsUpdate ${LANG_SPANISH} "El programa de instal
 LangString LANGNAME_WelcomeText ${LANG_SPANISH} "Este asistente le guiará durante el proceso de instalación de ${PrgName}.\r\n\r\nDFendX es un programa de código abierto y está desarrollado bajo la licencia GPL 3. (Se puede leer la licencia haciendo clic sobre Ayuda|Acerca de en el programa.) DFendX comes without any guarantee or warranty.\r\n\r\nHaga clic en $\"Siguiente$\" para continuar." ; EXTENDED
 LangString LANGNAME_WelcomeTextUpdate ${LANG_SPANISH} "Este asistente le guiará durante la actualización de ${PrgName}.\r\n\r\n¡Este proceso requiere una instalación anterior de DFendX!\r\n\r\nHaga clic en $\"Siguiente$\" para continuar."
 LangString LANGNAME_Next ${LANG_SPANISH} "Siguiente"
-LicenseLangString LANGNAME_License ${LANG_SPANISH} "..\Bin\License.txt"
+LicenseLangString LANGNAME_License ${LANG_SPANISH} "..\LICENSE"
 LangString LANGNAME_LICENSE_TITLE ${LANG_SPANISH} "Información"
 LangString LANGNAME_LICENSE_SUBTITLE ${LANG_SPANISH} "Información adicional sobre ${PrgName}"
 LangString LANGNAME_LICENSE_TOP ${LANG_SPANISH} "Por favor, lea la siguiente información antes de continuar:"
@@ -30,24 +30,17 @@ LangString LANGNAME_ConfirmDelUserData ${LANG_SPANISH} "¿También desea elimina
 LangString LANGNAME_ConfirmDelPrgDir ${LANG_SPANISH} "Hay archivos que no han sido creados por DFendX en la carpeta de destino. ¿Desea borrar la carpeta $INSTDIR igualmente?"
 
 LangString LANGNAME_NoInstallationFound ${LANG_SPANISH} "No existe en esta carpeta ninguna instalación previa de DFendX que pueda ser actualizada."
-LangString LANGNAME_NotDFendXInstallation ${LANG_SPANISH} "This folder is not a DFendX installation. Need DFend.dat, DFend.exe, Bin\dfxvalidator.exe, and a DFendX File Description on DFend.exe."
+LangString LANGNAME_NotDFendXInstallation ${LANG_SPANISH} "No es una instalación válida de DFendX."
+LangString LANGNAME_InstalledVersionNewer ${LANG_SPANISH} "Ya hay instalada una versión más reciente de DFendX ($R8). Esta actualización es para la versión ${VER_MAYOR}.${VER_MINOR1}.${VER_MINOR2} y no se puede usar para bajar de versión."
 
-LangString LANGNAME_Tools ${LANG_SPANISH} "Herramientas"
-LangString LANGNAME_FreeDosTools ${LANG_SPANISH} "Herramientas de FreeDOS para usar con DosBox"
-LangString LANGNAME_Doszip ${LANG_SPANISH} "Doszip Commander"
 LangString LANGNAME_DesktopShortcut ${LANG_SPANISH} "Acceso directo en el escritorio"
 
 LangString LANGNAME_InstallDFendReloaded ${LANG_SPANISH} "Instalando componentes principales de DFendX"
 LangString LANGNAME_InstallStartMenu ${LANG_SPANISH} "Creando enlaces en el menú Inicio"
-LangString LANGNAME_InstallFreeDOS ${LANG_SPANISH} "Instalando FreeDOS"
-LangString LANGNAME_InstallDOSZip ${LANG_SPANISH} "Instalando DOSZip Commander"
 LangString LANGNAME_InstallDesktopShortcut ${LANG_SPANISH} "Creando un acceso directo en el escritorio"
 
 LangString LANGNAME_UpdateDFendReloaded ${LANG_SPANISH} "Actualizando componentes principales de DFendX"
 LangString LANGNAME_UpdateUninstaller ${LANG_SPANISH} "Actualizando programa de desinstalación"
 
 LangString DESC_DFend ${LANG_SPANISH} "DFendX es una interfaz gráfica para gestionar juegos de MS-DOS."
-LangString DESC_Tools ${LANG_SPANISH} "Herramientas para usar con DOSBox."
-LangString DESC_FreeDosTools ${LANG_SPANISH} "Herramientas del proyecto FreeDOS para usar con DOSBox."
-LangString DESC_Doszip ${LANG_SPANISH} "Doszip Commander es un clon de Norton Commander para usar con DOSBox."
 LangString DESC_DesktopShortcut ${LANG_SPANISH} "Crea un acceso directo en el escritorio para DFendX."

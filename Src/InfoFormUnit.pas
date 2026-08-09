@@ -274,7 +274,7 @@ Var S : String;
 begin
   try LicenseMemo.Lines.Clear; except end;
   Case Integer(LicenseComboBox.Items.Objects[LicenseComboBox.ItemIndex]) of
-    0 : If FileExists(PrgDir+BinFolder+'\'+'License.txt') then S:=PrgDir+BinFolder+'\'+'License.txt' else S:=PrgDir+'License.txt';
+    0 : S:=PrgDir+'LICENSE';
     1 : begin
           S:=IncludeTrailingPathDelimiter(PrgSetup.DOSBoxSettings[0].DosBoxDir)+'Documentation\COPYING.txt';
           if not FileExists(S) then S:=IncludeTrailingPathDelimiter(PrgSetup.DOSBoxSettings[0].DosBoxDir)+'COPYING.txt';
@@ -293,9 +293,7 @@ Var S : String;
 begin
   try ChangeLogMemo.Lines.Clear; except end;
   Case Integer(ChangeLogComboBox.Items.Objects[ChangeLogComboBox.ItemIndex]) of
-    0 : If FileExists(PrgDir+BinFolder+'\'+'ChangeLog.txt')
-          then S:=PrgDir+BinFolder+'\'+'ChangeLog.txt'
-          else S:=PrgDir+'ChangeLog.txt';
+    0 : S:=PrgDir+'CHANGES';
     1 : if FileExists(IncludeTrailingPathDelimiter(PrgSetup.DOSBoxSettings[0].DosBoxDir)+'Documentation\NEWS.txt')
           then S:=IncludeTrailingPathDelimiter(PrgSetup.DOSBoxSettings[0].DosBoxDir)+'Documentation\NEWS.txt'
           else S:=IncludeTrailingPathDelimiter(PrgSetup.DOSBoxSettings[0].DosBoxDir)+'NEWS.txt';

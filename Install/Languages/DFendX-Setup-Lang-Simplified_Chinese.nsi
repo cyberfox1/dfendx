@@ -9,7 +9,7 @@ LangString LANGNAME_NeedAdminRightsUpdate ${LANG_SIMPCHINESE} "没有管理员�
 LangString LANGNAME_WelcomeText ${LANG_SIMPCHINESE} "这个向导会引导您安装 ${PrgName}。\r\n\r\nDFendX 是开源软件，遵循 GPL 3 许可证. (您可以在程序中通过点击帮助|关于来查看许可证条款。) DFendX 并不作任何保证和承诺。\r\n\r\n点击下一步继续。"
 LangString LANGNAME_WelcomeTextUpdate ${LANG_SIMPCHINESE} "这个向导会引导您更新 ${PrgName}。\r\n\r\n这个安装程序需要一个已存在的 DFendX !\r\n\r\n点击下一步继续。"
 LangString LANGNAME_Next ${LANG_SIMPCHINESE} "下一步"
-LicenseLangString LANGNAME_License ${LANG_SIMPCHINESE} "..\Bin\License.txt"
+LicenseLangString LANGNAME_License ${LANG_SIMPCHINESE} "..\LICENSE"
 LangString LANGNAME_LICENSE_TITLE ${LANG_SIMPCHINESE} "信息"
 LangString LANGNAME_LICENSE_SUBTITLE ${LANG_SIMPCHINESE} "${PrgName} 的附加信息"
 LangString LANGNAME_LICENSE_TOP ${LANG_SIMPCHINESE} "请在继续之前阅读下面的信息:"
@@ -30,24 +30,17 @@ LangString LANGNAME_ConfirmDelUserData ${LANG_SIMPCHINESE} "您想同时也删�
 LangString LANGNAME_ConfirmDelPrgDir ${LANG_SIMPCHINESE} "安装目录里有一些文件不是由 DFendX 安装程序创建的，你想不作保留并把整个安装文件夹 $INSTDIR 删除吗？"
 
 LangString LANGNAME_NoInstallationFound ${LANG_SIMPCHINESE} "所选择的文件夹中没有 DFendX 能进行更新。"
-LangString LANGNAME_NotDFendXInstallation ${LANG_SIMPCHINESE} "This folder is not a DFendX installation. Need DFend.dat, DFend.exe, Bin\dfxvalidator.exe, and a DFendX File Description on DFend.exe."
+LangString LANGNAME_NotDFendXInstallation ${LANG_SIMPCHINESE} "不是有效的 DFendX 安装。"
+LangString LANGNAME_InstalledVersionNewer ${LANG_SIMPCHINESE} "已安装更新版本的 DFendX（$R8）。此更新适用于版本 ${VER_MAYOR}.${VER_MINOR1}.${VER_MINOR2}，不能用于降级。"
 
-LangString LANGNAME_Tools ${LANG_SIMPCHINESE} "工具"
-LangString LANGNAME_FreeDosTools ${LANG_SIMPCHINESE} "DosBox 的 FreeDOS 工具"
-LangString LANGNAME_Doszip ${LANG_SIMPCHINESE} "Doszip Commander"
 LangString LANGNAME_DesktopShortcut ${LANG_SIMPCHINESE} "桌面快捷方式"
 
 LangString LANGNAME_InstallDFendReloaded ${LANG_SIMPCHINESE} "正在安装 DFendX 主要组件"
 LangString LANGNAME_InstallStartMenu ${LANG_SIMPCHINESE} "正在创建开始菜单快捷方式"
-LangString LANGNAME_InstallFreeDOS ${LANG_SIMPCHINESE} "正在安装 FreeDOS"
-LangString LANGNAME_InstallDOSZip ${LANG_SIMPCHINESE} "正在安装 DOSZip Commander"
 LangString LANGNAME_InstallDesktopShortcut ${LANG_SIMPCHINESE} "正在创建桌面快捷方式"
 
 LangString LANGNAME_UpdateDFendReloaded ${LANG_SIMPCHINESE} "正在更新 DFendX 主要组件"
 LangString LANGNAME_UpdateUninstaller ${LANG_SIMPCHINESE} "正在更新卸载程序"
 
 LangString DESC_DFend ${LANG_SIMPCHINESE} "DFendX 是有图形用户界面的管理 DOS 游戏的程序。"
-LangString DESC_Tools ${LANG_SIMPCHINESE} "在 DOSBox 下使用的工具。"
-LangString DESC_FreeDosTools ${LANG_SIMPCHINESE} "由 FreeDOS 项目收集的命令行工具,能在 DOSBox 里使用。"
-LangString DESC_Doszip ${LANG_SIMPCHINESE} "Doszip Commander 是一个 Norton Commander 克隆版本,能在 DOSBox 里使用。"
 LangString DESC_DesktopShortcut ${LANG_SIMPCHINESE} "为 DFendX 建立桌面快捷方式。"

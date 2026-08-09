@@ -4347,6 +4347,7 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
   KeyPreview = True
   Menu = MainMenu
   Position = poScreenCenter
+  OnActivate = FormActivate
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
@@ -4521,19 +4522,16 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
       object SoundtrackAutoplaySwitch: TToggleSwitch
         Left = 553
         Top = 0
-        Width = 110
+        Width = 89
         Height = 22
-        Alignment = taRightJustify
-        AutoSize = True
         ParentShowHint = False
         ShowHint = True
-        ShowStateCaption = True
+        StateCaptions.CaptionOn = 'Autop&lay'
+        StateCaptions.CaptionOff = 'Autop&lay'
         SwitchWidth = 40
         TabOrder = 1
         ThumbColor = clLimegreen
         OnClick = SoundtrackAutoplaySwitchClick
-        StateCaptions.CaptionOff = 'Autop&lay'
-        StateCaptions.CaptionOn = 'Autop&lay'
       end
     end
   end
@@ -4727,11 +4725,10 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
           Columns = <>
           ReadOnly = True
           SmallImages = DocImageList
-          ViewStyle = vsList
           TabOrder = 0
+          ViewStyle = vsList
           OnDblClick = DocListViewDblClick
           OnKeyDown = DocListViewKeyDown
-          OnSelectItem = DocListViewSelectItem
         end
       end
       object GameNotesPanel: TTabSheet
@@ -6693,6 +6690,11 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
       object MenuViewsShowTooltips: TMenuItem
         Tag = 2005
         Caption = 'Show &tooltips in games list'
+        OnClick = MenuWork
+      end
+      object MenuViewsShowScreenshotPane: TMenuItem
+        Tag = 2016
+        Caption = 'Show title image &pane'
         OnClick = MenuWork
       end
       object N12: TMenuItem
@@ -9374,6 +9376,7 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
     Top = 64
   end
   object ApplicationEvents: TApplicationEvents
+    OnActivate = ApplicationEventsActivate
     OnIdle = ApplicationEventsIdle
     OnMinimize = ApplicationEventsMinimize
     OnRestore = ApplicationEventsRestore
@@ -9395,8 +9398,6 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
     Top = 296
   end
   object DocImageList: TImageList
-    Height = 16
-    Width = 16
     Left = 248
     Top = 296
   end
@@ -9407,7 +9408,7 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
     object ScreenshotPopupOpen: TMenuItem
       Caption = '&Open...'
       Default = True
-      ImageIndex = 28
+      ImageIndex = 11
       OnClick = ScreenshotMenuWork
     end
     object ScreenshotPopupOpenExternal: TMenuItem
@@ -9486,12 +9487,10 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
       ImageIndex = 35
       OnClick = ScreenshotMenuWork
     end
-    object N29: TMenuItem
-      Caption = '-'
-    end
-    object ScreenshotPopupUseInScreenshotList: TMenuItem
-      Tag = 9
-      Caption = 'Use as screenshot in profiles list'
+    object ScreenshotPopupSetAsTitleImage: TMenuItem
+      Tag = 12
+      Caption = 'Set as &title image'
+      ImageIndex = 28
       OnClick = ScreenshotMenuWork
     end
   end

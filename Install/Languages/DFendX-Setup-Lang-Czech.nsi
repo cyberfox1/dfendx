@@ -9,7 +9,7 @@ LangString LANGNAME_NeedAdminRightsUpdate ${LANG_CZECH} "Bez práv administráto
 LangString LANGNAME_WelcomeText ${LANG_CZECH} "Tento pomocník vás provede instalací ${PrgName}.\r\n\r\nDFendX je programem typu open source vázaným licencí GPL 3. (Mùžete ji shlédnout v nabídce Nápovìda|O programu.) DFendX je poskytován bez jakýchkoli záruk a závazkù.\r\n\r\nPokraèujte stisknutím tlaèítka Dále." 
 LangString LANGNAME_WelcomeTextUpdate ${LANG_CZECH} "Tento pomocník vás provede aktualizací ${PrgName}.\r\n\r\nInstalátor vyžaduje již existující instalaci DFendX !\r\n\r\nPokraèujte stisknutím tlaèítka Dále."
 LangString LANGNAME_Next ${LANG_CZECH} "Dále"
-LicenseLangString LANGNAME_License ${LANG_CZECH} "..\Bin\License.txt"
+LicenseLangString LANGNAME_License ${LANG_CZECH} "..\LICENSE"
 LangString LANGNAME_LICENSE_TITLE ${LANG_CZECH} "Informace"
 LangString LANGNAME_LICENSE_SUBTITLE ${LANG_CZECH} "Doplòkové informace o ${PrgName}"
 LangString LANGNAME_LICENSE_TOP ${LANG_CZECH} "Pøed pokraèováním si pøeètìte níže uvedené informace:"
@@ -30,24 +30,17 @@ LangString LANGNAME_ConfirmDelUserData ${LANG_CZECH} "Chcete zároveò vymazat i
 LangString LANGNAME_ConfirmDelPrgDir ${LANG_CZECH} "V adresáøi s instalací se nalézají i soubory, které nevytvoøil instalátor DFendX. Chcete adresáø $INSTDIR i pøesto smazat?"
 
 LangString LANGNAME_NoInstallationFound ${LANG_CZECH} "V zadaném adresáøi se nenálézá žádná instalace DFendX, kterou by bylo možné aktualizovat."
-LangString LANGNAME_NotDFendXInstallation ${LANG_CZECH} "This folder is not a DFendX installation. Need DFend.dat, DFend.exe, Bin\dfxvalidator.exe, and a DFendX File Description on DFend.exe."
+LangString LANGNAME_NotDFendXInstallation ${LANG_CZECH} "Neplatná instalace DFendX."
+LangString LANGNAME_InstalledVersionNewer ${LANG_CZECH} "Je již nainstalována novější verze DFendX ($R8). Tato aktualizace je pro verzi ${VER_MAYOR}.${VER_MINOR1}.${VER_MINOR2} a nelze ji použít k downgradu."
 
-LangString LANGNAME_Tools ${LANG_CZECH} "Nástroje"
-LangString LANGNAME_FreeDosTools ${LANG_CZECH} "Nástroje FreeDOSu používané DosBoxem"
-LangString LANGNAME_Doszip ${LANG_CZECH} "Doszip Commander"
 LangString LANGNAME_DesktopShortcut ${LANG_CZECH} "Zástupce na Ploše"
 
 LangString LANGNAME_InstallDFendReloaded ${LANG_CZECH} "Instalace hlavních èástí DFendX"
 LangString LANGNAME_InstallStartMenu ${LANG_CZECH} "Vytváøení odkazù v Menu Start"
-LangString LANGNAME_InstallFreeDOS ${LANG_CZECH} "Instalace FreeDOSu"
-LangString LANGNAME_InstallDOSZip ${LANG_CZECH} "Instalace DOSZip Commanderu"
 LangString LANGNAME_InstallDesktopShortcut ${LANG_CZECH} "Vytváøení zástupce na Ploše"
 
 LangString LANGNAME_UpdateDFendReloaded ${LANG_CZECH} "Aktualizace hlavních èástí DFendX"
 LangString LANGNAME_UpdateUninstaller ${LANG_CZECH} "Aktualizace odinstalaèního programu"
 
 LangString DESC_DFend ${LANG_CZECH} "DFendX je grafickým rozhraním ke spouštìní aplikací urèených pro DOS."
-LangString DESC_Tools ${LANG_CZECH} "Nástroje používané v DOSBoxu."
-LangString DESC_FreeDosTools ${LANG_CZECH} "Nástroje pøíkazového øádku FreeDOSu, používané v DOSBoxu."
-LangString DESC_Doszip ${LANG_CZECH} "Doszip Commander je klonem Norton Commanderu používaným v DOSBoxu."
 LangString DESC_DesktopShortcut ${LANG_CZECH} "Vytvoøí na Ploše zástupce DFendX."

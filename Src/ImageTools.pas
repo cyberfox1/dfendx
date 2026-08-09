@@ -3,6 +3,9 @@ interface
 
 Function GetGeometryFromFile(const FileName : String) : String;
 Function GetGeometryFromMB(const Size : Integer) : String;
+{ Pure selection: UseShort + OSShortNameOK → OSShortName, else LongName. No FS. }
+Function SelectShortName(const LongName, OSShortName: String;
+  const UseShortFolderNames, OSShortNameOK: Boolean): String;
 Function ShortName(const LongName : String) : String;
 
 Function CheckCDImage(const FileName : String) : Boolean;
@@ -45,16 +48,31 @@ begin
   result:='512,63,16,'+IntToStr(Int64(Size)*2);
 end;
 
-Function ShortName(const LongName : String) : String;
+Function SelectShortName(const LongName, OSShortName: String;
+  const UseShortFolderNames, OSShortNameOK: Boolean): String;
 begin
-  If PrgSetup.UseShortFolderNames then begin
-    SetLength(result,MAX_PATH+10);
-    if GetShortPathName(PChar(LongName),PChar(result),MAX_PATH)=0
-      then result:=LongName
-      else SetLength(result,StrLen(PChar(result)));
-  end else begin
-    result:=LongName;
+  if UseShortFolderNames and OSShortNameOK then
+    Result := OSShortName
+  else
+    Result := LongName;
+end;
+
+Function ShortName(const LongName : String) : String;
+Var
+  Buf: String;
+  OK: Boolean;
+begin
+  if not PrgSetup.UseShortFolderNames then begin
+    Result := SelectShortName(LongName, '', False, False);
+    Exit;
   end;
+  SetLength(Buf, MAX_PATH + 10);
+  OK := GetShortPathName(PChar(LongName), PChar(Buf), MAX_PATH) <> 0;
+  if OK then
+    SetLength(Buf, StrLen(PChar(Buf)))
+  else
+    Buf := '';
+  Result := SelectShortName(LongName, Buf, True, OK);
 end;
 
 Function SearchCueSheetKeyWords(const FileName : String) : Boolean;

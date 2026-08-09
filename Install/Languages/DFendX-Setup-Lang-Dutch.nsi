@@ -9,7 +9,7 @@ LangString LANGNAME_NeedAdminRightsUpdate ${LANG_DUTCH} "Zonder administratierec
 LangString LANGNAME_WelcomeText ${LANG_DUTCH} "Deze wizard zal je begeleiden bij het installeren van ${PrgName}.\r\n\r\n ${PrgName} is een open source programma en is beschermd onder de GPL 3 licentie. (Je kan deze licentie bekijken door te klikken op Help|Over ${PrgName} in het programma.) De correcte werking van dit programma wordt niet gegarandeerd.\r\n\r\nKlik op Volgende om verder te gaan."
 LangString LANGNAME_WelcomeTextUpdate ${LANG_DUTCH} "Deze wizard zal je begeleiden bij het updaten van ${PrgName}. \r\n\r\nLet wel, dit installatieprogramma vereist dat er reeds een versie van ${PrgName} op je computer staat !\r\n\r\nKlik op Volgende om verder te gaan."
 LangString LANGNAME_Next ${LANG_DUTCH} "Volgende"
-LicenseLangString LANGNAME_License ${LANG_DUTCH} "..\Bin\License.txt"
+LicenseLangString LANGNAME_License ${LANG_DUTCH} "..\LICENSE"
 LangString LANGNAME_LICENSE_TITLE ${LANG_DUTCH} "Informatie"
 LangString LANGNAME_LICENSE_SUBTITLE ${LANG_DUTCH} "Extra informatie over ${PrgName}"
 LangString LANGNAME_LICENSE_TOP ${LANG_DUTCH} "Gelieve onderstaande informatie door te nemen voor verder te gaan:"
@@ -30,25 +30,18 @@ LangString LANGNAME_ConfirmDelUserData ${LANG_DUTCH} "Wil je de data map $DataIn
 LangString LANGNAME_ConfirmDelPrgDir ${LANG_DUTCH} "In de ${PrgName} installatiemap bevinden zich bestanden die niet bij het programma behoren. Wil je de map $INSTDIR toch volledig verwijderen?"
 
 LangString LANGNAME_NoInstallationFound ${LANG_DUTCH} "Er is geen ${PrgName} installatie gevonden in de geselecteerde map die geüpdatet kan worden."
-LangString LANGNAME_NotDFendXInstallation ${LANG_DUTCH} "This folder is not a DFendX installation. Need DFend.dat, DFend.exe, Bin\dfxvalidator.exe, and a DFendX File Description on DFend.exe."
+LangString LANGNAME_NotDFendXInstallation ${LANG_DUTCH} "Geen geldige DFendX-installatie."
+LangString LANGNAME_InstalledVersionNewer ${LANG_DUTCH} "Er is al een nieuwere versie van DFendX geïnstalleerd ($R8). Deze update is voor versie ${VER_MAYOR}.${VER_MINOR1}.${VER_MINOR2} en kan niet worden gebruikt om te downgraden."
 
-LangString LANGNAME_Tools ${LANG_DUTCH} "Tools"
-LangString LANGNAME_FreeDosTools ${LANG_DUTCH} "FreeDOS Tools voor DosBox"
-LangString LANGNAME_Doszip ${LANG_DUTCH} "Doszip Commander"
 LangString LANGNAME_DesktopShortcut ${LANG_DUTCH} "Bureaublad snelkoppeling"
 
 LangString LANGNAME_InstallDFendReloaded ${LANG_DUTCH} "Installeren DFendX"
 LangString LANGNAME_InstallStartMenu ${LANG_DUTCH} "Creëeren start menu snelkoppelingen"
-LangString LANGNAME_InstallFreeDOS ${LANG_DUTCH} "Installeren FreeDOS"
-LangString LANGNAME_InstallDOSZip ${LANG_DUTCH} "Installeren DOSZip Commander"
 LangString LANGNAME_InstallDesktopShortcut ${LANG_DUTCH} "Creëeren bureaublad snelkoppeling"
 
 LangString LANGNAME_UpdateDFendReloaded ${LANG_DUTCH} "Updaten DFendX hoofdonderdelen"
 LangString LANGNAME_UpdateUninstaller ${LANG_DUTCH} "Updaten uninstaller"
 
 LangString DESC_DFend ${LANG_DUTCH} "${PrgName} is een grafische gebruikersinterface om DOS games mee te beheren."
-LangString DESC_Tools ${LANG_DUTCH} "Hulpprogramma's om in DOSBox te gebruiken."
-LangString DESC_FreeDosTools ${LANG_DUTCH} "Commandline tools zijn een collectie FreeDOS programma's voor DOSBox."
-LangString DESC_Doszip ${LANG_DUTCH} "Doszip Commander is een programma voor DOSBox, gelijkaardig aan Norton Commander."
 LangString DESC_DesktopShortcut ${LANG_DUTCH} "Een bureaublad snelkoppeling creëren voor ${PrgName}."
 

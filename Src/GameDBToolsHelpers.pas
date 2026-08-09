@@ -30,9 +30,18 @@ function DOSBoxKindToPreviewFileName(Kind: TDOSBoxKind): String;
 function ProgramInstallDir: String;
 function GetExeFileDescription(const ExePath: String): String;
 
+{ Screenshot pane pick: lower prio first; same prio prefers larger file via inverted size key. }
+{ True when taller than wide and h/w <= 1.8 (not overly elongated). }
+function ImageIsPortrait(const ImageW, ImageH: Integer): Boolean;
+function DetermineImagePriority(const FileNameOrPath: String; const IsPortrait: Boolean;
+  const ImageW, ImageH: Integer): Integer;
+function BuildScreenshotPaneSortKey(const Prio: Integer; const FileSize: Int64; const FilePath: String;
+  const ImageW, ImageH: Integer): String;
+function ExtractPathFromScreenshotPaneSortKey(const SortKey: String): String;
+
 implementation
 
-uses Windows, SysUtils, CommonHelpers;
+uses Windows, SysUtils, Math, CommonHelpers;
 
 function ProgramInstallDir: String;
 begin
@@ -377,6 +386,98 @@ begin
   else
     Result := 'dosbox-unknown.png';
   end;
+end;
+
+function ImageIsPortrait(const ImageW, ImageH: Integer): Boolean;
+begin
+  Result := False;
+  if (ImageW < 1) or (ImageH < 1) then Exit;
+  if ImageH <= ImageW then Exit;
+  if ImageH / ImageW > 1.8 then Exit;
+  Result := True;
+end;
+
+function DetermineImagePriority(const FileNameOrPath: String; const IsPortrait: Boolean;
+  const ImageW, ImageH: Integer): Integer;
+var
+  Name: String;
+  Words: TStringList;
+  I: Integer;
+  Prio: Integer;
+begin
+  if (ImageW < 1) or (ImageH < 1) or (ImageW + ImageH < 300) then begin
+    Result := 9;
+    Exit;
+  end;
+
+  Name := AnsiLowerCase(FileNameOrPath);
+  for I := 1 to Length(Name) do
+    if not (Name[I] in ['a'..'z']) then
+      Name[I] := ' ';
+
+  Words := TStringList.Create;
+  Words.AddStrings(Name.Split([' ', #9], TStringSplitOptions.ExcludeEmpty));
+
+  Prio := -1;
+  if Words.IndexOf('title') >= 0 then
+    Prio := 0
+  else if Words.IndexOf('cover') >= 0 then
+    Prio := 1
+  else if (Words.IndexOf('box') >= 0) and (Words.IndexOf('front') >= 0) then
+    Prio := 2
+  else if Words.IndexOf('poster') >= 0 then
+    Prio := 3;
+
+  if (Prio > -1) and (not IsPortrait) then
+    Prio := Prio + 4;
+
+  if Prio < 0 then begin
+    if (Words.IndexOf('gameplay') >= 0) or (Words.IndexOf('screenshot') >= 0) then
+      Prio := 8
+    else
+      Prio := 9;
+  end;
+
+  Words.Free;
+  Result := Prio;
+end;
+
+function BuildScreenshotPaneSortKey(const Prio: Integer; const FileSize: Int64; const FilePath: String;
+  const ImageW, ImageH: Integer): String;
+var
+  Inv: Int64;
+  ScaleF, R: Double;
+  Size: Int64;
+begin
+  { Ascending key: lower prio first; inverted size (MaxInt-size) so larger files sort first. }
+  if (ImageW < 1) or (ImageH < 1) then
+    Size := 0
+  else begin
+    ScaleF := Min(ImageH, ImageW) / Max(ImageH, ImageW);
+    R := ImageH / ImageW;
+    if (R >= 1.0) and (R <= 1.33) then
+      ScaleF := 1.0 + (R - 1.0) / (1.33 - 1.0) * 0.1        { 1.0 → 1.1 }
+    else if (R > 1.33) and (R <= 1.8) then
+      ScaleF := 1.1 + (R - 1.33) / (1.8 - 1.33) * (ScaleF - 1.1); { 1.1 → base }
+    Size := Trunc(FileSize * ScaleF);
+  end;
+
+  Inv := Int64(High(Integer)) - Size;
+  if Inv < 0 then
+    Inv := 0;
+  Result := IntToStr(Prio) + ',' + Format('%.10d', [Inv]) + ',' + FilePath;
+end;
+
+function ExtractPathFromScreenshotPaneSortKey(const SortKey: String): String;
+var
+  P1, P2: Integer;
+begin
+  Result := '';
+  P1 := Pos(',', SortKey);
+  if P1 <= 0 then Exit;
+  P2 := Pos(',', Copy(SortKey, P1 + 1, MaxInt));
+  if P2 <= 0 then Exit;
+  Result := Copy(SortKey, P1 + 1 + P2, MaxInt);
 end;
 
 end.

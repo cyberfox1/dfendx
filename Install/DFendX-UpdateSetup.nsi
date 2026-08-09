@@ -15,6 +15,10 @@
 !include FileFunc.nsh
 !insertmacro GetParameters
 !insertmacro GetOptions
+!include WordFunc.nsh
+!insertmacro VersionCompare
+!include TextFunc.nsh
+!insertmacro TrimNewLines
 
 !define MUI_PAGE_CUSTOMFUNCTION_PRE SkipPageIfAutoUpdate
 !insertmacro MUI_PAGE_WELCOME
@@ -62,7 +66,9 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
   ; ($InstallDataType=0 <=> Prg dir mode, $InstallDataType=1 <=> User dir mode; in user dir mode $DataInstDir will contain the data directory otherwise $INSTDIR)
   ;
   ; Require a DFendX install (not classic D-Fend Reloaded):
-  ;   DFend.dat, DFend.exe, Bin\dfxvalidator.exe, and validator exit 0 on DFend.exe
+  ;   DFend.dat, DFend.exe, Bin\dfxvalidator.exe, and validator exit 0 on DFend.exe.
+  ;   Optional: if validator wrote $TEMP\dfxvalidator.version, refuse when that
+  ;   installed PE version is newer than this update package.
   
   IfFileExists "$INSTDIR\DFend.dat" +3
   MessageBox MB_OK "$(LANGNAME_NoInstallationFound)"
@@ -76,10 +82,35 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
   MessageBox MB_OK "$(LANGNAME_NotDFendXInstallation)"
   Quit
 
+  Delete "$TEMP\dfxvalidator.version"
   ClearErrors
-  ExecWait '"$INSTDIR\Bin\dfxvalidator.exe" "$INSTDIR\DFend.exe"' $0
-  IntCmp $0 0 StartCheck
+  ExecWait '"$INSTDIR\Bin\dfxvalidator.exe" "$INSTDIR\DFend.exe" "$TEMP\dfxvalidator.version"' $0
+  IntCmp $0 0 DfxValidOk
   MessageBox MB_OK "$(LANGNAME_NotDFendXInstallation)"
+  Quit
+
+  DfxValidOk:
+  ; Version file is optional — only used to block older updater on newer install.
+  IfFileExists "$TEMP\dfxvalidator.version" 0 StartCheck
+  FileOpen $0 "$TEMP\dfxvalidator.version" r
+  IfErrors DfxVerSkip
+  FileRead $0 $R8
+  FileClose $0
+  Delete "$TEMP\dfxvalidator.version"
+  ${TrimNewLines} "$R8" $R8
+  StrCmp $R8 "" DfxVerSkip
+  ; VersionCompare: 0=equal, 1=first newer, 2=second newer
+  ${VersionCompare} "$R8" "${VER_MAYOR}.${VER_MINOR1}.${VER_MINOR2}.0" $0
+  IntCmp $0 1 DfxTooNew
+  Goto StartCheck
+
+  DfxVerSkip:
+  Delete "$TEMP\dfxvalidator.version"
+  Goto StartCheck
+
+  DfxTooNew:
+  Delete "$TEMP\dfxvalidator.version"
+  MessageBox MB_OK "$(LANGNAME_InstalledVersionNewer)"
   Quit
 
   StartCheck:  
@@ -107,31 +138,28 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
   SetDetailsPrint none  
   File "..\DFend.exe"
   ; PE-import + LoadLibrary / BASS_PluginLoad: next to DFend.exe
-  File "..\Bin\bass.dll"
-  File "..\Bin\bassflac.dll"
-  ; FireDAC SQLite vendor lib (EnsureSqlite3Dll.bat / BuildProject)
-  File "..\Bin\sqlite3.dll"
+  File "staging\Bin\bass.dll"
+  File "staging\Bin\bassflac.dll"
+  File "staging\Bin\sqlite3.dll"
+  File "..\LICENSE"
+  File "..\CHANGES"
   
   SetDetailsPrint listonly
   SetOutPath "$INSTDIR\Bin"  
   SetDetailsPrint none  
-  File "..\Bin\oggenc2.exe"
-  File "..\Bin\mkdosfs.exe"
-  File "..\Bin\LicenseComponents.txt"
-  File "..\Bin\Links.txt"
-  File "..\Bin\SearchLinks.txt"
-  File "..\Bin\ChangeLog.txt"
-  File "..\Bin\DFendX DataInstaller.nsi"  
-  File "..\Bin\UpdateCheck.exe"
-  File "..\Bin\SetInstallerLanguage.exe"
-  File "..\Bin\7za.dll"
-  File "..\Bin\DelZip179.dll"
-  File "..\Bin\LicenseBASS.txt"
-  File "..\Bin\InstallVideoCodec.exe"
-  File "..\Bin\AdminLauncher.exe"
-  File "..\Bin\dfxvalidator.exe"
-  IntCmp $InstallDataType 2 +2
-  File "..\Bin\DFendGameExplorerData.dll"
+  File "staging\Bin\oggenc2.exe"
+  File "staging\Bin\libFLAC.dll"
+  File "staging\Bin\mkdosfs.exe"
+  File "staging\Bin\LicenseMTOOLS.txt"
+  File "staging\Bin\LicenseComponents.txt"
+  File "staging\Bin\Links.txt"
+  File "staging\Bin\SearchLinks.txt"
+  File "staging\Bin\7za.dll"
+  File "staging\Bin\DelZip179.dll"
+  File "staging\Bin\LicenseBASS.txt"
+  File "staging\Bin\AdminLauncher.exe"
+  File "staging\Bin\SetInstallerLanguage.exe"
+  File "staging\Bin\dfxvalidator.exe"
   
   SetDetailsPrint listonly
   SetOutPath "$INSTDIR\Lang"
@@ -149,28 +177,34 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
   SetDetailsPrint listonly
   SetOutPath "$DataInstDir\Settings"
   SetDetailsPrint none
-  File "..\Bin\Cheats.xml"
+  File "staging\Bin\Cheats.xml"
   
-  ; Remove files in $INSTDIR for which the new position is $INSTDIR\Bin or $INSTDIR\Lang
-  
-  IfFileExists "$INSTDIR\License.txt" 0 +2
-    CopyFiles /SILENT "$INSTDIR\License.txt" "$INSTDIR\Bin\License.txt"
+  ; Remove legacy license/changelog paths (now only $INSTDIR\LICENSE and CHANGES)
    
   Delete "$INSTDIR\oggenc2.exe"
   Delete "$INSTDIR\LicenseComponents.txt"
-  Delete "$INSTDIR\License.txt"  
+  Delete "$INSTDIR\License.txt"
+  Delete "$INSTDIR\Bin\License.txt"
   IntCmp $InstallDataType 0 KeepSettingsFilesIfPrgDirIsUserDir  
   Delete "$INSTDIR\Links.txt"
   Delete "$INSTDIR\SearchLinks.txt"
   KeepSettingsFilesIfPrgDirIsUserDir:
   Delete "$INSTDIR\ChangeLog.txt"
+  Delete "$INSTDIR\Changelog.txt"
+  Delete "$INSTDIR\Bin\ChangeLog.txt"
+  Delete "$INSTDIR\Bin\Changelog.txt"
   Delete "$INSTDIR\DFendX DataInstaller.nsi"
+  Delete "$INSTDIR\Bin\DFendX DataInstaller.nsi"
+  Delete "$INSTDIR\AdminLauncher.exe"
   Delete "$INSTDIR\SetInstallerLanguage.exe"
   Delete "$INSTDIR\UpdateCheck.exe"
   Delete "$INSTDIR\7za.dll"
   Delete "$INSTDIR\DelZip179.dll"
   Delete "$INSTDIR\InstallVideoCodec.exe"
+  Delete "$INSTDIR\Bin\UpdateCheck.exe"
+  Delete "$INSTDIR\Bin\InstallVideoCodec.exe"
   Delete "$INSTDIR\mkdosfs.exe"
+  Delete "$INSTDIR\LicenseMTOOLS.txt"
   Delete "$INSTDIR\mediaplr.dll"
   Delete "$INSTDIR\Bin\mediaplr.dll"
   Delete "$INSTDIR\Bin\bass.dll"
@@ -178,6 +212,12 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
   Delete "$INSTDIR\Bin\sqlite3.dll"
   Delete "$INSTDIR\LicenseBASS.txt"
   Delete "$INSTDIR\Readme_OperationMode.txt"
+  Delete "$INSTDIR\DFendGameExplorerData.dll"
+  Delete "$INSTDIR\Bin\DFendGameExplorerData.dll"
+  ; Legacy DataReader.xml (unused MobyGames scrape config; no longer shipped)
+  Delete "$DataInstDir\Settings\DataReader.xml"
+  Delete "$INSTDIR\Settings\DataReader.xml"
+  Delete "$INSTDIR\NewUserData\DataReader.xml"
   
   ; Update templates
 
@@ -200,7 +240,6 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
 	
     SetOutPath "$DataInstDir\Settings"
     File /nonfatal "..\NewUserData\Icons.ini"
-	File "..\Tools\DataReaderServer\DataReader.xml"
 
   Goto TemplateWritingFinish
   WriteNewUserDir:  
@@ -222,38 +261,11 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
 	
     SetOutPath "$INSTDIR\NewUserData"
     File /nonfatal "..\NewUserData\Icons.ini"
-	File "..\Tools\DataReaderServer\DataReader.xml"
-
-    ; Runtime path PrgDataDir\Settings (e.g. %USERPROFILE%\DFendX\Settings)
-    SetOutPath "$DataInstDir\Settings"
-    File "..\Tools\DataReaderServer\DataReader.xml"
 	
-	; Copy FreeDOS files to NewUserData directory
-	
-	IfFileExists "$DataInstDir\VirtualHD\FREEDOS\*.*" 0 TemplateWritingFinish
-	IfFileExists "$INSTDIR\NewUserData\FREEDOS\*.*" TemplateWritingFinish
-	
-	CreateDirectory "$INSTDIR\NewUserData\FREEDOS"
-	CopyFiles /SILENT "$DataInstDir\VirtualHD\FREEDOS\*.*" "$INSTDIR\NewUserData\FREEDOS\"
-
   TemplateWritingFinish:
   
-  ; Install DOSZip
-  
-  SetDetailsPrint both
-  DetailPrint "$(LANGNAME_InstallDOSZip)"
-  SetDetailsPrint listonly
+  ; FreeDOS / DOSZip are no longer packaged.
 
-  IntCmp $InstallDataType 1 DoszipToNewUserDir
-    SetOutPath "$DataInstDir\VirtualHD\DOSZIP"
-  Goto DoszipWritingStart
-  DoszipToNewUserDir:
-    SetOutPath "$INSTDIR\NewUserData\DOSZIP"
-  DoszipWritingStart:
-  
-  SetDetailsPrint none
-  File /nonfatal /r "..\NewUserData\DOSZIP\*.*"
-  
   IntCmp $InstallDataType 2 NoUninstallerUpdate
   
   ; Update uninstaller
@@ -268,7 +280,7 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
   SetShellVarContext all
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\DFendX" "DisplayVersion" "${VER_MAYOR}.${VER_MINOR1}.${VER_MINOR2}"
   
-  !insertmacro AddToGamesExplorer
+  Call GameExplorerUninstall
   
   NoUninstallerUpdate:
 

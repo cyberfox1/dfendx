@@ -42,7 +42,7 @@ implementation
 
 uses BassMedia;
 
-{ Phase 2.7 — no video backend; keep pointers non-nil so PlayVideoForm does not AV. }
+{ Video exports unused (no in-process player); stubs stay non-nil for safety. }
 function StubVideoAvailable : boolean; stdcall;
 begin
   result:=False;

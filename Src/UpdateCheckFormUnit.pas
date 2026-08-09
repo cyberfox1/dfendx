@@ -14,8 +14,6 @@ type
     InfoLabelPackages: TLabel;
     CheckBoxCheats: TCheckBox;
     InfoLabelCheats: TLabel;
-    CheckBoxDatareader: TCheckBox;
-    InfoLabelDatareader: TLabel;
     UpdateButton: TBitBtn;
     CloseButton: TBitBtn;
     LabelDownload: TLabel;
@@ -24,7 +22,6 @@ type
     StatusLabelProgram: TLabel;
     StatusLabelPackages: TLabel;
     StatusLabelCheats: TLabel;
-    StatusLabelDatareader: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure DFRHomepageLabelClick(Sender: TObject);
     procedure UpdateButtonClick(Sender: TObject);
@@ -35,7 +32,6 @@ type
     Procedure UpdateProgram;
     Procedure UpdatePackagesDB;
     Procedure UpdateCheatsDB;
-    Procedure UpdateDataReader; 
   public
     { Public-Deklarationen }
     GameDB : TGameDB;
@@ -51,7 +47,7 @@ implementation
 
 uses ShellAPI, Math, CommonHelpers, CommonTools, LanguageSetupUnit, VistaToolsUnit, PrgSetupUnit,
      IconLoaderUnit, ProgramUpdateCheckUnit, CheatDBToolsUnit, SetupFormUnit,
-     DataReaderMobyUnit, InternetDataWaitFormUnit, PackageDBToolsUnit, PrgConsts;
+     PackageDBToolsUnit, PrgConsts;
 
 {$R *.dfm}
 
@@ -69,8 +65,6 @@ begin
   InfoLabelPackages.Caption:=LanguageSetup.UpdateCheckDialogPackagesInfo;
   CheckBoxCheats.Caption:=LanguageSetup.UpdateCheckDialogCheats;
   InfoLabelCheats.Caption:=LanguageSetup.UpdateCheckDialogCheatsInfo;
-  CheckBoxDatareader.Caption:=LanguageSetup.UpdateCheckDialogDataReader;
-  InfoLabelDatareader.Caption:=LanguageSetup.UpdateCheckDialogDataReaderInfo;
   LabelDownload.Caption:=LanguageSetup.UpdateCheckDialogDownload;
   UpdateButton.Caption:=LanguageSetup.UpdateCheckDialogUpdate;
   CloseButton.Caption:=LanguageSetup.Close;
@@ -83,7 +77,6 @@ begin
   CheckBoxProgram.Font.Style:=[fsBold];
   CheckBoxPackages.Font.Style:=[fsBold];
   CheckBoxCheats.Font.Style:=[fsBold];
-  CheckBoxDatareader.Font.Style:=[fsBold];
 
   { Program updates intentionally disabled for DFendX; keep other update kinds. }
   CheckBoxProgram.Checked:=False;
@@ -92,7 +85,6 @@ begin
   SetStatus(StatusLabelProgram,LanguageSetup.UpdateCheckDialogStatusAborted,clGrayText);
   SetStatus(StatusLabelPackages,LanguageSetup.UpdateCheckDialogStatusNotYetChecked,clGrayText);
   SetStatus(StatusLabelCheats,LanguageSetup.UpdateCheckDialogStatusNotYetChecked,clGrayText);
-  SetStatus(StatusLabelDatareader,LanguageSetup.UpdateCheckDialogStatusNotYetChecked,clGrayText);
 
   DFRHomepageLabel.Caption:=LanguageSetup.MenuHelpUpdatesURL;
   with DFRHomepageLabel.Font do begin Color:=clBlue; Style:=[fsUnderline]; end;
@@ -127,7 +119,6 @@ begin
   CloseButton.Enabled:=False;
   SetupButton.Enabled:=False;
   try
-    If CheckBoxDatareader.Checked then UpdateDataReader;
     If CheckBoxCheats.Checked then UpdateCheatsDB;
     If CheckBoxPackages.Checked then UpdatePackagesDB;
     If CheckBoxProgram.Checked then UpdateProgram;
@@ -165,33 +156,6 @@ begin
     urNoUpdatesAvailable : SetStatus(StatusLabelCheats,LanguageSetup.UpdateCheckDialogStatusNoUpdates,clGreen);
     urUpdateInstallCanceled : SetStatus(StatusLabelCheats,LanguageSetup.UpdateCheckDialogStatusAborted,clRed);
     urUpdateInstalled : SetStatus(StatusLabelCheats,LanguageSetup.UpdateCheckDialogStatusCheatsDone,clGreen);
-  end;
-  BringWindowToTop(Handle);
-end;
-
-procedure TUpdateCheckForm.UpdateDataReader;
-Var DataReader : TMobyDataReader;
-    I : Integer;
-begin
-  SetStatus(StatusLabelDatareader,LanguageSetup.UpdateCheckDialogStatusSearching,clDarkYellow);
-  DataReader:=TMobyDataReader.Create;
-  try
-    If not DataReader.LoadConfig(PrgDataDir+SettingsFolder+'\'+DataReaderConfigFile,False) then begin
-      SetStatus(StatusLabelDatareader,Format(LanguageSetup.DataReaderDownloadError,[DataReaderUpdateURL]),clRed);
-      exit;
-    end;
-    I:=DataReader.Config.Version;
-    If ShowDataReaderInternetConfigWaitDialog(Owner,DataReader,True,LanguageSetup.DataReaderDownloadCaption,LanguageSetup.DataReaderDownloadInfo,LanguageSetup.DataReaderDownloadError) then begin
-      If DataReader.Config.Version>I then begin
-        SetStatus(StatusLabelDatareader,LanguageSetup.UpdateCheckDialogStatusDataReaderDone,clGreen);
-      end else begin
-        SetStatus(StatusLabelDatareader,LanguageSetup.UpdateCheckDialogStatusNoUpdates,clGreen);
-      end;
-    end else begin
-      SetStatus(StatusLabelDatareader,LanguageSetup.UpdateCheckDialogStatusAborted,clRed);
-    end;
-  finally
-    DataReader.Free;
   end;
   BringWindowToTop(Handle);
 end;

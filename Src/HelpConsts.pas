@@ -50,7 +50,6 @@ const ID_Index=1;
       ID_FileOptionsGameListInIconMode=1129;
       ID_FileOptionsMenubar=1130;
       ID_FileOptionsUserInterpreters=1131;
-      ID_FileOptionsImageScaling=1132;
       ID_FileOptionsMoreEmulator=1133;
       ID_FileOptionsAutomaticConfiguration=1134;
       ID_FileOptionsDOSBoxGlobal=1135;

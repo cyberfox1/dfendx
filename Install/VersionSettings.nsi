@@ -1,6 +1,6 @@
 !macro VersionData
 !define VER_MAYOR 2
-!define VER_MINOR1 0
+!define VER_MINOR1 1
 !define VER_MINOR2 0
 !macroend
 

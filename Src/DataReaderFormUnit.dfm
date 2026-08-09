@@ -14,7 +14,6 @@ object DataReaderForm: TDataReaderForm
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   Position = poOwnerFormCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -23,7 +22,6 @@ object DataReaderForm: TDataReaderForm
   DesignSize = (
     592
     494)
-  PixelsPerInch = 96
   TextHeight = 13
   object SearchResultsLabel: TLabel
     Left = 8
@@ -50,6 +48,7 @@ object DataReaderForm: TDataReaderForm
     EditLabel.Height = 13
     EditLabel.Caption = 'GameNameEdit'
     TabOrder = 1
+    Text = ''
   end
   object SearchButton: TBitBtn
     Left = 495
@@ -58,8 +57,6 @@ object DataReaderForm: TDataReaderForm
     Height = 25
     Anchors = [akTop, akRight]
     Caption = 'Search'
-    TabOrder = 2
-    OnClick = SearchButtonClick
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000130B0000130B00001000000000000000000000000000
@@ -74,6 +71,8 @@ object DataReaderForm: TDataReaderForm
       333333333333333333FF33333333333330003333333333333777333333333333
       3000333333333333377733333333333333333333333333333333}
     NumGlyphs = 2
+    TabOrder = 2
+    OnClick = SearchButtonClick
   end
   object ListBox: TListBox
     Left = 8
@@ -227,9 +226,6 @@ object DataReaderForm: TDataReaderForm
     Anchors = [akLeft, akBottom]
     Caption = 'Insert data'
     Enabled = False
-    ModalResult = 1
-    TabOrder = 5
-    OnClick = InsertButtonClick
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -247,7 +243,10 @@ object DataReaderForm: TDataReaderForm
       3338F38F000033333333333333A223333333333333338F830000333333333333
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
+    ModalResult = 1
     NumGlyphs = 2
+    TabOrder = 5
+    OnClick = InsertButtonClick
   end
   object CancelButton: TBitBtn
     Left = 128
@@ -255,8 +254,9 @@ object DataReaderForm: TDataReaderForm
     Width = 97
     Height = 25
     Anchors = [akLeft, akBottom]
-    TabOrder = 6
     Kind = bkCancel
+    NumGlyphs = 2
+    TabOrder = 6
   end
   object SearchTypeCheckBox: TCheckBox
     Left = 8
@@ -277,13 +277,20 @@ object DataReaderForm: TDataReaderForm
     Height = 21
     Style = csDropDownList
     Anchors = [akLeft, akTop, akRight]
-    ItemHeight = 13
     ItemIndex = 0
     TabOrder = 0
     Text = 'The Games DB (thegamesdb.net)'
     OnChange = SourceComboBoxChange
     Items.Strings = (
-      'The Games DB (thegamesdb.net)'
-      'Moby Games (www.mobygames.com)')
+      'The Games DB (thegamesdb.net)')
+  end
+  object btnSetDataReaderAPIKey: TButton
+    Left = 495
+    Top = 23
+    Width = 89
+    Height = 25
+    Caption = 'Set API Key'
+    TabOrder = 8
+    OnClick = btnSetDataReaderAPIKeyClick
   end
 end

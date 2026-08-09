@@ -91,6 +91,7 @@ Type TPrgSetup=class(TBasePrgSetup)
     FDOSBox, FPacker : TList;
     FDOSBoxBasedUserInterpretersPrograms, FDOSBoxBasedUserInterpretersParameters, FDOSBoxBasedUserInterpretersExtensions : TStringList;
     FWindowsBasedEmulatorsNames, FWindowsBasedEmulatorsPrograms, FWindowsBasedEmulatorsParameters, FWindowsBasedEmulatorsExtensions : TStringList;
+    FHTTPUserAgent : String;
     Procedure ReadSettings;
     Procedure InitDirs;
     Procedure DoneDirs;
@@ -122,6 +123,9 @@ Type TPrgSetup=class(TBasePrgSetup)
 
     {True when ExoDOSDir and ExoDOSVersion are both non-empty after Trim.}
     Function HasValidExoInstallation : Boolean;
+
+    { Built once at Create; use for all THTTPClient User-Agent headers. }
+    property HTTPUserAgent : String read FHTTPUserAgent;
 
     property GameDir : String index 0 read GetString write SetString;
     property BaseDir : String index 1 read GetString write SetString;
@@ -174,6 +178,10 @@ Type TPrgSetup=class(TBasePrgSetup)
     property DefaultFloppyDrive : String index 48 read GetString write SetString;
     property ExoDOSDir : String index 49 read GetString write SetString;
     property ExoDOSVersion : String index 50 read GetString write SetString;
+    { TheGamesDB REST API key (api.thegamesdb.net apikey=); set in DFendX.ini. }
+    property TheGamesDBAPIKey : String index 51 read GetString write SetString;
+    { Log verbosity INI string: OFF|INFO|WARNING|CRITICAL (see LogLevel* consts / TLogLevel). }
+    property LogLevel : String index 52 read GetString write SetString;
 
     property LinuxRemap[DriveLetter : Char] : String read GetDriveLetter write SetDriveLetter;
 
@@ -237,7 +245,6 @@ Type TPrgSetup=class(TBasePrgSetup)
     property FavoritesBold : Boolean index 48 read GetBoolean write SetBoolean;
     property FavoritesItalic : Boolean index 49 read GetBoolean write SetBoolean;
     property FavoritesUnderline : Boolean index 50 read GetBoolean write SetBoolean;
-    property ScreenshotListUseFirstScreenshot : Boolean index 51 read GetBoolean write SetBoolean;
     property FullscreenInfo : Boolean index 52 read GetBoolean write SetBoolean;
     property GridLinesInGamesList : Boolean index 53 read GetBoolean write SetBoolean;
     property QuickStarterMaximized : Boolean index 54 read GetBoolean write SetBoolean;
@@ -279,6 +286,7 @@ Type TPrgSetup=class(TBasePrgSetup)
     property OfferRunAsAdmin : Boolean index 90 read GetBoolean write SetBoolean;
     {property ActivateIncompleteFeatures : Boolean index 91 read GetBoolean write SetBoolean;}
     property SoundtrackAutoplay : Boolean index 91 read GetBoolean write SetBoolean;
+    property ShowScreenshotPane : Boolean index 92 read GetBoolean write SetBoolean;
 
     property MainLeft : Integer index 0 read GetInteger write SetInteger;
     property MainTop : Integer index 1 read GetInteger write SetInteger;
@@ -302,11 +310,9 @@ Type TPrgSetup=class(TBasePrgSetup)
     property QuickStarterTop : Integer index 19 read GetInteger write SetInteger;
     property QuickStarterWidth : Integer index 20 read GetInteger write SetInteger;
     property QuickStarterHeight : Integer index 21 read GetInteger write SetInteger;
-    property ScreenshotListUseFirstScreenshotNr : Integer index 22 read GetInteger write SetInteger;
     property DOSBoxShortFileNameAlgorithm : Integer index 23 read GetInteger write SetInteger;
     property LastWizardMode : Integer index 24 read GetInteger write SetInteger;
     property IconSize : Integer index 25 read GetInteger write SetInteger;
-    property ImageFilter : Integer index 26 read GetInteger write SetInteger;
     property NoteLinesInTooltips : Integer index 27 read GetInteger write SetInteger;
     property PreviewerCategory : Integer index 28 read GetInteger write SetInteger;
     property LanguageEditorViewMode : Integer index 29 read GetInteger write SetInteger;
@@ -529,6 +535,8 @@ begin
   FWindowsBasedEmulatorsPrograms:=TStringList.Create;
   FWindowsBasedEmulatorsParameters:=TStringList.Create;
   FWindowsBasedEmulatorsExtensions:=TStringList.Create;
+
+  FHTTPUserAgent:=GetDFendXHTTPUserAgent;
 end;
 
 procedure TPrgSetup.LoadSettings;
@@ -730,6 +738,8 @@ begin
   AddStringRec(48,'ProgramSets','DefaultFloppyDrive','');
   AddStringRec(49,'ProgramSets','ExoDOSDir','');
   AddStringRec(50,'ProgramSets','ExoDOSVersion','');
+  AddStringRec(51,'ProgramSets','TheGamesDBAPIKey','');
+  AddStringRec(52,'ProgramSets','LogLevel',LogLevelOff);
 
   For I:=0 to 25 do AddStringRec(450+I,'WineSupport',chr(ord('A')+I),'');
 
@@ -795,7 +805,7 @@ begin
   AddBooleanRec(48,'ProgramSets','Favorites.Bold',True);
   AddBooleanRec(49,'ProgramSets','Favorites.Italic',False);
   AddBooleanRec(50,'ProgramSets','Favorites.Underline',False);
-  AddBooleanRec(51,'ProgramSets','ScreenshotsGamesList.UseFirstScreenshot',True);
+  { 51 reserved (was ScreenshotsGamesList.UseFirstScreenshot) }
   AddBooleanRec(52,'ProgramSets','ShowFullscreenInfo',True);
   AddBooleanRec(53,'ProgramSets','GridLinesInGamesList',False);
   AddBooleanRec(54,'ProgramSets','QuickStarterMaximized',False);
@@ -837,6 +847,7 @@ begin
   AddBooleanRec(90,'ProgramSets','OfferRunAsAdmin',False);
   {AddBooleanRec(91,'ProgramSets','ActivateIncompleteFeatures',False);}
   AddBooleanRec(91,'ProgramSets','SoundtrackAutoplay',False);
+  AddBooleanRec(92,'ProgramSets','ShowScreenshotPane',False);
 
   AddIntegerRec(0,'ProgramSets','MainLeft',-1);
   AddIntegerRec(1,'ProgramSets','MainTop',-1);
@@ -848,7 +859,7 @@ begin
   AddIntegerRec(7,'ProgramSets','AddButtonFunction',2);
   AddIntegerRec(8,'ProgramSets','CheckForUpdates',0);
   AddIntegerRec(9,'ProgramSets','LastUpdateCheck',0);
-  AddIntegerRec(10,'ProgramSets','StartWindowSize',0);
+  AddIntegerRec(10,'ProgramSets','StartWindowSize',1); { default: restore last window size/position }
   AddIntegerRec(11,'ProgramSets','GamesListViewFontSize',9);
   AddIntegerRec(12,'ProgramSets','ScreenshotsListViewFontSize',9);
   AddIntegerRec(13,'ProgramSets','GamesTreeViewFontSize',9);
@@ -860,11 +871,11 @@ begin
   AddIntegerRec(19,'ProgramSets','QuickStarterTop',-1);
   AddIntegerRec(20,'ProgramSets','QuickStarterWidth',-1);
   AddIntegerRec(21,'ProgramSets','QuickStarterHeight',-1);
-  AddIntegerRec(22,'ProgramSets','ScreenshotsGamesList.UseScreenshotNr',1);
+  { 22 reserved (was ScreenshotsGamesList.UseScreenshotNr) }
   AddIntegerRec(23,'ProgramSets','DOSBoxShortFileNameAlgorithm',3);
   AddIntegerRec(24,'ProgramSets','LastWizardMode',1);
   AddIntegerRec(25,'ProgramSets','IconSize',32);
-  AddIntegerRec(26,'ProgramSets','ImageFilter',6);
+  { 26 reserved (was ImageFilter) }
   AddIntegerRec(27,'ProgramSets','NoteLinesInTooltips',5);
   AddIntegerRec(28,'ProgramSets','PreviewerCategory',0);
   AddIntegerRec(29,'ProgramSets','LanguageEditorViewMode',0);

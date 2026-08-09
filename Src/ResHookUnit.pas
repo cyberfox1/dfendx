@@ -33,8 +33,7 @@ Var
 
 implementation
 
-uses SysUtils, Classes, Windows, Menus, IdGlobal, IdGlobalProtocols, IdException,
-     ResHookHelpers;
+uses SysUtils, Classes, Windows, Menus;
 
 { RTL patching system }
 
@@ -171,74 +170,9 @@ begin
   SetString(Result, Buffer, LoadString(FindResourceHInstance(ResStringRec.Module^), ResStringRec.Identifier, Buffer, SizeOf(Buffer)));
 end;
 
-{New versions of functions from IdGlobalProtocols}
-
-{ NewRawStrInternetToDateTime extracted to ResHookHelpers }
-
-function NewStrInternetToDateTime(Value: string): TDateTime;
-begin
-  Result := NewRawStrInternetToDateTime(Value);
-end;
-
-{ GmtOffsetStrToDateTime extracted to ResHookHelpers }
-
-function OffsetFromUTC: TDateTime;
-var
-  iBias: Integer;
-  tmez: TTimeZoneInformation;
-begin
-  Case GetTimeZoneInformation(tmez) of
-    TIME_ZONE_ID_INVALID:
-      raise EIdFailedToRetreiveTimeZoneInfo.Create('RSFailedTimeZoneInfo');
-    TIME_ZONE_ID_UNKNOWN  :
-       iBias := tmez.Bias;
-    TIME_ZONE_ID_DAYLIGHT :
-      iBias := tmez.Bias + tmez.DaylightBias;
-    TIME_ZONE_ID_STANDARD :
-      iBias := tmez.Bias + tmez.StandardBias;
-    else
-      raise EIdFailedToRetreiveTimeZoneInfo.Create('RSFailedTimeZoneInfo');
-  end;
-  {We use ABS because EncodeTime will only accept positve values}
-  Result := EncodeTime(Abs(iBias) div 60, Abs(iBias) mod 60, 0, 0);
-  {The GetTimeZone function returns values oriented towards convertin
-   a GMT time into a local time.  We wish to do the do the opposit by returning
-   the difference between the local time and GMT.  So I just make a positive
-   value negative and leave a negative value as positive}
-  if iBias > 0 then begin
-    Result := 0 - Result;
-  end;
-end;
-
-function NewGMTToLocalDateTime(S: string): TDateTime;
-var  {-Always returns date/time relative to GMT!!  -Replaces StrInternetToDateTime}
-  DateTimeOffset: TDateTime;
-begin
-  try
-    If length(S)<10 then result:=Now else Result:=NewRawStrInternetToDateTime(S);
-  except
-    result:=Now;
-  end;
-  if Length(S) < 5 then begin
-    DateTimeOffset := 0.0
-  end else begin
-    DateTimeOffset := GmtOffsetStrToDateTime(S);
-  end;
-  {-Apply GMT offset here}
-  if DateTimeOffset < 0.0 then begin
-    Result := Result + Abs(DateTimeOffset);
-  end else begin
-    Result := Result - DateTimeOffset;
-  end;
-  { Apply local offset}
-  Result := Result + OffSetFromUTC;
-end;
-
-
 Var S : String;
 initialization
-  AddressPatch(@IdGlobalProtocols.GMTToLocalDateTime,@NewGMTToLocalDateTime);
-
+  { Indy GMTToLocalDateTime patch removed — no product code uses Indy HTTP. }
   AddressPatch(@Menus.ShortCutToText,@NewShortCutToText);
 
   LoadResStringMode:=lrsmLearning;

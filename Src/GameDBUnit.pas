@@ -111,6 +111,11 @@ begin
   AddStringRec(55,'vsyncStaging','value',DefaultValueVSyncStaging);
   AddStringRec(56,'vsyncStagingOld','value',DefaultValueVSyncStagingOld);
   AddStringRec(57,'vsyncX','value',DefaultValueVSyncX);
+  AddStringRec(58,'MIDIDeviceStaging','value',DefaultValuesMIDIDeviceStaging);
+  AddStringRec(59,'MIDIDeviceStagingOld','value',DefaultValuesMIDIDeviceStagingOld);
+  AddStringRec(60,'MIDIDeviceX','value',DefaultValuesMIDIDeviceX);
+  AddStringRec(61,'MT32ModelStaging','value',DefaultValuesMT32ModelStaging);
+  AddStringRec(62,'MT32ModelX','value',DefaultValuesMT32ModelX);
 
   CacheAllStrings;
 end;
@@ -187,9 +192,8 @@ end;
 Procedure TGameDB.LoadGameFromFile(const FileName: String; const DOSFileDate : Integer);
 Var Game : TGame;
 begin
-  LogInfo('Loading profile '+FileName);
+  { No per-profile logs here — LoadList can run this hundreds of times. }
   If PrgSetup.BinaryCache and GetLoadBinCacheOffset(FileName,DOSFileDate) then begin
-    LogInfo('Trying to load from cache');
     Game:=TGame.CreateDelayed(FileName,FTimeStampCheck);
     try
       Game.InitData;
@@ -207,11 +211,9 @@ begin
       Game:=TGame.Create(FileName);
     end;
   end else begin
-    LogInfo('Loading profile from prof file');
     Game:=TGame.Create(FileName);
   end;
 
-  LogInfo('Adding profile to data base list');
   Game.OnChanged:=GameChanged;
   Game.GameDB:=self;
   FGameList.Add(Game);

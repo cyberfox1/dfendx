@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Was ist neu (DFendX)</title>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+  <link rel="stylesheet" type="text/css" href="global.css">
+  <script language="JavaScript" type="text/javascript" src="Global.js"></script>
+  <meta name="keywords" content="Was ist neu, DFendX, DOSBox-X, DOSBox Staging, eXoDOS, Pixel-Shader, Autoplay">
+</head>
+<body>
+<Object type="application/x-oleobject" classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e">
+  <param name="Keyword" value="Was ist neu">
+  <param name="Keyword" value="DFendX">
+  <param name="Keyword" value="DOSBox-X">
+  <param name="Keyword" value="DOSBox Staging">
+  <param name="Keyword" value="eXoDOS">
+  <param name="Keyword" value="Pixel-Shader">
+  <param name="Keyword" value="Autoplay">
+</OBJECT>
+
+<p class="content">
+Inhalt dieser Seite:
+&nbsp;&nbsp;
+<a href="#DOSBoxForks">DOSBox-X und Staging</a>
+&nbsp;&nbsp;
+<a href="#eXoDOS">eXoDOS</a>
+&nbsp;&nbsp;
+<a href="#PixelShaders">Pixel-Shader</a>
+&nbsp;&nbsp;
+<a href="#Autoplay">Soundtrack-Autoplay</a>
+</p>
+
+<h1>Was ist neu (DFendX)</h1>
+
+<p>
+Diese Seite fasst neue Funktionen in DFendX zusammen.
+</p>
+
+<a onclick="Work('DOSBoxForks')" name="DOSBoxForks" href="#"><h2>&raquo; Unterst&uuml;tzung f&uuml;r DOSBox-X und DOSBox Staging</h2></a>
+
+<div id="DOSBoxForks"><p>
+DFendX unterst&uuml;tzt diese beiden modernen DOSBox-Ableger auf erster Ebene.
+</p>
+<p>
+Sie k&ouml;nnen sie wie gewohnt als
+<a href="FileOptionsDOSBox.html">Installationen</a>
+hinzuf&uuml;gen; DFendX erkennt sie als g&uuml;ltige DOSBox-Installationen.
+</p>
+<p>
+Au&szlig;erdem unterscheiden sich bestimmte Werte in der erzeugten <tt>dosbox.conf</tt>
+je nachdem, welche DOSBox-Variante f&uuml;r das Profil gew&auml;hlt ist.
+</p></div>
+
+<a onclick="Work('eXoDOS')" name="eXoDOS" href="#"><h2>&raquo; Unterst&uuml;tzung f&uuml;r eXoDOS</h2></a>
+
+<div id="eXoDOS"><p>
+DFendX unterst&uuml;tzt eXoDOS direkt als Quelle f&uuml;r Spiele-Metadaten, Medien
+(Screenshots, Sounds, Handb&uuml;cher usw.) und zum direkten Hinzuf&uuml;gen von Spielen.
+</p>
+<p>
+Den eXoDOS-Pfad konfigurieren Sie im Bereich &quot;Externe Programme&quot; der
+<a href="FileOptions.html">Programmeinstellungen</a>.
+</p>
+<p>
+Nachdem Sie einen g&uuml;ltigen eXoDOS-Pfad gew&auml;hlt haben, m&uuml;ssen Sie auf
+&quot;Spiele einlesen...&quot; klicken, um die Index-Datenbanken aufzubauen.
+Die Liste der verf&uuml;gbaren Spiele k&ouml;nnen Sie anschlie&szlig;end mit
+&quot;Spiele auflisten...&quot; anzeigen.
+</p>
+<p>
+Ist eXoDOS erfolgreich indiziert, stehen unter anderem folgende M&ouml;glichkeiten zur Verf&uuml;gung:
+</p>
+<ul>
+  <li>
+    Auf der Seite
+    <a href="ProfileEditProgramInformation.html">Programminformationen</a>
+    im Profileditor k&ouml;nnen Sie beim Laden von Spielinformationen eXoDOS als Quelle w&auml;hlen.
+  </li>
+  <li>
+    In den Medien-Registerkarten der Hauptansicht erscheinen zus&auml;tzliche eXoDOS-Medien
+    sowie ein neues Register &quot;Dokumente&quot; mit Handb&uuml;chern und anderen Dateien aus eXoDOS.
+  </li>
+  <li>
+    Beim
+    <a href="Introduction2.html">Hinzuf&uuml;gen von Spielen</a>
+    gibt es die Option &quot;Aus eXoDOS hinzuf&uuml;gen&quot;. Damit erstellen Sie ein Profil
+    auf dem Ordner, in dem eXoDOS Spielarchive entpackt.
+    <b>Hinweis:</b> Das Setup-Programm eines so erzeugten Profils zeigt auf die eXoDOS-eigene
+    <tt>setup.bat</tt> &mdash; den Installer, der das Spiel entpackt und diverse Optionen anbietet.
+    Nur wenige davon wirken sich auf das DFendX-Profil aus; Sie k&ouml;nnen die Einstellungen
+    weiterhin normal in DFendX vornehmen. Solange Setup nicht gelaufen ist, zeigt die
+    Spiele-EXE des Profils auf einen noch nicht vorhandenen Pfad.
+  </li>
+</ul>
+</div>
+
+<a onclick="Work('PixelShaders')" name="PixelShaders" href="#"><h2>&raquo; Pixel-Shader-Erkennung</h2></a>
+
+<div id="PixelShaders"><p>
+F&uuml;r DOSBox-X und Staging sucht DFendX an den &uuml;blichen Orten nach Pixel-Shader-Dateien
+dieser Distributionen und tr&auml;gt sie in die nun dauerhaft freigegebene Pixel-Shader-Liste
+auf der Seite
+<a href="ProfileEditGraphics.html">Grafikkarte</a>
+des Profileditors ein.
+</p>
+<p>
+Bei Verwendung von Pixel-Shadern sollten Sie als Renderer &quot;openglnb&quot; und als
+Skalierung &quot;Keine Skalierung&quot; w&auml;hlen.
+</p>
+<p>
+DFendX setzt den passenden Pixel-Shader-Eintrag in der <tt>dosbox.conf</tt> automatisch
+f&uuml;r die gew&auml;hlte DOSBox-Installation.
+</p></div>
+
+<a onclick="Work('Autoplay')" name="Autoplay" href="#"><h2>&raquo; Autoplay f&uuml;r Spiele-Soundtracks</h2></a>
+
+<div id="Autoplay"><p>
+In der Hauptoberfl&auml;che gibt es den Schalter &quot;Autoplay&quot;. Ist er aktiv,
+spielt DFendX Hintergrundmusik ab, basierend auf einer Datei, die &uuml;ber den Dateinamen
+als Soundtrack erkannt wird. Das gilt f&uuml;r eXoDOS-Soundtracks und f&uuml;r Dateien im
+Capture-Ordner des Spiels, deren Name &quot;soundtrack&quot; enth&auml;lt.
+</p></div>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+object ScreenshotPaneForm: TScreenshotPaneForm
+  Left = 0
+  Top = 0
+  BorderIcons = []
+  BorderStyle = bsNone
+  Caption = 'Screenshot'
+  ClientHeight = 669
+  ClientWidth = 602
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  FormStyle = fsNormal
+  OldCreateOrder = False
+  ShowInTaskbar = False
+  OnCreate = FormCreate
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Image: TImage
+    Left = 0
+    Top = 0
+    Width = 602
+    Height = 669
+    Align = alClient
+    Center = True
+    Stretch = False
+  end
+end

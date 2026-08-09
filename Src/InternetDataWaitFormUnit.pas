@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ComCtrls, ExtCtrls, StdCtrls, DataReaderBaseUnit, DataReaderMobyUnit;
+  Dialogs, ComCtrls, ExtCtrls, StdCtrls, DataReaderBaseUnit, DataReaderThreadsUnit;
 
 type
   TInternetDataWaitForm = class(TForm)

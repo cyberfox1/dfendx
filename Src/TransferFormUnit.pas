@@ -167,16 +167,13 @@ begin
     try
       St.Add(MakeDOSFilesystemFileName);
       St.Add(OggEncPrgFile);
-      St.Add('License.txt');
+      St.Add('libFLAC.dll');
       St.Add('LicenseComponents.txt');
-      St.Add('ChangeLog.txt');
       St.Add(NSIInstallerHelpFile);
-      St.Add('SetInstallerLanguage.exe');
       St.Add('7za.dll');
       St.Add('DelZip179.dll');
       St.Add('LicenseBASS.txt');
-      St.Add('UpdateCheck.exe');
-      St.Add('InstallVideoCodec.exe');
+      St.Add('AdminLauncher.exe');
       For I:=0 to St.Count-1 do begin
         S:='';
         If FileExists(PrgDir+BinFolder+'\'+St[I]) then S:=PrgDir+BinFolder+'\'+St[I];
@@ -186,6 +183,10 @@ begin
           Application.ProcessMessages;
         end;
       end;
+      If FileExists(PrgDir+'LICENSE') then
+        CopyFile(PChar(PrgDir+'LICENSE'),PChar(DestPrgDir+'LICENSE'),False);
+      If FileExists(PrgDir+'CHANGES') then
+        CopyFile(PChar(PrgDir+'CHANGES'),PChar(DestPrgDir+'CHANGES'),False);
     finally
       St.Free;
     end;

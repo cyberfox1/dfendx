@@ -124,7 +124,7 @@ uses Math, VistaToolsUnit, LanguageSetupUnit, CommonHelpers, CommonTools, PrgSet
      SetupFrameEditorUnit, SetupFrameViewerUnit, SetupFrameWindowsGamesUnit,
      SetupFrameZipPrgsUnit, SetupFrameCustomLanguageStringsUnit,
      SetupFrameGameListIconModeAppearanceUnit, SetupFrameUserInterpreterFrameUnit,
-      SetupFrameImageScalingUnit, SetupFrameMoreEmulatorsUnit,
+      SetupFrameMoreEmulatorsUnit,
       SetupFrameAutomaticConfigurationUnit, SetupFrameDOSBoxGlobalUnit,
       SetupFrameDataPrivacyUnit, MainUnit, SetupFrameExoDOSUnit, System.Types, System.UITypes;
 
@@ -257,7 +257,6 @@ begin
   F:=TSetupFrameGamesListScreenshotModeAppearance.Create(self); AddTreeNode(Root2,F,TSetupFrameGamesListScreenshotModeAppearance(F),True,20);
   F:=TSetupFrameGameListIconModeAppearance.Create(self); AddTreeNode(Root2,F,TSetupFrameGameListIconModeAppearance(F),True,21);
   F:=TSetupFrameGamesListScreenshotAppearance.Create(self); AddTreeNode(Root,F,TSetupFrameGamesListScreenshotAppearance(F),True,18);
-  F:=TSetupFrameImageScaling.Create(self); AddTreeNode(Root,F,TSetupFrameImageScaling(F),True,18);
 
   F:=TSetupFrameProfileEditor.Create(self); AddTreeNode(nil,F,TSetupFrameProfileEditor(F),True,8); Root:=F;
   F:=TSetupFrameDefaultValues.Create(self); AddTreeNode(Root,F,TSetupFrameDefaultValues(F),True,6);

@@ -1,16 +1,53 @@
 unit LoggingUnit;
 interface
 
-Procedure LogInfo(const Info : String; const ContinueLogging : Boolean = True);
+uses PrgConsts;
+
+{ Default llInfo so startup logs run until SetLogLevel(llOff). }
+var CurrentLogLevel : TLogLevel = llInfo;
+
+{ Inline gate only — body must be a separate interface symbol or dcc32 E2441
+  (inline in interface cannot touch LogLock / SysUtils / etc.). }
+Procedure LogInfo(const Info : String); inline;
+Procedure LogInfoWrite(const Info : String);
+Procedure SetLogLevel(const Level : TLogLevel); overload;
+Procedure SetLogLevel(const Level : String); overload;
+Function GetLogLevel : TLogLevel;
 
 implementation
 
-uses SysUtils, ShlObj, CommonTools, SyncObjs;
+uses SysUtils, ShlObj, CommonTools, CommonHelpers, SyncObjs, PrgSetupUnit;
 
 var StartupLogFile : String ='';
     LogLock : TCriticalSection;
 
-Procedure LogInfo(const Info : String; const ContinueLogging : Boolean);
+Procedure SetLogLevel(const Level : TLogLevel);
+begin
+  CurrentLogLevel:=Level;
+end;
+
+Procedure SetLogLevel(const Level : String);
+Var S : String;
+begin
+  S:=ExtUpperCase(Trim(Level));
+  If S=LogLevelInfo then SetLogLevel(llInfo)
+  else If S=LogLevelWarning then SetLogLevel(llWarning)
+  else If S=LogLevelCritical then SetLogLevel(llCritical)
+  else SetLogLevel(llOff);
+end;
+
+Function GetLogLevel : TLogLevel;
+begin
+  result:=CurrentLogLevel;
+end;
+
+Procedure LogInfo(const Info : String);
+begin
+  If CurrentLogLevel=llOff then exit;
+  LogInfoWrite(Info);
+end;
+
+Procedure LogInfoWrite(const Info : String);
 Var F : TextFile;
 begin
   LogLock.Enter;
@@ -33,7 +70,6 @@ begin
       end;
       WriteLn(ErrOutput, '!!! CRITICAL LOGGING ERROR !!!');
     end;
-    If not ContinueLogging then StartupLogFile:='';
   finally
     LogLock.Leave;
   end;
@@ -51,6 +87,8 @@ initialization
       StartupLogFile:='';
     end;
   end;
+  { PrgSetupUnit inits first (uses dependency); apply [ProgramSets] LogLevel. }
+  SetLogLevel(PrgSetup.LogLevel);
 
 finalization
   LogLock.Free;

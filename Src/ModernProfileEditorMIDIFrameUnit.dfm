@@ -109,7 +109,7 @@ object ModernProfileEditorMIDIFrame: TModernProfileEditorMIDIFrame
   object MT32SettingsGroupBox: TGroupBox
     Left = 24
     Top = 313
-    Width = 425
+    Width = 489
     Height = 81
     Caption = 'MT32SettingsGroupBox'
     TabOrder = 5
@@ -121,14 +121,21 @@ object ModernProfileEditorMIDIFrame: TModernProfileEditorMIDIFrame
       Caption = 'MT32ModeLabel'
     end
     object MT32TimeLabel: TLabel
-      Left = 152
+      Left = 132
       Top = 24
       Width = 85
       Height = 15
       Caption = 'MT32TimeLabel'
     end
+    object MT32ModelLabel: TLabel
+      Left = 366
+      Top = 24
+      Width = 92
+      Height = 15
+      Caption = 'MT32ModelLabel'
+    end
     object MT32LevelLabel: TLabel
-      Left = 288
+      Left = 247
       Top = 24
       Width = 85
       Height = 15
@@ -137,26 +144,34 @@ object ModernProfileEditorMIDIFrame: TModernProfileEditorMIDIFrame
     object MT32ModeComboBox: TComboBox
       Left = 16
       Top = 40
-      Width = 121
+      Width = 90
       Height = 23
       Style = csDropDownList
       TabOrder = 0
     end
     object MT32TimeComboBox: TComboBox
-      Left = 152
+      Left = 132
       Top = 40
-      Width = 121
+      Width = 90
       Height = 23
       Style = csDropDownList
       TabOrder = 1
     end
     object MT32LevelComboBox: TComboBox
-      Left = 288
+      Left = 247
       Top = 40
-      Width = 121
+      Width = 90
       Height = 23
       Style = csDropDownList
       TabOrder = 2
+    end
+    object MT32ModelComboBox: TComboBox
+      Left = 366
+      Top = 40
+      Width = 90
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 3
     end
   end
   object FluidSynthGroupBox: TGroupBox

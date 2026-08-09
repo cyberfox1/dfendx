@@ -27,7 +27,12 @@ Procedure GamesListLoadColWidthsFromString(const AListView : TListView; const Da
 Procedure AddScreenshotsToList(const AListView : TListView; const AImageList : TImageList; Dir : String);
 Procedure AddExoScreenshotsToList(const MediaDB : TExoDOSMediaDB; const AListView : TListView; const AImageList : TImageList; const AGame : TGame; const ExtraRootPath : String);
 Procedure AddExoExtrasToList(const MediaDB : TExoDOSMediaDB; const AListView : TListView; const AImageList : TImageList; const AGame : TGame; const ExtraRootPath : String);
-Function GetExoListItemFilePath(const Item : TListItem; const CaptureDir : String) : String;
+{ Resolve original file path for a media list item (capture-folder caption or SubItems full path). }
+Function GetImageListItemFilePath(const Item : TListItem; const CaptureDir : String) : String;
+{ Absolute path for Game.SelectedTitleImage if set and the file exists; else ''. }
+Function ResolveSelectedTitleImagePath(const Game : TGame) : String;
+{ After Screenshots + Extras lists are built: score each image, sort, first key wins. }
+Function PickScreenshotPaneSourceFromLists(const ScreenshotsList, ExtrasList : TListView; const CaptureDir : String) : String;
 Procedure AddSoundsToList(const AListView : TListView; Dir : String; ImageListIndex : TMediaListImageIndex);
 Procedure AddExoSoundsToList(const MediaDB : TExoDOSMediaDB; const AListView : TListView; const AGame : TGame; ImageListIndex : TMediaListImageIndex; const ExtraRootPath : String);
 Procedure AddVideosToList(const AListView : TListView; Dir : String; ImageListIndex : TMediaListImageIndex);
@@ -59,7 +64,7 @@ Function BuildDefaultDosProfile(const GameDB : TGameDB; const CopyFiles : Boolea
 Procedure BuildDefaultProfile;
 Procedure ReBuildTemplates(const InBackground : Boolean);
 Function CopyFiles(Source, Dest : String; const OverwriteExistingFiles, ProcessMessages : Boolean) : Boolean;
-Procedure UpdateUserDataFolderAndSettingsAfterUpgrade(const GameDB : TGameDB; const LastVersion : Integer);
+Procedure UpdateUserDataFolderAndSettingsAfterUpgrade(const GameDB : TGameDB; const LastVersion : Integer; const LastVersionStr : String);
 Var FreeDOSInitThreadRunning : Boolean = False;
     TemplatesInitThreadRunning : Boolean = False;
 
@@ -171,6 +176,38 @@ var
   FDosBoxKindTried: array[TDOSBoxKind] of Boolean;
   FGenDocBmp: TBitmap = nil;
   FGenDocTried: Boolean = False;
+
+const
+  { Skip full-decode of huge sources on UI thread (e.g. MI1 covers ~16MB). }
+  MaxThumbSourceBytes = 20 * 1024 * 1024;
+  TooBigThumbCacheKey = 'res:TOOBIGTHUMB';
+
+function EnsureTooBigListImage(const AImageList: TImageList;
+  var TooBigScaledThumb: TBitmap; var TooBigImgIdx: Integer): Integer;
+{ Lazy: first call scales via ScreenshotsCache.GetThumbnailFromBitmap and AddMasked.
+  Later calls reuse TooBigImgIdx. Caller frees TooBigScaledThumb after the list fill. }
+var
+  Src: TBitmap;
+begin
+  if TooBigImgIdx >= 0 then begin
+    Result := TooBigImgIdx;
+    Exit;
+  end;
+  Result := -1;
+  if (AImageList = nil) or (not Assigned(ScreenshotsCache)) then Exit;
+  if (AImageList.Width <= 0) or (AImageList.Height <= 0) then Exit;
+
+  if TooBigScaledThumb = nil then begin
+    Src := GetTooBigPlaceholderBitmap;
+    if Src = nil then Exit;
+    TooBigScaledThumb := ScreenshotsCache.GetThumbnailFromBitmap(Src, TooBigThumbCacheKey,
+      AImageList.Width, AImageList.Height);
+    if TooBigScaledThumb = nil then Exit;
+  end;
+
+  TooBigImgIdx := AImageList.AddMasked(TooBigScaledThumb, clNone);
+  Result := TooBigImgIdx;
+end;
 
 procedure InvalidateDosBoxKindListIconCache;
 var
@@ -798,38 +835,74 @@ begin
 end;
 
 Procedure ScaleGraphicToImageList(const Graphic : TGraphic; const ImageList : TImageList; const UseFiltering : Boolean; const UseBackgroundColor : Boolean; const BackgroundColor : TColor);
-Var B,B2 : TBitmap;
-    D1,D2 : Double;
-    W,H : Integer;
+{ Aspect-fit Graphic into ImageList slot via WIC (same scaler path as ViewImageForm:
+  rasterize -> TWICImage -> CreateScaledCopy). Does not use ScreenshotsCache. }
+Var
+  SrcBmp, Dest : TBitmap;
+  Wic, Scaled : TWICImage;
+  DrawSrc : TGraphic;
+  NewW, NewH, X, Y : Integer;
+  Mode : TWICImageInterpolationMode;
 begin
-  B:=TBitmap.Create;
+  if (Graphic=nil) or (ImageList=nil) then Exit;
+  if (Graphic.Width<=0) or (Graphic.Height<=0) then Exit;
+  if (ImageList.Width<=0) or (ImageList.Height<=0) then Exit;
+
   try
-    SetStretchBltMode(B.Canvas.Handle,STRETCH_HALFTONE);
-    SetBrushOrgEx(B.Canvas.Handle,0,0,nil);
-    B.Transparent:=True;
-
-    If UseBackgroundColor then begin
-      B.Canvas.Brush.Color:=BackgroundColor;
-      B.Canvas.Rectangle(-1,-1,B.Width+1,B.Height+1);
-    end;
-
-    B2:=nil;
+    { Rasterize any TGraphic (bitmap/icon/metafile) so WIC has a bitmap master. }
+    SrcBmp:=TBitmap.Create;
     try
-      B2:=TBitmap.Create;
-      B2.Width:=Graphic.Width;
-      B2.Height:=Graphic.Height;
-      B2.Canvas.Draw(0,0,Graphic);
+      SrcBmp.PixelFormat:=pf32bit;
+      SrcBmp.SetSize(Graphic.Width,Graphic.Height);
+      SrcBmp.Canvas.Draw(0,0,Graphic);
 
-      B.Width:=ImageList.Width; B.Height:=ImageList.Height;
-      D1:=B2.Width/B2.Height; D2:=B.Width/B.Height;
-      If D1>=D2 then begin W:=B.Width; H:=Round(W/D1); end else begin H:=B.Height; W:=Round(H*D1); end;
-      ScaleImage(B2,B,W,H,UseFiltering);
-      ImageList.Add(B,nil);
+      Wic:=TWICImage.Create;
+      try
+        Wic.Assign(SrcBmp);
+        if Wic.Empty or (Wic.Width<=0) or (Wic.Height<=0) then Exit;
+
+        CalcWH(Wic.Width,Wic.Height,ImageList.Width,ImageList.Height,NewW,NewH);
+        if (NewW<=0) or (NewH<=0) then Exit;
+
+        if UseFiltering then
+          Mode:=wipmHighQualityCubic
+        else
+          Mode:=wipmNearestNeighbor;
+
+        Scaled:=nil;
+        if (NewW<>Wic.Width) or (NewH<>Wic.Height) then
+          Scaled:=Wic.CreateScaledCopy(NewW,NewH,Mode);
+        try
+          if Scaled<>nil then DrawSrc:=Scaled else DrawSrc:=Wic;
+
+          Dest:=TBitmap.Create;
+          try
+            Dest.PixelFormat:=pf32bit;
+            Dest.SetSize(ImageList.Width,ImageList.Height);
+            Dest.Transparent:=True;
+            if UseBackgroundColor then
+              Dest.Canvas.Brush.Color:=BackgroundColor
+            else
+              Dest.Canvas.Brush.Color:=clWhite;
+            Dest.Canvas.FillRect(Rect(0,0,Dest.Width,Dest.Height));
+            X:=(Dest.Width-NewW) div 2;
+            Y:=(Dest.Height-NewH) div 2;
+            Dest.Canvas.Draw(X,Y,DrawSrc);
+            ImageList.Add(Dest,nil);
+          finally
+            Dest.Free;
+          end;
+        finally
+          Scaled.Free;
+        end;
+      finally
+        Wic.Free;
+      end;
     finally
-      If B2<>nil then B2.Free;
+      SrcBmp.Free;
     end;
-  finally
-    B.Free;
+  except
+    { List rebuild must not abort on a bad icon/graphic. }
   end;
 end;
 
@@ -878,60 +951,51 @@ begin
   FKindIconIndex[Kind] := Result;
 end;
 
+Function ResolveSelectedTitleImagePath(const Game : TGame) : String;
+Var Candidate, CaptureDir : String;
+begin
+  result:='';
+  if Game=nil then exit;
+  Candidate:=Trim(Game.SelectedTitleImage);
+  if Candidate='' then exit;
+
+  CaptureDir:=Trim(Game.CaptureFolder);
+  if CaptureDir<>'' then CaptureDir:=MakeAbsPath(CaptureDir,PrgSetup.BaseDir);
+
+  if Pos('\',Candidate)=0 then begin
+    { bare filename: prefer capture dir }
+    if CaptureDir<>'' then
+      Candidate:=IncludeTrailingPathDelimiter(CaptureDir)+Candidate
+    else
+      Candidate:=MakeAbsPath(Candidate,PrgSetup.BaseDir);
+  end else
+    Candidate:=MakeAbsPath(Candidate,PrgSetup.BaseDir);
+
+  if FileExists(Candidate) then result:=Candidate;
+end;
+
 Function LoadScreenshotToImageLists(const Game : TGame; ImageList2 : TImageList; const UseBackgroundColor : Boolean; const BackgroundColor : TColor) : Boolean;
-Var S,T,U : String;
-    Rec : TSearchRec;
-    I : Integer;
-    P : TPicture;
-    B : Boolean;
-    St : TStringList;
+{ Screenshot-mode list icons: SelectedTitleImage only (no pick). Sized from ImageList2
+  (PrgSetup.ScreenshotListViewWidth/Height). ScreenshotsCache with cache ON. }
+Var T : String;
+    B : TBitmap;
 begin
   result:=False;
-  S:=Trim(Game.CaptureFolder);
-  If S='' then exit;
-  S:=MakeAbsPath(S,PrgSetup.BaseDir);
-  If not DirectoryExists(S) then exit;
+  if (Game=nil) or (ImageList2=nil) then exit;
+  if not Assigned(ScreenshotsCache) then exit;
+  if (ImageList2.Width<=0) or (ImageList2.Height<=0) then exit;
 
-  B:=False;
-  If Trim(Game.ScreenshotListScreenshot)<>'' then begin
-    If Pos('\',Game.ScreenshotListScreenshot)<>0 then begin
-      T:=MakeAbsPath(Game.ScreenshotListScreenshot,PrgSetup.BaseDir);
-    end else begin
-      T:=IncludeTrailingPathDelimiter(S)+Trim(Game.ScreenshotListScreenshot);
-    end;
-    B:=FileExists(T);
+  T:=ResolveSelectedTitleImagePath(Game);
+  if T='' then exit;
+
+  B:=ScreenshotsCache.GetThumbnail(T,ImageList2.Width,ImageList2.Height);
+  if B=nil then exit;
+  try
+    ImageList2.AddMasked(B,clNone);
+    result:=True;
+  finally
+    B.Free;
   end;
-
-  If (not B) and PrgSetup.ScreenshotListUseFirstScreenshot then begin
-    T:='';
-    St:=TStringList.Create;
-    try
-      I:=FindFirst(IncludeTrailingPathDelimiter(S)+'*.*',faAnyFile,Rec);
-      try
-        While I=0 do begin
-          If (Rec.Attr and faDirectory)=0 then begin
-            U:=ExtUpperCase(ExtractFileExt(Rec.Name));
-            If (U='.BMP') or (U='.GIF') or (U='.PNG') or (U='.JPG') or (U='.JPEG') then St.Add(Rec.Name);
-          end;
-          I:=FindNext(Rec);
-        end;
-      finally
-       FindClose(Rec);
-      end;
-      St.Sort;
-
-      If St.Count>0 then T:=IncludeTrailingPathDelimiter(S)+St[Min(St.Count-1,Max(0,PrgSetup.ScreenshotListUseFirstScreenshotNr-1))];
-    finally
-      St.Free;
-    end;
-  end;
-  
-  If T='' then exit;
-
-  P:=PictureCache.GetPicture(T);
-  result:=(P<>nil);
-
-  If result then ScaleGraphicToImageList(P.Graphic,ImageList2,True,UseBackgroundColor,BackgroundColor);
 end;
 
 Procedure AddGameToList(const AListView : TListView; var ItemsUsed : Integer; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const Game : TGame; const ShowExtraInfo : Boolean; const O,V : String; const VUserSt : TStringList; const T : String; const ScreenshotViewMode, ScummVMTemplate : Boolean; const UseBackgroundColor : Boolean; const BackgroundColor : TColor);
@@ -942,34 +1006,21 @@ Var IconNr,I,J,Nr : Integer;
     SubUsed,SubCount : Integer;
     Icon : TIcon;
     St : TStringList;
-    T0, TIcon, TItem : UInt64;
-    IconPath : String;
-    IconSrc : String;
 begin
-  T0:=GetTickCount64;
-  IconPath:='';
-  IconSrc:='none';
-
   {Set IconNr to the corrosponding icon in imagelist}
-  TIcon:=GetTickCount64;
   B:=False; IconNr:=0;
   If ScreenshotViewMode then begin
     B:=LoadScreenshotToImageLists(Game,AListViewIconImageList,UseBackgroundColor,BackgroundColor);
-    If B then begin
-      IconNr:=AListViewIconImageList.Count-1;
-      IconSrc:='screenshot';
-    end;
+    If B then IconNr:=AListViewIconImageList.Count-1;
   end;
   If not B then begin
     If Trim(Game.Icon)<>'' then S:=MakeAbsIconName(Game.Icon) else S:='';
     If (S<>'') and (not FileExists(S)) then S:='';
     If (S='') and WindowsExeMode(Game) and PrgSetup.UseWindowsExeIcons then
       S:=MakeAbsIconName(MakeAbsPath(Game.GameExe,PrgSetup.BaseDir));
-    IconPath:=S;
     If S<>'' then Icon:=IconCache.GetIcon(S) else Icon:=nil;
     B:=(Icon<>nil);
     If B then begin
-      IconSrc:='file';
       AListViewImageList.AddIcon(Icon);
       If ScreenshotViewMode then begin
         ScaleGraphicToImageList(Icon,AListViewIconImageList,True,UseBackgroundColor,BackgroundColor);
@@ -992,13 +1043,10 @@ begin
     If I>=0 then begin
       B:=True;
       IconNr:=I;
-      IconSrc:='dosboxkind';
     end;
   end;
-  TIcon:=GetTickCount64-TIcon;
 
   {Set L to TListItem to use}
-  TItem:=GetTickCount64;
   If ItemsUsed>=AListView.Items.Count
     then L:=AListView.Items.Add
     else L:=AListView.Items[ItemsUsed];
@@ -1069,13 +1117,6 @@ begin
     end;
     ImageIndex:=IconNr;
   end;
-  TItem:=GetTickCount64-TItem;
-
-  S:='AddGameToList: "'+Game.CacheName+'" total='+FloatToStrF(Double(GetTickCount64-T0),ffFixed,8,0)
-    +'ms icon='+FloatToStrF(Double(TIcon),ffFixed,8,0)+'ms item='+FloatToStrF(Double(TItem),ffFixed,8,0)
-    +'ms src='+IconSrc+' idx='+IntToStr(IconNr);
-  If IconPath<>'' then S:=S+' path="'+IconPath+'"';
-  LogInfo(S);
 end;
 
 Procedure AddGameToList(const AListView : TListView; var ItemsUsed : Integer; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const Game : TGame; const ShowExtraInfo, ScreenshotViewMode, ScummVMTemplate : Boolean; const UseBackgroundColor : Boolean; const BackgroundColor : TColor);
@@ -1520,12 +1561,16 @@ end;
 
 Procedure AddScreenshotsToList(const AListView : TListView; const AImageList : TImageList; Dir : String);
 Var St : TStringList;
-    K : Integer;
-    B : TBitmap;
+    K, ImgIdx : Integer;
+    B, TooBigScaledThumb : TBitmap;
+    TooBigImgIdx : Integer;
     L : TListItem;
+    Sz : Int64;
 begin
   AListView.SortType:=stNone;
   Dir:=IncludeTrailingPathDelimiter(Dir);
+  TooBigScaledThumb:=nil;
+  TooBigImgIdx:=-1;
 
   St:=TStringList.Create;
   try
@@ -1533,15 +1578,25 @@ begin
 
     For K:=0 to St.Count-1 do begin
       if not Assigned(ScreenshotsCache) then Break;
-      B:=ScreenshotsCache.GetThumbnail(St[K],AImageList.Width,AImageList.Height);
-      If B<>nil then begin
-        AImageList.AddMasked(B,clNone); B.Free;
+      Sz:=GetFileSize(St[K]);
+      if Sz>MaxThumbSourceBytes then begin
+        ImgIdx:=EnsureTooBigListImage(AImageList,TooBigScaledThumb,TooBigImgIdx);
+        if ImgIdx<0 then Continue;
         L:=AListView.Items.Add;
         L.Caption:=ExtractFileName(St[K]);
-        L.ImageIndex:=AImageList.Count-1;
+        L.ImageIndex:=ImgIdx;
+      end else begin
+        B:=ScreenshotsCache.GetThumbnail(St[K],AImageList.Width,AImageList.Height);
+        If B<>nil then begin
+          AImageList.AddMasked(B,clNone); B.Free;
+          L:=AListView.Items.Add;
+          L.Caption:=ExtractFileName(St[K]);
+          L.ImageIndex:=AImageList.Count-1;
+        end;
       end;
     end;
   finally
+    TooBigScaledThumb.Free;
     St.Free;
   end;
 
@@ -1551,47 +1606,58 @@ end;
 
 Procedure AddExoScreenshotsToList(const MediaDB : TExoDOSMediaDB; const AListView : TListView; const AImageList : TImageList; const AGame : TGame; const ExtraRootPath : String);
 Var St, Parts : TStringList;
-    K : Integer;
-    B : TBitmap;
+    K, ImgIdx : Integer;
+    B, TooBigScaledThumb : TBitmap;
+    TooBigImgIdx : Integer;
     L : TListItem;
     Cap : String;
+    Sz : Int64;
 begin
   if (AGame=nil) or (not PrgSetup.HasValidExoInstallation) then exit;
   { ExtraRootPath unused: screenshots are MediaDB only. }
 
-  LogInfo('ExoScreenshots: game="'+AGame.Name+'" norm="'+NormalizeExoMediaKey(AGame.Name)+'"');
   St:=MediaDB.GetScreenshotPaths(NormalizeExoMediaKey(AGame.Name));
-  LogInfo('ExoScreenshots: count='+IntToStr(St.Count));
+  TooBigScaledThumb:=nil;
+  TooBigImgIdx:=-1;
   try
     For K:=0 to St.Count-1 do begin
       if not Assigned(ScreenshotsCache) then Break;
-      B:=ScreenshotsCache.GetThumbnail(St[K],AImageList.Width,AImageList.Height);
-      If B<>nil then begin
-        AImageList.AddMasked(B,clNone); B.Free;
-        Parts:=ExoImagePathParts(St[K]);
-        try
-          if (Parts.Count>=2) and (Parts[1]<>'') then
-            Cap:=Parts[1]+' (Exo)'
-          else
-            Cap:='Screenshot (Exo)';
-        finally
-          Parts.Free;
-        end;
+      Sz:=GetFileSize(St[K]);
+      Parts:=ExoImagePathParts(St[K]);
+      try
+        if (Parts.Count>=2) and (Parts[1]<>'') then
+          Cap:=Parts[1]+' (Exo)'
+        else
+          Cap:='Screenshot (Exo)';
+      finally
+        Parts.Free;
+      end;
+
+      if Sz>MaxThumbSourceBytes then begin
+        ImgIdx:=EnsureTooBigListImage(AImageList,TooBigScaledThumb,TooBigImgIdx);
+        if ImgIdx<0 then Continue;
         L:=AListView.Items.Add;
         L.Caption:=Cap;
-        L.ImageIndex:=AImageList.Count-1;
+        L.ImageIndex:=ImgIdx;
         L.SubItems.Add(St[K]);
+      end else begin
+        B:=ScreenshotsCache.GetThumbnail(St[K],AImageList.Width,AImageList.Height);
+        If B<>nil then begin
+          AImageList.AddMasked(B,clNone); B.Free;
+          L:=AListView.Items.Add;
+          L.Caption:=Cap;
+          L.ImageIndex:=AImageList.Count-1;
+          L.SubItems.Add(St[K]);
+        end;
       end;
     end;
   finally
+    TooBigScaledThumb.Free;
     St.Free;
   end;
 end;
 
 Procedure AddExoExtrasToList(const MediaDB : TExoDOSMediaDB; const AListView : TListView; const AImageList : TImageList; const AGame : TGame; const ExtraRootPath : String);
-const
-  { Avoid full-decode of multi-MB covers on UI thread (e.g. MI1 Extras ~16MB). }
-  MaxThumbSourceBytes = 8 * 1024 * 1024;
 Type
   TExoExtraListEntry = record
     FullPath : String;
@@ -1601,7 +1667,8 @@ Type
   TExoExtraListEntries = array of TExoExtraListEntry;
 Var St : TStringList;
     N : Integer;
-    B, Scaled : TBitmap;
+    B, TooBigScaledThumb : TBitmap;
+    TooBigImgIdx : Integer;
     L : TListItem;
     Cap : String;
     Entries : TExoExtraListEntries;
@@ -1646,29 +1713,6 @@ Var St : TStringList;
     end;
   end;
 
-  function AddTooBigPlaceholderThumb : Integer;
-  { Returns ImageList index, or -1. Does not use ScreenshotsCache.
-    Same fit as CalcThumbnail: portrait stays portrait (aspect preserved). }
-  Var NewW, NewH : Integer;
-  begin
-    result:=-1;
-    B:=GetTooBigPlaceholderBitmap;
-    if B=nil then exit;
-    Scaled:=TBitmap.Create;
-    try
-      Scaled.PixelFormat:=pf24bit;
-      Scaled.SetSize(AImageList.Width,AImageList.Height);
-      { Match normal thumbs: white field + centered aspect-fit (not stretch-to-wide). }
-      Scaled.Canvas.Brush.Color:=clWhite;
-      Scaled.Canvas.FillRect(Rect(0,0,Scaled.Width,Scaled.Height));
-      CalcWH(B.Width,B.Height,AImageList.Width,AImageList.Height,NewW,NewH);
-      ScaleImage(B,Scaled,NewW,NewH);
-      result:=AImageList.AddMasked(Scaled,clNone);
-    finally
-      Scaled.Free;
-    end;
-  end;
-
   procedure AddEntriesToList(const OnlyLarge : Boolean);
   Var I, ImgIdx : Integer;
       IsLarge : Boolean;
@@ -1678,7 +1722,7 @@ Var St : TStringList;
       if IsLarge<>OnlyLarge then continue;
 
       if IsLarge then begin
-        ImgIdx:=AddTooBigPlaceholderThumb;
+        ImgIdx:=EnsureTooBigListImage(AImageList,TooBigScaledThumb,TooBigImgIdx);
         if ImgIdx<0 then continue;
       end else begin
         if not Assigned(ScreenshotsCache) then continue;
@@ -1700,6 +1744,8 @@ begin
   if (AGame=nil) or (not PrgSetup.HasValidExoInstallation) then exit;
 
   SetLength(Entries,0);
+  TooBigScaledThumb:=nil;
+  TooBigImgIdx:=-1;
 
   CollectPlatformExtras;
   CollectGameRootExtras;
@@ -1707,26 +1753,96 @@ begin
   { Keep insertion order; stText would re-sort by caption. }
   AListView.SortType:=stNone;
 
-  { Small real thumbs first; large sources use resource placeholder (no cache). }
-  AddEntriesToList(False);
-  AddEntriesToList(True);
+  try
+    { Small real thumbs first; large sources share one too-big imagelist slot. }
+    AddEntriesToList(False);
+    AddEntriesToList(True);
+  finally
+    TooBigScaledThumb.Free;
+  end;
 end;
 
-Function GetExoListItemFilePath(const Item : TListItem; const CaptureDir : String) : String;
-Var ExoRoot, Stored : String;
+Function GetImageListItemFilePath(const Item : TListItem; const CaptureDir : String) : String;
+Var Stored : String;
 begin
+  { Screenshots capture-folder: Caption = filename, no SubItems.
+    eXo screenshots / Extras: SubItems[0] = full path. }
   result:='';
   if Item=nil then exit;
-  ExoRoot:=Trim(PrgSetup.ExoDOSDir);
-  if (Item.SubItems.Count>0) and (ExoRoot<>'') then begin
-    Stored:=Item.SubItems[0];
-    if (Stored<>'') and (Pos(UpperCase(IncludeTrailingPathDelimiter(ExoRoot)), UpperCase(Stored))=1) then begin
+  if Item.SubItems.Count>0 then begin
+    Stored:=Trim(Item.SubItems[0]);
+    if (Stored<>'') and FileExists(Stored) then begin
       result:=Stored;
       exit;
     end;
   end;
   if CaptureDir<>'' then
     result:=IncludeTrailingPathDelimiter(CaptureDir)+Item.Caption;
+end;
+
+Function PickScreenshotPaneSourceFromLists(const ScreenshotsList, ExtrasList : TListView; const CaptureDir : String) : String;
+Var
+  Keys : TStringList;
+
+  function ListThumbSize(const LV : TListView; out TW, TH : Integer) : Boolean;
+  begin
+    Result:=False;
+    TW:=0; TH:=0;
+    if LV=nil then Exit;
+    if (LV.LargeImages<>nil) and (LV.LargeImages is TImageList) then begin
+      TW:=TImageList(LV.LargeImages).Width;
+      TH:=TImageList(LV.LargeImages).Height;
+      Result:=(TW>0) and (TH>0);
+    end else if (LV.SmallImages<>nil) and (LV.SmallImages is TImageList) then begin
+      TW:=TImageList(LV.SmallImages).Width;
+      TH:=TImageList(LV.SmallImages).Height;
+      Result:=(TW>0) and (TH>0);
+    end;
+  end;
+
+  function ItemPath(const Item : TListItem) : String;
+  begin
+    { Path only — no FileExists (metadata pick must not touch disk). }
+    Result:='';
+    if Item=nil then Exit;
+    if Item.SubItems.Count>0 then
+      Result:=Trim(Item.SubItems[0]);
+    if (Result='') and (CaptureDir<>'') and (Item.Caption<>'') then
+      Result:=IncludeTrailingPathDelimiter(CaptureDir)+Item.Caption;
+  end;
+
+  procedure ConsiderList(const LV : TListView);
+  Var I, TW, TH, OW, OH, Prio : Integer;
+      Path : String;
+      Sz : Int64;
+      IsPortrait : Boolean;
+  begin
+    if LV=nil then exit;
+    if not Assigned(ScreenshotsCache) then exit;
+    if not ListThumbSize(LV,TW,TH) then exit;
+    for I:=0 to LV.Items.Count-1 do begin
+      Path:=ItemPath(LV.Items[I]);
+      if Path='' then Continue;
+      if not ScreenshotsCache.GetCachedMeta(Path,TW,TH,Sz,OW,OH) then Continue;
+      IsPortrait:=ImageIsPortrait(OW,OH);
+      Prio:=DetermineImagePriority(Path,IsPortrait,OW,OH);
+      Keys.Add(BuildScreenshotPaneSortKey(Prio,Sz,Path,OW,OH));
+    end;
+  end;
+
+begin
+  Result:='';
+  Keys:=TStringList.Create;
+  try
+    Keys.Sorted:=False;
+    ConsiderList(ScreenshotsList);
+    ConsiderList(ExtrasList);
+    if Keys.Count=0 then Exit;
+    Keys.Sort;
+    Result:=ExtractPathFromScreenshotPaneSortKey(Keys[0]);
+  finally
+    Keys.Free;
+  end;
 end;
 
 Procedure AddExoSoundsToList(const MediaDB : TExoDOSMediaDB; const AListView : TListView; const AGame : TGame; ImageListIndex : TMediaListImageIndex; const ExtraRootPath : String);
@@ -2085,213 +2201,13 @@ begin
     If not G.UseScanCodesOld then begin G.UseScanCodes:=False; B:=True; end;
   end;
 
-  If B then begin
-    LogInfo('Upgrade: UpdateTemplate modified '+G.CacheName);
-    G.StoreAllValues;
-  end;
+  If B then G.StoreAllValues;
 end;
 
-Procedure UpdateUserDataFolderAndSettingsAfterUpgrade(const GameDB : TGameDB; const LastVersion : Integer);
-Var Source,Dest,S : String;
-    I : Integer;
-    DB : TGameDB;
-    G : TGame;
-    B : Boolean;
+Procedure UpdateUserDataFolderAndSettingsAfterUpgrade(const GameDB : TGameDB; const LastVersion : Integer; const LastVersionStr : String);
 begin
-  LogInfo('Upgrade: UpdateUserDataFolderAndSettingsAfterUpgrade ENTERED LastVersion='+IntToStr(LastVersion)+' PrgSetup.FirstRun='+BoolToStr(PrgSetup.FirstRun,True));
-  {Copy new and changed NewUserData files to DataDir}
-  If PrgDataDir<>PrgDir then begin
-    {Update DataReader.xml to version 6 (only if upgrade from below 1.4.0)}
-    if LastVersion<10400 then begin
-      If FileExists(PrgDir+NewUserDataSubDir+'\'+DataReaderConfigFile) then CopyFile(PChar(PrgDir+NewUserDataSubDir+'\'+DataReaderConfigFile),PChar(PrgDataDir+SettingsFolder+'\'+DataReaderConfigFile),False); {False = overwrite existing file}
-    end;
-
-    {Update installer package base script (only if upgrade from below 0.9)}
-    If LastVersion<900 then begin
-      If FileExists(PrgDir+NSIInstallerHelpFile) then begin
-        CopyFile(PChar(PrgDir+NSIInstallerHelpFile),PChar(PrgDataDir+SettingsFolder+'\'+NSIInstallerHelpFile),False); {False = overwrite existing file}
-      end else begin
-        If FileExists(PrgDir+BinFolder+'\'+NSIInstallerHelpFile) then begin
-          CopyFile(PChar(PrgDir+BinFolder+'\'+NSIInstallerHelpFile),PChar(PrgDataDir+SettingsFolder+'\'+NSIInstallerHelpFile),False); {False = overwrite existing file}
-        end;
-      end;
-    end;
-
-    {Copy Icons.ini to settings folder (always)}
-    If FileExists(PrgDir+NewUserDataSubDir+'\'+IconsConfFile) then begin
-      If FileExists(PrgDataDir+SettingsFolder+'\'+IconsConfFile) then begin
-        If FileExists(PrgDataDir+SettingsFolder+'\'+ChangeFileExt(IconsConfFile,'.old')) then DeleteFile(PrgDataDir+SettingsFolder+'\'+ChangeFileExt(IconsConfFile,'.old'));
-        RenameFile(PrgDataDir+SettingsFolder+'\'+IconsConfFile,PrgDataDir+SettingsFolder+'\'+ChangeFileExt(IconsConfFile,'.old'));
-      end;
-      CopyFile(PChar(PrgDir+NewUserDataSubDir+'\'+IconsConfFile),PChar(PrgDataDir+SettingsFolder+'\'+IconsConfFile),True);
-    end;
-
-    {Add new auto setup templates (always)}
-    CopyFiles(PrgDir+NewUserDataSubDir+'\'+AutoSetupSubDir,PrgDataDir+AutoSetupSubDir,False,True); {False = do not overwrite existing file}
-
-    {Update DozZip (only if upgrade from below 1.3)}
-    If LastVersion<10300 then begin
-      Source:=PrgDir+NewUserDataSubDir+'\DOSZIP\';
-      If DirectoryExists(Source) then CopyFiles(Source,IncludeTrailingPathDelimiter(PrgSetup.GameDir)+'DOSZIP\',True,True);
-    end;
-
-    {Update FreeDOS (only if upgrade from below 1.3)}
-    If LastVersion<10300 then begin
-      Source:=PrgDir+NewUserDataSubDir+'\FREEDOS';
-      Dest:=IncludeTrailingPathDelimiter(PrgSetup.GameDir)+'FREEDOS';
-      if DirectoryExists(Source) and DirectoryExists(Dest) then begin
-        if (GetMD5Sum(Dest+'\kernel.sys',true)=FD10KernelSys) and (GetMD5Sum(Source+'\kernel.sys',true)=FD11KernelSys) then
-          CopyFiles(Source,Dest,True,True);
-      end;
-    end;
-
-    {Update DOSBox screenshot}
-    ForceDirectories(PrgDataDir+CaptureSubDir+'\'+DosBoxDOSProfile+'\');
-    CopyFiles(PrgDir+NewUserDataSubDir+'\'+CaptureSubDir+'\'+DosBoxDOSProfile+'\',PrgDataDir+CaptureSubDir+'\'+DosBoxDOSProfile+'\',True,False);
-  end;
-
-  {Update game DB: Max->max, Auto->auto (only if upgrade from below 9.0)}
-  If LastVersion<900 then begin
-    For I:=0 to GameDB.Count-1 do begin
-      B:=False;
-      If GameDB[I].Cycles='Max' then begin GameDB[I].Cycles:='max'; B:=True; end;
-      If GameDB[I].Cycles='Auto' then begin GameDB[I].Cycles:='auto'; B:=True; end;
-      If B then begin GameDB[I].StoreAllValues; GameDB[I].LoadCache; end;
-      Application.ProcessMessages;
-    end;
-  end;
-
-  {Update default template}
-  G:=TGame.Create(PrgSetup);
-  try
-    If LastVersion<10000 then begin
-      G.GUS:=False;
-      G.CyclesUp:=10;
-      G.MixerRate:=44100;
-      G.MixerBlocksize:=1024;
-      G.MixerPrebuffer:=20;
-      G.SBOplRate:=44100;
-      G.GUSRate:=44100;
-      G.SpeakerRate:=44100;
-      G.SpeakerTandyRate:=44100;
-      G.JoystickButtonwrap:=False;
-    end;
-    If LastVersion<900 then begin
-      If G.Cycles='Max' then G.Cycles:='max';
-      If G.Cycles='Auto' then G.Cycles:='auto';
-    end;
-    G.StoreAllValues;
-  finally
-    G.Free;
-  end;
-
-  {Update templates and auto setup template (see UpdateTemplate)}
-  LogInfo('Upgrade: loading TemplateDB');
-  DB:=TGameDB.Create(PrgDataDir+TemplateSubDir,False);
-  try
-    LogInfo('Upgrade: updating '+IntToStr(DB.Count)+' templates');
-    For I:=0 to DB.Count-1 do begin
-      UpdateTemplate(DB[I],LastVersion);
-      Application.ProcessMessages;
-    end;
-    LogInfo('Upgrade: TemplateDB update complete');
-  finally
-    DB.Free;
-  end;
-  LogInfo('Upgrade: loading AutoSetupDB');
-  DB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,False);
-  try
-    LogInfo('Upgrade: updating '+IntToStr(DB.Count)+' auto-setup templates');
-    For I:=0 to DB.Count-1 do begin
-      UpdateTemplate(DB[I],LastVersion);
-      Application.ProcessMessages;
-    end;
-    LogInfo('Upgrade: AutoSetupDB update complete');
-  finally
-    DB.Free;
-  end;
-  G:=TGame.Create(PrgSetup);
-  try
-    UpdateTemplate(G,LastVersion);
-  finally
-    G.Free;
-  end;
-
-  {Change year from 2007 or 2009 to 2010 and "multilingual" to "Multilingual" in "DOSBox DOS" profile (always / only if upgrade from below 9.0)}
-  I:=GameDB.IndexOf(DosBoxDOSProfile);
-  If (I>0) and ((GameDB[I].CacheYear='2007') or (GameDB[I].CacheYear='2009')) then begin
-    GameDB[I].Year:='2010'; GameDB[I].StoreAllValues; GameDB[I].LoadCache;
-  end;
-  If LastVersion<900 then begin
-    If (I>0) and (GameDB[I].CacheLanguage='multilingual') then begin
-      GameDB[I].Language:='Multilingual'; GameDB[I].StoreAllValues; GameDB[I].LoadCache;
-    end;
-  end;
-
-  {Update Autoexec.bat in "DOSBox DOS" profile (only if upgrade from below 1.3)}
-  If LastVersion<10300 then begin
-    BuildDefaultDosProfileAutoexec(GameDB);
-  end;
-
-  {Add new games list column}
-  If LastVersion<10009 then begin
-    PrgSetup.ColVisible:=Copy(PrgSetup.ColVisible,1,7)+'0'+Copy(PrgSetup.ColVisible,8,MaxInt);
-    S:=Trim(PrgSetup.ColOrder);
-    For I:=0 to length(S) do begin
-      If S[I]='8' then begin S[I]:='9'; continue; end;
-      If S[I]='9' then begin S[I]:='A'; continue; end;
-      If (ExtUpperCase(S[I])>='A') and (ExtUpperCase(S[I])<='Y') then S[I]:=chr(ord(S[I])+1);
-    end;
-    PrgSetup.ColOrder:=S;
-  end;
-
-  {Update settings in ConfOpt.dat}
-  If LastVersion<11100 then begin
-    GameDB.ConfOpt.ResolutionFullscreen:=DefaultValuesResolutionFullscreen;
-    GameDB.ConfOpt.ResolutionWindow:=DefaultValuesResolutionWindow;
-  end;
-  If LastVersion<10000 then begin
-    GameDB.ConfOpt.Video:=DefaultValuesVideo;
-    GameDB.ConfOpt.ResolutionFullscreen:=DefaultValuesResolutionFullscreen;
-    GameDB.ConfOpt.ResolutionWindow:=DefaultValuesResolutionWindow;
-    GameDB.ConfOpt.TandyRate:=DefaultValuesTandyRate;
-    GameDB.ConfOpt.Sblaster:=DefaultValuesSBlaster;
-    GameDB.ConfOpt.ReportedDOSVersion:=DefaultValuesReportedDOSVersion;
-  end;
-  If LastVersion<902 then begin
-    GameDB.ConfOpt.Codepage:=DefaultValuesCodepage;
-    GameDB.ConfOpt.TandyRate:=DefaultValuesTandyRate;
-  end;
-  If LastVersion<901 then begin
-    GameDB.ConfOpt.KeyboardLayout:=DefaultValuesKeyboardLayout;
-    GameDB.ConfOpt.Codepage:=DefaultValuesCodepage;
-  end;
-  If LastVersion<900 then begin
-    GameDB.ConfOpt.Video:=DefaultValuesVideo;
-  end;
-  If LastVersion<801 then begin
-    GameDB.ConfOpt.Joysticks:=DefaultValuesJoysticks;
-    GameDB.ConfOpt.GUSRate:=DefaultValuesGUSRate;
-    GameDB.ConfOpt.OPLRate:=DefaultValuesOPLRate;
-    GameDB.ConfOpt.PCRate:=DefaultValuesPCRate;
-    GameDB.ConfOpt.Rate:=DefaultValuesRate;
-    GameDB.ConfOpt.Oplmode:=DefaultValuesOPLModes;
-    GameDB.ConfOpt.SBBase:=DefaultValuesSBBase;
-    GameDB.ConfOpt.GUSBase:=DefaultValuesGUSBase;
-    GameDB.ConfOpt.Dma:=DefaultValuesDMA;
-    GameDB.ConfOpt.GUSDma:=DefaultValuesDMA1;
-    GameDB.ConfOpt.HDMA:=DefaultValuesHDMA;
-    GameDB.ConfOpt.Memory:=DefaultValuesMemory;
-  end;
-  If LastVersion<800 then begin
-    GameDB.ConfOpt.ResolutionFullscreen:=DefaultValuesResolutionFullscreen;
-    GameDB.ConfOpt.ResolutionWindow:=DefaultValuesResolutionWindow;
-    GameDB.ConfOpt.Scale:=DefaultValuesScale;
-    GameDB.ConfOpt.Video:=DefaultValuesVideo;
-  end;
-  GameDB.ConfOpt.StoreAllValues;
+  LogInfo('Upgrading DFendX installation from '+LastVersionStr+' to '+GetNormalFileVersionAsString+'.');
 end;
-
 Function RestoreFREEDOSFolder(const ShowWaitForm : Boolean) : Boolean;
 Var Source1, Source2, Dest1, Dest2 : String;
     B1, B2 : Boolean;

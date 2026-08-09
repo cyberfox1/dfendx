@@ -111,7 +111,8 @@ begin
     0 : begin
           S:=Trim(FolderEdit.Text);
           If S='' then S:=PrgSetup.BaseDir else S:=IncludeTrailingPathDelimiter(MakeAbsPath(IncludeTrailingPathDelimiter(S),PrgSetup.BaseDir));
-          If SelectDirectory(Handle,LanguageSetup.ExtractImageFolderTitle,S) then FolderEdit.Text:=S;
+          { Source folder — not ExtractImage's "destination folder" title. }
+          If SelectDirectory(Handle,LanguageSetup.ImageFromFolderSourceFolder,S) then FolderEdit.Text:=S;
         end;
     1 : begin
           S:=Trim(FileNameEdit.Text);

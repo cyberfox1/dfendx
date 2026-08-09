@@ -109,30 +109,26 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
   SetOutPath "$INSTDIR"
   File "..\DFend.exe"
   ; PE-import + LoadLibrary / BASS_PluginLoad: next to DFend.exe
-  File "..\Bin\bass.dll"
-  File "..\Bin\bassflac.dll"
-  ; FireDAC SQLite vendor lib (EnsureSqlite3Dll.bat / BuildProject)
-  File "..\Bin\sqlite3.dll"
+  File "staging\Bin\bass.dll"
+  File "staging\Bin\bassflac.dll"
+  File "staging\Bin\sqlite3.dll"
+  File "..\LICENSE"
+  File "..\CHANGES"
   
   SetOutPath "$INSTDIR\Bin"
-  File "..\Bin\mkdosfs.exe"  
-  File "..\Bin\oggenc2.exe"
-  File "..\Bin\License.txt"
-  File "..\Bin\LicenseComponents.txt"
-  File "..\Bin\Links.txt"
-  File "..\Bin\SearchLinks.txt"
-  File "..\Bin\ChangeLog.txt"
-  File "..\Bin\DFendX DataInstaller.nsi"
-  File "..\Bin\UpdateCheck.exe"
-  File "..\Bin\SetInstallerLanguage.exe"  
-  File "..\Bin\7za.dll"
-  File "..\Bin\DelZip179.dll"
-  File "..\Bin\LicenseBASS.txt"
-  File "..\Bin\InstallVideoCodec.exe"
-  File "..\Bin\AdminLauncher.exe"
-  File "..\Bin\dfxvalidator.exe"
-  IntCmp $InstallDataType 2 +2
-  File "..\Bin\DFendGameExplorerData.dll"
+  File "staging\Bin\mkdosfs.exe"
+  File "staging\Bin\LicenseMTOOLS.txt"
+  File "staging\Bin\oggenc2.exe"
+  File "staging\Bin\libFLAC.dll"
+  File "staging\Bin\LicenseComponents.txt"
+  File "staging\Bin\Links.txt"
+  File "staging\Bin\SearchLinks.txt"
+  File "staging\Bin\7za.dll"
+  File "staging\Bin\DelZip179.dll"
+  File "staging\Bin\LicenseBASS.txt"
+  File "staging\Bin\AdminLauncher.exe"
+  File "staging\Bin\SetInstallerLanguage.exe"
+  File "staging\Bin\dfxvalidator.exe"
 
   SetOutPath "$INSTDIR\Lang"
   File "..\Lang\*.ini"
@@ -144,25 +140,34 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
   Delete "$INSTDIR\IconSets\Modern\Thumbs.db"
   
   SetOutPath "$DataInstDir\Settings"
-  File "..\Bin\Cheats.xml"
+  File "staging\Bin\Cheats.xml"
 
-  ; Remove files in $INSTDIR for which the new position is $INSTDIR\Bin or $INSTDIR\Lang
+  ; Remove legacy license/changelog locations (now only $INSTDIR\LICENSE and CHANGES)
   
   Delete "$INSTDIR\oggenc2.exe"
   Delete "$INSTDIR\LicenseComponents.txt"
   Delete "$INSTDIR\License.txt"
+  Delete "$INSTDIR\Bin\License.txt"
   IntCmp $InstallDataType 0 KeepSettingsFilesIfPrgDirIsUserDir  
   Delete "$INSTDIR\Links.txt"
   Delete "$INSTDIR\SearchLinks.txt"
   KeepSettingsFilesIfPrgDirIsUserDir:
   Delete "$INSTDIR\ChangeLog.txt"
+  Delete "$INSTDIR\Changelog.txt"
+  Delete "$INSTDIR\Bin\ChangeLog.txt"
+  Delete "$INSTDIR\Bin\Changelog.txt"
   Delete "$INSTDIR\DFendX DataInstaller.nsi"
+  Delete "$INSTDIR\Bin\DFendX DataInstaller.nsi"
+  Delete "$INSTDIR\AdminLauncher.exe"
   Delete "$INSTDIR\SetInstallerLanguage.exe"
   Delete "$INSTDIR\UpdateCheck.exe"
+  Delete "$INSTDIR\InstallVideoCodec.exe"
   Delete "$INSTDIR\7za.dll"
   Delete "$INSTDIR\DelZip179.dll"
-  Delete "$INSTDIR\InstallVideoCodec.exe"
+  Delete "$INSTDIR\Bin\UpdateCheck.exe"
+  Delete "$INSTDIR\Bin\InstallVideoCodec.exe"
   Delete "$INSTDIR\mkdosfs.exe"
+  Delete "$INSTDIR\LicenseMTOOLS.txt"
   Delete "$INSTDIR\mediaplr.dll"
   Delete "$INSTDIR\Bin\mediaplr.dll"
   Delete "$INSTDIR\Bin\bass.dll"
@@ -170,6 +175,12 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
   Delete "$INSTDIR\Bin\sqlite3.dll"
   Delete "$INSTDIR\LicenseBASS.txt"
   Delete "$INSTDIR\Readme_OperationMode.txt"
+  Delete "$INSTDIR\DFendGameExplorerData.dll"
+  Delete "$INSTDIR\Bin\DFendGameExplorerData.dll"
+  ; Legacy DataReader.xml (unused MobyGames scrape config; no longer shipped)
+  Delete "$DataInstDir\Settings\DataReader.xml"
+  Delete "$INSTDIR\Settings\DataReader.xml"
+  Delete "$INSTDIR\NewUserData\DataReader.xml"
 
   ; Install templates  
   
@@ -189,7 +200,6 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
 	
     SetOutPath "$DataInstDir\Settings"
     File /nonfatal "..\NewUserData\Icons.ini"
-	File "..\Tools\DataReaderServer\DataReader.xml"
   
   Goto TemplateWritingFinish
   WriteNewUserDir:  
@@ -208,11 +218,6 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
 	
     SetOutPath "$INSTDIR\NewUserData"
     File /nonfatal "..\NewUserData\Icons.ini"
-	File "..\Tools\DataReaderServer\DataReader.xml"
-
-    ; Runtime path PrgDataDir\Settings (e.g. %USERPROFILE%\DFendX\Settings)
-    SetOutPath "$DataInstDir\Settings"
-    File "..\Tools\DataReaderServer\DataReader.xml"
 
   TemplateWritingFinish:
   
@@ -268,7 +273,7 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
   WriteRegDWord HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\DFendX" "NoModify" 1
   WriteRegDWord HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\DFendX" "NoRepair" 1
   
-  !insertmacro AddToGamesExplorer
+  Call GameExplorerUninstall
 
   NoDFendStartMenuLinks:
 SectionEnd
@@ -278,44 +283,7 @@ SectionEnd
 ; Bundled DOSBox is no longer shipped. Users install DOSBox separately;
 ; DFend discovers it at first run (SearchDosBox). Uninstaller still
 ; removes any leftover $INSTDIR\DOSBox from older installs.
-
-
-SectionGroup "$(LANGNAME_Tools)" ID_Tools
-
-Section "$(LANGNAME_FreeDosTools)" ID_FreeDosTools
-  SetDetailsPrint both  
-  DetailPrint "$(LANGNAME_InstallFreeDOS)"
-  SetDetailsPrint listonly
-  
-  IntCmp $InstallDataType 1 FreeDOSToNewUserDir
-    SetOutPath "$DataInstDir\VirtualHD\FREEDOS"
-  Goto FreeDOSWritingStart
-  FreeDOSToNewUserDir:
-    SetOutPath "$INSTDIR\NewUserData\FREEDOS"
-  FreeDOSWritingStart:
-  
-  SetDetailsPrint none
-  File /nonfatal /r "..\NewUserData\FREEDOS\*.*"
-SectionEnd
-
-Section "$(LANGNAME_Doszip)" ID_Doszip
-  SetDetailsPrint both
-  DetailPrint "$(LANGNAME_InstallDOSZip)"
-  SetDetailsPrint listonly
-  
-  IntCmp $InstallDataType 1 DoszipToNewUserDir
-    SetOutPath "$DataInstDir\VirtualHD\DOSZIP"
-  Goto DoszipWritingStart
-  DoszipToNewUserDir:
-    SetOutPath "$INSTDIR\NewUserData\DOSZIP"
-  DoszipWritingStart:
-  
-  SetDetailsPrint none
-  File /nonfatal /r "..\NewUserData\DOSZIP\*.*"
-SectionEnd
-
-SectionGroupEnd
-
+; FreeDOS / DOSZip components are no longer packaged.
 
 
 Section "$(LANGNAME_DesktopShortcut)" ID_DesktopShortcut
@@ -408,9 +376,6 @@ Function InstallMode
   IntCmp $9 1 FastMode
   Goto InstallModePageFinish
   FastMode:  
-  !insertmacro ActivateSection ${ID_Tools}
-  !insertmacro ActivateSection ${ID_FreeDosTools}
-  !insertmacro ActivateSection ${ID_Doszip}
   StrCpy $INSTDIR "$PROGRAMFILES\DFendX\"
   IntOp $InstallDataType 1 + 0
   IntOp $FastInstallationMode 1 + 0
@@ -479,9 +444,6 @@ FunctionEnd
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
   !insertmacro MUI_DESCRIPTION_TEXT ${ID_DFend} $(DESC_DFend)
-  !insertmacro MUI_DESCRIPTION_TEXT ${ID_Tools} $(DESC_Tools)
-  !insertmacro MUI_DESCRIPTION_TEXT ${ID_FreeDosTools} $(DESC_FreeDosTools)
-  !insertmacro MUI_DESCRIPTION_TEXT ${ID_Doszip} $(DESC_Doszip)
   !insertmacro MUI_DESCRIPTION_TEXT ${ID_DesktopShortcut} $(DESC_DesktopShortcut)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 

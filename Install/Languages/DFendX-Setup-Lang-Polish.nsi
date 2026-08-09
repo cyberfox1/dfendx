@@ -9,7 +9,7 @@ LangString LANGNAME_NeedAdminRightsUpdate ${LANG_POLISH} "Bez praw administrator
 LangString LANGNAME_WelcomeText ${LANG_POLISH} "Ten kreator poprowadzi ciê przez proces instalacji ${PrgName}.\r\n\r\nDFendX jest programem typu open source objêtym licencj¹ GPL 3. (Mo¿esz j¹ zobaczyæ klikaj¹c w programie Help|About.) DFendX comes without any guarantee or warranty.\r\n\r\nKliknij Dalej, aby kontynuowaæ." ; EXTENDED
 LangString LANGNAME_WelcomeTextUpdate ${LANG_POLISH} "Ten kreator poprowadzi ciê przez proces aktualizacji ${PrgName}.\r\n\r\nInstalator wymaga istniej¹cej instalacji DFendX !\r\n\r\nKliknij Dalej, aby kontynuowaæ."
 LangString LANGNAME_Next ${LANG_POLISH} "Dalej"
-LicenseLangString LANGNAME_License ${LANG_POLISH} "..\Bin\License.txt"
+LicenseLangString LANGNAME_License ${LANG_POLISH} "..\LICENSE"
 LangString LANGNAME_LICENSE_TITLE ${LANG_POLISH} "Informacje"
 LangString LANGNAME_LICENSE_SUBTITLE ${LANG_POLISH} "Informacje dodatkowe o ${PrgName}"
 LangString LANGNAME_LICENSE_TOP ${LANG_POLISH} "Przeczytaj poni¿sz¹ informacjê zanim kontynuujesz:"
@@ -24,30 +24,23 @@ LangString LANGNAME_DFendReloaded ${LANG_POLISH} "DFendX"
 LangString LANGNAME_Uninstall ${LANG_POLISH} "Odinstaluj"
 LangString LANGNAME_GamesFolder ${LANG_POLISH} "Folder gier"
 LangString LANGNAME_GameDataFolder ${LANG_POLISH} "Folder instrukcji"
-LangString LANGNAME_CaptureFolder ${LANG_POLISH} "Screenshots folder" ; NEW
+LangString LANGNAME_CaptureFolder ${LANG_POLISH} "Folder zrzutów ekranu" ; NEW
 LangString LANGNAME_Deinstall ${LANG_POLISH} "odinstaluj"
 LangString LANGNAME_ConfirmDelUserData ${LANG_POLISH} "Czy chcesz równie¿ usun¹æ folder danych $DataInstDir ?"
-LangString LANGNAME_ConfirmDelPrgDir ${LANG_POLISH} "There are some files not created by the DFendX installer in the installation directory. Do you want to remove the folder $INSTDIR anyway?" ; NEW
+LangString LANGNAME_ConfirmDelPrgDir ${LANG_POLISH} "W katalogu instalacji znajdują się pliki, których nie utworzył instalator DFendX. Czy mimo to usunąć folder $INSTDIR?" ; NEW
 
 LangString LANGNAME_NoInstallationFound ${LANG_POLISH} "W podanym folderze nie ma instalacji DFendX, która mog³aby byæ uaktualniona."
-LangString LANGNAME_NotDFendXInstallation ${LANG_POLISH} "This folder is not a DFendX installation. Need DFend.dat, DFend.exe, Bin\dfxvalidator.exe, and a DFendX File Description on DFend.exe."
+LangString LANGNAME_NotDFendXInstallation ${LANG_POLISH} "Nieprawidłowa instalacja DFendX."
+LangString LANGNAME_InstalledVersionNewer ${LANG_POLISH} "Zainstalowana jest już nowsza wersja DFendX ($R8). Ta aktualizacja dotyczy wersji ${VER_MAYOR}.${VER_MINOR1}.${VER_MINOR2} i nie może służyć do obniżenia wersji."
 
-LangString LANGNAME_Tools ${LANG_POLISH} "Narzêdzia"
-LangString LANGNAME_FreeDosTools ${LANG_POLISH} "Narzêdzia FreeDOS'a do u¿ycia w DosBox'ie"
-LangString LANGNAME_Doszip ${LANG_POLISH} "Doszip Commander"
 LangString LANGNAME_DesktopShortcut ${LANG_POLISH} "Skrót na pulpicie"
 
 LangString LANGNAME_InstallDFendReloaded ${LANG_POLISH} "Instalowanie g³ównych komponentów DFendX"
 LangString LANGNAME_InstallStartMenu ${LANG_POLISH} "Tworzenie skrótów w Menu Start"
-LangString LANGNAME_InstallFreeDOS ${LANG_POLISH} "Instalowanie FreeDOS'a"
-LangString LANGNAME_InstallDOSZip ${LANG_POLISH} "Instalowanie DOSZip Commander'a"
 LangString LANGNAME_InstallDesktopShortcut ${LANG_POLISH} "Tworzenie skrótu na pulpicie"
 
 LangString LANGNAME_UpdateDFendReloaded ${LANG_POLISH} "Uaktualnianie g³ównych komponentów DFendX"
 LangString LANGNAME_UpdateUninstaller ${LANG_POLISH} "Uaktualnianie programu odinstalowuj¹cego"
 
 LangString DESC_DFend ${LANG_POLISH} "DFendX jest graficznym interfejsem do zarz¹dzania DOS'owymi grami."
-LangString DESC_Tools ${LANG_POLISH} "Narzêdzia do u¿ycia w DOSBox'ie."
-LangString DESC_FreeDosTools ${LANG_POLISH} "Narzêdzia linii komend FreeDOS'a do u¿ycia w DOSBox'ie."
-LangString DESC_Doszip ${LANG_POLISH} "Doszip Commander jest klonem Norton Commandera do u¿ycia w DOSBox'ie."
 LangString DESC_DesktopShortcut ${LANG_POLISH} "Tworzy na pulpicie skrót do DFendX."

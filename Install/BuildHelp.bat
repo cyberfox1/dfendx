@@ -1,5 +1,5 @@
 @echo off
-REM Build Lang\English.chm and Lang\German.chm from Help\ sources using Free Pascal chmcmd.
+REM Build .\Lang\English.chm and .\Lang\German.chm from Help\ using Free Pascal chmcmd.
 REM Includes full [MAP] + [ALIAS] so Application.HelpCommand(HELP_CONTEXT, id) works.
 REM Called by BuildInstallers(x86|x64).bat before makensis.
 REM Requires: chmcmd.exe (PATH, CHMCMD env, or same FPC bin as test\runTests.bat).

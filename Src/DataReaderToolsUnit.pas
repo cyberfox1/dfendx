@@ -23,32 +23,23 @@ Function GetPlainDecodedText(Lines : String) : String;
 
 implementation
 
-uses SysUtils, Forms, IdHTTP, Math, CommonHelpers;
+uses SysUtils, Math, CommonHelpers, PrgSetupUnit, HTTPDownloadHelpers, System.NetEncoding;
 
 function DownloadFile(const URL, Referer: String): TMemoryStream;
-Var HTTP: TIdHTTP;
+var
+  Status: Integer;
 begin
-  if (LowerCase(Copy(URL,1,7))<>'http://') and (LowerCase(Copy(URL,1,8))<>'https://') and (LowerCase(Copy(URL,1,6))<>'ftp://') then begin result:=nil; exit; end;
-                                                                                                                                                                 
-  if Pos('https://', LowerCase(URL)) = 1 then begin
-    // no SSL support configured
-    result := nil;
-    exit;
-  end;
+  Result := nil;
+  if (not THTTPDownloadHelper.IsInternetURL(URL)) or THTTPDownloadHelper.IsFTPURL(URL) then
+    Exit;
 
-  HTTP:=TIdHTTP.Create(nil);
+  Result := TMemoryStream.Create;
   try
-    result:=TMemoryStream.Create;
-    try
-      HTTP.Request.UserAgent:='User-Agent=Mozilla/5.0 (Windows; U; Windows NT 6.0)';
-      HTTP.Request.AcceptLanguage:='en';
-      HTTP.Request.Referer:=Referer;
-      HTTP.Get(URL,result);
-    except
-      FreeAndNil(result);
-    end;
-  finally
-    HTTP.Free;
+    if not THTTPDownloadHelper.HTTPRequestToStream('GET', URL, nil,
+      PrgSetup.HTTPUserAgent, Referer, 30000, 30000, Result, Status, nil) then
+      FreeAndNil(Result);
+  except
+    FreeAndNil(Result);
   end;
 end;
 
@@ -103,18 +94,9 @@ begin
 end;
 
 Function EncodeName(const Name : String) : String;
-Var I : Integer;
 begin
-  result:='';
-  For I:=1 to length(Name) do Case Name[I] of
-    ' ' : result:=result+'+';
-    '/' : result:=result+'%2F';
-    '#' : result:=result+'%23';
-    '+' : result:=result+'%2B';
-    '?' : result:=result+'%3F';
-    '&' : result:=result+'%26';
-    else result:=result+Name[I];
-  end;
+  { Standard URL component encoding (space → %20, not +). }
+  Result := TNetEncoding.URL.Encode(Name);
 end;
 
 Function TryHexStrToInt(const S : String; var Value : Integer) : Boolean;

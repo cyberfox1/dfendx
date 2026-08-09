@@ -63,7 +63,6 @@ SetCompressor /solid lzma
 ; Do NOT UPX-pack the NSIS exehead. UPX 3.x/5.x on modern NSIS 3 Unicode
 ; stubs commonly produces an installer that exits immediately with no UI
 ; (exit code 2). Payload packing of DFend.exe below is separate and OK.
-; !packhdr "$%TEMP%\exehead.tmp" 'upx-prefer-path.bat "$%TEMP%\exehead.tmp"'
 
 ; Native elevation (Vista+): OS shows UAC from the EXE manifest.
 ; XP ignores this; UserInfo in .onInit still gates Program Files mode.
@@ -80,11 +79,13 @@ ShowUninstDetails nevershow
 
 
 
-; Pack program file (PATH upx first; ignore non-zero if already packed)
+; Pack program file (upx on PATH; ignore non-zero if already packed)
 ; ============================================================
 
-!system 'cmd /c "upx-prefer-path.bat ..\DFend.exe & exit /b 0"'
-!system 'cmd /c "upx-prefer-path.bat ..\Bin\oggenc2.exe & exit /b 0"'
+!system 'cmd /c "upx ..\DFend.exe & exit /b 0"'
+!system 'cmd /c "for %I in (staging\Bin\*.exe) do @upx "%I" >nul 2>&1"'
+!system 'cmd /c "for %I in (staging\Bin\*.dll) do @upx "%I" >nul 2>&1"'
+
 
 
 
@@ -289,6 +290,8 @@ FunctionEnd
     Delete $INSTDIR\Bin\bass.dll
     Delete $INSTDIR\Bin\bassflac.dll
     Delete $INSTDIR\Bin\sqlite3.dll
+    Delete $INSTDIR\DFendGameExplorerData.dll
+    Delete $INSTDIR\Bin\DFendGameExplorerData.dll
     RmDir /r $INSTDIR\Bin
 	RmDir /r $INSTDIR\DOSBox
 	RmDir /r $INSTDIR\IconSets
@@ -306,6 +309,7 @@ FunctionEnd
     Delete $INSTDIR\Links.txt;
     Delete $INSTDIR\SearchLinks.txt
     Delete "$INSTDIR\DFendX DataInstaller.nsi"
+    Delete "$INSTDIR\Bin\DFendX DataInstaller.nsi"
 	
     Push "$INSTDIR"
     Call un.isEmptyDir
@@ -334,20 +338,6 @@ FunctionEnd
   SectionEnd
   
 !macroend
-
-!macro AddToGamesExplorer
-  SetShellVarContext all
-  IfFileExists "$APPDATA\Microsoft\Windows\GameExplorer\*.*" 0 AddToGamesExplorerDone
-  ClearErrors
-  Call GameExplorerUninstall ; Remove old DFendX Game Explorer records
-  StrCpy $GEGUID "{C4CC218B-7E0A-4616-9ECB-500221826266}"  
-  WriteRegStr HKLM "Software\DFendX" "GameExplorerGUID" "$GEGUID"
-  ClearErrors
-  ${GameExplorer_AddGame} all $INSTDIR\Bin\DFendGameExplorerData.dll $INSTDIR $INSTDIR\DFend.exe $GEGUID
-  AddToGamesExplorerDone:
-!macroend
-
-
 
 ; Definition of NSIS functions
 ; ============================================================

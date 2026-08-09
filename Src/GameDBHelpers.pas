@@ -68,6 +68,12 @@ Type TConfOptH=class(TBasePrgSetup)
     property VSyncStaging : String index 55 read GetString write SetString;
     property VSyncStagingOld : String index 56 read GetString write SetString;
     property VSyncX : String index 57 read GetString write SetString;
+    property MIDIDeviceStaging : String index 58 read GetString write SetString;
+    property MIDIDeviceStagingOld : String index 59 read GetString write SetString;
+    property MIDIDeviceX : String index 60 read GetString write SetString;
+    { MT-32 model conf values: Staging [mt32] model / DOSBox-X mt32.model }
+    property MT32ModelStaging : String index 61 read GetString write SetString;
+    property MT32ModelX : String index 62 read GetString write SetString;
 end;
 
 const NR_Name=1;
@@ -85,9 +91,9 @@ const NR_Name=1;
       NR_ExtraDirs=21;
       NR_ExtraFiles=22;
       NR_LastModification=23;
-      NR_ScreenshotListScreenshot=24;
       NR_IgnoreWindowsFileWarnings=25;
       NR_NoDOSBoxFailedDialog=26;
+      NR_SelectedTitleImage=27;
 
       NR_ExtraPrgFile=30; {30-79}
       NR_ExtraPrgFileParameter=80; {80-129}
@@ -177,7 +183,7 @@ const NR_Name=1;
       NR_ShaderPreset=264;
       NR_VSync=265;
       NR_FluidSoundFont=266;
-      NR_FluidSoundFontGain=267;
+      NR_MIDIDeviceGainValue=267;
       NR_MuteWhenInactive=268;
       NR_PauseWhenInactive=269;
       NR_OnScreenInactive=270;
@@ -243,6 +249,8 @@ const NR_Name=1;
       NR_MIDIMT32Mode=374;
       NR_MIDIMT32Time=375;
       NR_MIDIMT32Level=376;
+      NR_MIDIMT32RomDir=377;
+      NR_MIDIMT32Model=378;
       NR_SpeakerPC=381;
       NR_SpeakerRate=382;
       NR_SpeakerTandy=383;
@@ -404,9 +412,10 @@ Type TGameDBH=class;
     property ExtraDirs : String index NR_ExtraDirs read GetString write SetString;
     property ExtraFiles : String index NR_ExtraFiles read GetString write SetString;
     property LastModification : String index NR_LastModification read GetString write SetString;
-    property ScreenshotListScreenshot : String index NR_ScreenshotListScreenshot read GetString write SetString;
     property IgnoreWindowsFileWarnings : Boolean index NR_IgnoreWindowsFileWarnings read GetBoolean write SetBoolean;
     property NoDOSBoxFailedDialog : Boolean index NR_NoDOSBoxFailedDialog read GetBoolean write SetBoolean;
+    { Cached path for main-form screenshot pane; empty = run pick algo. }
+    property SelectedTitleImage : String index NR_SelectedTitleImage read GetString write SetString;
 
     property ExtraPrgFile[I : Integer] : String read GetExtraPrgFile write SetExtraPrgFile;
     property ExtraPrgFileParameter[I : Integer] : String read GetExtraPrgFileParameter write SetExtraPrgFileParameter;
@@ -487,7 +496,7 @@ Type TGameDBH=class;
     { Staging/X FluidSynth SoundFont path. Empty = unset / omit from conf. }
     property FluidSoundFont : String index NR_FluidSoundFont read GetString write SetString;
     { Staging/X FluidSynth gain percent as string "1".."800". Empty = unset / omit. }
-    property FluidSoundFontGain : String index NR_FluidSoundFontGain read GetString write SetString;
+    property MIDIDeviceGainValue : String index NR_MIDIDeviceGainValue read GetString write SetString;
     { Legacy profile flags; prefer OnScreenInactive. Kept for reading old confs. }
     property MuteWhenInactive : Boolean index NR_MuteWhenInactive read GetBoolean write SetBoolean;
     property PauseWhenInactive : Boolean index NR_PauseWhenInactive read GetBoolean write SetBoolean;
@@ -555,6 +564,8 @@ Type TGameDBH=class;
     property MIDIMT32Mode : String index NR_MIDIMT32Mode read GetString write SetString;
     property MIDIMT32Time : String index NR_MIDIMT32Time read GetString write SetString;
     property MIDIMT32Level : String index NR_MIDIMT32Level read GetString write SetString;
+    property MIDIMT32RomDir : String index NR_MIDIMT32RomDir read GetString write SetString;
+    property MIDIMT32Model : String index NR_MIDIMT32Model read GetString write SetString;
     property SpeakerPC : Boolean index NR_SpeakerPC read GetBoolean write SetBoolean;
     property SpeakerRate : Integer index NR_SpeakerRate read GetInteger write SetInteger;
     property SpeakerTandy : String index NR_SpeakerTandy read GetString write SetString;
@@ -722,7 +733,8 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
       DefaultValuesVideo='hercules (Hercules Graphics Card),cga (Color Graphics Adapter),tandy (Tandy),pcjr (IBM PCjr),ega (Enhanced Graphics Adapter),'+
                          'vgaonly (Video Graphics Array), svga_s3 (VESA 2.0 compatible S3 SuperVGA card), svga_et3000 (Tseng ET3000 SuperVGA card),'+
                          'svga_et4000 (Tseng ET4000 SuperVGA card),svga_paradise (Paradise PVGA1A SuperVGA card),vesa_nolfb (VESA 2.0 compatible S3 SuperVGA card),'+
-                         'vesa_oldvbe (VESA 1.2 compatible S3 SuperVGA card)';
+                         'vesa_oldvbe (VESA 1.2 compatible S3 SuperVGA card),'+
+                         'PC98,DOS/V,olivetti (Olivetti M24 / AT&T 6300),pc3270 (IBM 3270 PC)';
       DefaultValuesMemory='1,2,4,8,16,32,63';
       DefaultValuesFrameSkip='0,1,2,3,4,5,6,7,8,9,10';
       DefaultValuesCore='auto,normal,dynamic,simple';
@@ -750,7 +762,16 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
                             '58210 (Cyrillic Azeri Cyrillic),59234 (Cyrillic Tatar),59829 (Georgian),60258 (Cyrillic Azeri Latin),60853 (Georgian with capital letters),'+
                             '61282 (Latvian and Russian "RusLat"),62306 (Cyrillic Uzbek)';
       DefaultValuesReportedDOSVersion='default,6.22,6.2,6.0,5.0,4.0,3.3';
-      DefaultValuesMIDIDevice='default,alsa,oss,win32,coreaudio,none';
+      DefaultValuesMIDIDevice='default,alsa,oss,win32,coreaudio,mt32,none';
+      DefaultValuesMIDIDeviceStaging='port,fluidsynth,mt32,none';
+      DefaultValuesMIDIDeviceStagingOld='auto,win32,fluidsynth,mt32,none';
+      DefaultValuesMIDIDeviceX='default,win32,fluidsynth,mt32,synth,timidity,none';
+      { Staging [mt32] model Set_values (staging + 83rc). }
+      DefaultValuesMT32ModelStaging=
+        'auto,cm32l,cm32l_102,cm32l_100,cm32ln_100,mt32,mt32_old,mt32_107,mt32_106,'+
+        'mt32_105,mt32_104,mt32_bluer,mt32_new,mt32_207,mt32_206,mt32_204,mt32_203';
+      { DOSBox-X mt32.model Set_values. }
+      DefaultValuesMT32ModelX='auto,cm32l,mt32';
       DefaultValuesBlocksize='512,1024,2048,3072,4096,8192';
       DefaultValuesCyclesDown='20,50,100,500,1000,2000,5000,10000';
       DefaultValuesCyclesUp='20,50,100,500,1000,2000,5000,10000';
@@ -819,7 +840,8 @@ uses Windows, SysUtils, Math, CommonHelpers, CommonTools,
 
 constructor TConfOptH.Create;
 begin
-  inherited Create(PrgDataDir+SettingsFolder+'\'+ConfOptFile);
+  { Empty path: mem-ini only, no ConfOpt.dat load (defaults via AddStringRec). }
+  inherited Create('');
 
   AddStringRec(0,'resolution','value',DefaultValuesResolutionFullscreen);
   AddStringRec(1,'resolutionWindow','value',DefaultValuesResolutionWindow);
@@ -879,6 +901,11 @@ begin
   AddStringRec(55,'vsyncStaging','value',DefaultValueVSyncStaging);
   AddStringRec(56,'vsyncStagingOld','value',DefaultValueVSyncStagingOld);
   AddStringRec(57,'vsyncX','value',DefaultValueVSyncX);
+  AddStringRec(58,'MIDIDeviceStaging','value',DefaultValuesMIDIDeviceStaging);
+  AddStringRec(59,'MIDIDeviceStagingOld','value',DefaultValuesMIDIDeviceStagingOld);
+  AddStringRec(60,'MIDIDeviceX','value',DefaultValuesMIDIDeviceX);
+  AddStringRec(61,'MT32ModelStaging','value',DefaultValuesMT32ModelStaging);
+  AddStringRec(62,'MT32ModelX','value',DefaultValuesMT32ModelX);
 
   CacheAllStrings;
 end;
@@ -950,7 +977,7 @@ begin
   AddStringRec(NR_LastModification,'Extra','LastModification','');
   AddBooleanRec(NR_IgnoreWindowsFileWarnings,'Extras','IgnoreWindowsFileWarnings',False);
   AddBooleanRec(NR_NoDOSBoxFailedDialog,'Extras','NoDOSBoxFailedDialog',False);
-  AddStringRec(NR_ScreenshotListScreenshot,'Extra','ScreenshotListScreenshot','');
+  AddStringRec(NR_SelectedTitleImage,'Extra','SelectedTitleImage','');
 
   For I:=0 to 49 do begin
     AddStringRec(NR_ExtraPrgFile+I,'Extra','ExtraExe'+IntToStr(I),'');
@@ -1044,7 +1071,7 @@ begin
   AddStringRec(NR_ShaderPreset,'vga','ShaderPreset','');
   AddStringRec(NR_VSync,'render','vsync','');
   AddStringRec(NR_FluidSoundFont,'midi','FluidSoundFont','');
-  AddStringRec(NR_FluidSoundFontGain,'midi','FluidSoundFontGain','');
+  AddStringRec(NR_MIDIDeviceGainValue,'midi','MIDIDeviceGainValue','');
   AddBooleanRec(NR_MuteWhenInactive,'sdl','MuteWhenInactive',False);
   AddBooleanRec(NR_PauseWhenInactive,'sdl','PauseWhenInactive',False);
   AddIntegerRec(NR_OnScreenInactive,'sdl','OnScreenInactive',Ord(simDoNothing));
@@ -1109,6 +1136,8 @@ begin
   AddStringRec(NR_MIDIMT32Mode,'midi','MT32Mode','auto');
   AddStringRec(NR_MIDIMT32Time,'midi','MT32Time','5');
   AddStringRec(NR_MIDIMT32Level,'midi','MT32Level','3');
+  AddStringRec(NR_MIDIMT32RomDir,'midi','MT32RomDir','');
+  AddStringRec(NR_MIDIMT32Model,'midi','MT32Model','auto');
   AddBooleanRec(NR_SpeakerPC,'speaker','pcspeaker',true);
   AddIntegerRec(NR_SpeakerRate,'speaker','pcrate',44100);
   AddStringRec(NR_SpeakerTandy,'speaker','tandy','auto');

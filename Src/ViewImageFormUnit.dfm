@@ -143,6 +143,15 @@ object ViewImageForm: TViewImageForm
         ImageIndex = 3
         OnClick = ButtonWork
       end
+      object TitleImageButton: TToolButton
+        Tag = 8
+        Left = 670
+        Top = 0
+        AutoSize = True
+        Caption = 'TitleImageButton'
+        ImageIndex = 7
+        OnClick = ButtonWork
+      end
     end
   end
   object StatusBar: TStatusBar
@@ -506,12 +515,5 @@ object ViewImageForm: TViewImageForm
       Caption = '400%'
       OnClick = ButtonWork
     end
-  end
-  object Timer: TTimer
-    Enabled = False
-    Interval = 500
-    OnTimer = TimerTimer
-    Left = 584
-    Top = 8
   end
 end

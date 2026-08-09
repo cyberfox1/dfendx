@@ -123,7 +123,7 @@ implementation
 
 uses ShellAPI, Math, CommonHelpers, CommonTools, VistaToolsUnit, LanguageSetupUnit,
      PrgSetupUnit, PrgConsts, DOSBoxUnit, DOSBoxUnitHelpers, HelpConsts, IconLoaderUnit,
-     ViewImageFormUnit, PlaySoundFormUnit, PlayVideoFormUnit, GameDBToolsUnit,
+     ViewImageFormUnit, PlaySoundFormUnit, GameDBToolsUnit,
      ClassExtensions, DOSBoxTempUnit, MainUnit, System.UITypes;
 
 {$R *.dfm}
@@ -876,8 +876,7 @@ begin
                              If (T<>'') and (T<>'INTERNAL') then begin PlaySoundDialog(self,S,nil,nil); exit; end;
                            end;
            otVideoPlayer : begin
-                             T:=Trim(ExtUpperCase(PrgSetup.VideoPlayer));
-                             If (T<>'') and (T<>'INTERNAL') then begin PlayVideoDialog(self,S,nil,nil); exit; end;
+                             If OpenMediaFile(PrgSetup.VideoPlayer,S) then exit;
                            end;
            end;
            ShellExecute(Handle,'open',PChar('"'+S+'"'),nil,nil,SW_SHOW);
@@ -1001,12 +1000,8 @@ begin
                       end;
                     end;
     otVideoPlayer : begin
-                      GetFilesInFolder(['.AVI','.MPG','.MPEG','.WMV','.ASF'],FileName,St1,St2);
-                      try
-                        PlayVideoDialog(self,FileName,St1,St2);
-                      finally
-                        St1.Free; St2.Free;
-                      end;
+                      If not OpenMediaFile(PrgSetup.VideoPlayer,FileName) then
+                        ShellExecute(Handle,'open',PChar(FileName),nil,PChar(ExtractFilePath(FileName)),SW_SHOW);
                     end;
     otEditor      : OpenFileInEditor(FileName);
   end;

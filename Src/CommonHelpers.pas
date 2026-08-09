@@ -87,6 +87,12 @@ Function GetFileVersionEx(const AFileName: string) : Cardinal;
 Function VersionToInt(Version : String) : Integer;
 Function MainVersionStringToInt(S : String) : Integer;
 
+{ HTTP User-Agent for THTTPClient.
+  IsWow64 = IsWow64Process result (WOW64 vs Win32 in UA).
+  Example: DFendX/2.0.1 (Windows NT 10.0; WOW64) Delphi 12 (THTTPClient) }
+Function BuildDFendXHTTPUserAgent(const AppVersion: String; WinMajor, WinMinor: Integer; const IsWow64: Boolean): String;
+Function GetDFendXHTTPUserAgent: String;
+
 Function OldDOSBoxVersion(const Version : String) : Boolean;
 
 Function GetFileDate(const FileName : String) : TDateTime;
@@ -554,6 +560,81 @@ begin
       FreeMem(VerBuf);
     end;
   end;
+end;
+
+Function BuildDFendXHTTPUserAgent(const AppVersion: String; WinMajor, WinMinor: Integer; const IsWow64: Boolean): String;
+Var Arch: String;
+begin
+  if IsWow64 then Arch := 'WOW64' else Arch := 'Win32';
+  Result := Format('DFendX/%s (Windows NT %d.%d; %s) Delphi 12 (THTTPClient)',
+    [AppVersion, WinMajor, WinMinor, Arch]);
+end;
+
+Function IsWow64ProcessThis: Boolean;
+{ IsWow64Process(GetCurrentProcess): True → WOW64 token, else Win32. }
+Var
+  Wow64: BOOL;
+  IsWow64ProcessFn: function(hProcess: THandle; var Wow64Process: BOOL): BOOL; stdcall;
+begin
+  Result := False;
+  IsWow64ProcessFn := GetProcAddress(GetModuleHandle(kernel32), 'IsWow64Process');
+  if not Assigned(IsWow64ProcessFn) then Exit;
+  if not IsWow64ProcessFn(GetCurrentProcess, Wow64) then Exit;
+  Result := Wow64;
+end;
+
+Function GetThisModuleFileVersionString: String;
+{ VS_VERSION_INFO from the loaded module (HInstance) — not GetFileVersionInfo(path). }
+Var
+  hResInfo: THandle;
+  hResData: THandle;
+  pRes: Pointer;
+  pFileInfo: PVSFixedFileInfo;
+  puLen: UINT;
+begin
+  Result := '0.0.0';
+  hResInfo := FindResource(HInstance, MakeIntResource(1), RT_VERSION);
+  if hResInfo = 0 then Exit;
+  hResData := LoadResource(HInstance, hResInfo);
+  if hResData = 0 then Exit;
+  pRes := LockResource(hResData);
+  if pRes = nil then Exit;
+  if VerQueryValue(pRes, '\', Pointer(pFileInfo), puLen) then
+    Result := Format('%d.%d.%d',
+      [HiWord(pFileInfo.dwFileVersionMS), LoWord(pFileInfo.dwFileVersionMS),
+       HiWord(pFileInfo.dwFileVersionLS)]);
+end;
+
+Function GetHostWindowsNTVersion(out WinMajor, WinMinor: Integer): Boolean;
+Var
+  vi: TOSVersionInfo;
+begin
+  { GetVersionEx: host OS as seen by this process (manifest may cap the value). }
+  Result := False;
+  WinMajor := 0;
+  WinMinor := 0;
+  FillChar(vi, SizeOf(vi), 0);
+  vi.dwOSVersionInfoSize := SizeOf(vi);
+  if not GetVersionEx(vi) then Exit;
+  WinMajor := Integer(vi.dwMajorVersion);
+  WinMinor := Integer(vi.dwMinorVersion);
+  Result := True;
+end;
+
+Function GetDFendXHTTPUserAgent: String;
+{ Builds the UA string. Call once at PrgSetup.Create and store on PrgSetup.HTTPUserAgent. }
+Var
+  WinMajor, WinMinor: Integer;
+begin
+  if not GetHostWindowsNTVersion(WinMajor, WinMinor) then begin
+    WinMajor := 0;
+    WinMinor := 0;
+  end;
+  Result := BuildDFendXHTTPUserAgent(
+    GetThisModuleFileVersionString,
+    WinMajor,
+    WinMinor,
+    IsWow64ProcessThis);
 end;
 
 Function VersionToInt(Version : String) : Integer;

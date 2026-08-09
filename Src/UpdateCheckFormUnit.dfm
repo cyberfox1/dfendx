@@ -59,20 +59,6 @@ object UpdateCheckForm: TUpdateCheckForm
     WordWrap = True
     ExplicitWidth = 524
   end
-  object InfoLabelDatareader: TLabel
-    Left = 32
-    Top = 332
-    Width = 535
-    Height = 47
-    Anchors = [akLeft, akTop, akRight]
-    AutoSize = False
-    Caption = 
-      'If activated the update checker will update the data reader conf' +
-      'iguration from the server to ensure DFendX is able to i' +
-      'nterpret the MobyGames search results homepage.'
-    WordWrap = True
-    ExplicitWidth = 524
-  end
   object LabelDownload: TLabel
     Left = 16
     Top = 418
@@ -111,13 +97,6 @@ object UpdateCheckForm: TUpdateCheckForm
     Height = 13
     Caption = 'Status: Not yet checked.'
   end
-  object StatusLabelDatareader: TLabel
-    Left = 32
-    Top = 380
-    Width = 120
-    Height = 13
-    Caption = 'Status: Not yet checked.'
-  end
   object CheckBoxProgram: TCheckBox
     Left = 16
     Top = 16
@@ -147,16 +126,6 @@ object UpdateCheckForm: TUpdateCheckForm
     Checked = True
     State = cbChecked
     TabOrder = 2
-  end
-  object CheckBoxDatareader: TCheckBox
-    Left = 16
-    Top = 314
-    Width = 540
-    Height = 17
-    Caption = 'Data reader configuration'
-    Checked = True
-    State = cbChecked
-    TabOrder = 3
   end
   object UpdateButton: TBitBtn
     Tag = 3

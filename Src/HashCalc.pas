@@ -1,44 +1,28 @@
 unit HashCalc;
+{ Thin adapter over System.Hash.THashMD5 for file MD5s.
+  Preserves historical GetMD5Sum contract: empty string on missing/unreadable
+  files; uppercase hex (matches stored profile/kernel checksums).
+  SmallFile is ignored (same digest either way). }
+
 interface
 
 Function GetMD5Sum(const FileName : String; const SmallFile : Boolean) : String;
 
 implementation
 
-uses Classes, SysUtils, HashAlgMD5_U, HashValue_U;
+uses
+  SysUtils, System.Hash;
 
 Function GetMD5Sum(const FileName : String; const SmallFile : Boolean) : String;
-Var FileStream : TFileStream;
-    MemoryStream : TMemoryStream;
-    LHashAlgMD5 : THashAlgMD5;
-    LHashValue: THashValue;
 begin
-  result:='';
-  if (Trim(FileName)='') or (not FileExists(FileName)) then exit;
-
-  LHashAlgMD5:=THashAlgMD5.Create(nil);
-  LHashValue:=THashValue.Create;
+  Result := '';
+  if (Trim(FileName) = '') or (not FileExists(FileName)) then
+    Exit;
   try
-    If SmallFile then begin
-      FileStream:=nil;
-      try MemoryStream:=TMemoryStream.Create; except exit; end;
-    end else begin
-      try FileStream:=TFileStream.Create(FileName,fmOpenRead); except exit; end;
-      MemoryStream:=nil;
-    end;
-    try
-      If SmallFile then MemoryStream.LoadFromFile(FileName);
-      LHashAlgMD5.Init;
-      If SmallFile then LHashAlgMD5.Update(MemoryStream) else LHashAlgMD5.Update(FileStream);
-    finally
-      FileStream.Free;
-      MemoryStream.Free;
-    end;
-    LHashAlgMD5.Final(LHashValue);
-    result:=LHashValue.ValueAsASCIIHex;
-  finally
-    LHashAlgMD5.Free;
-    LHashValue.Free;
+    { Uppercase: legacy inttohex and constants like FD10KernelSys. }
+    Result := AnsiUpperCase(THashMD5.GetHashStringFromFile(FileName));
+  except
+    Result := '';
   end;
 end;
 

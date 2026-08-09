@@ -982,6 +982,13 @@ begin
   SetVolume('SB',Game.MixerVolumeSBLeft,Game.MixerVolumeSBRight);
   SetVolume('FM',Game.MixerVolumeFMLeft,Game.MixerVolumeFMRight);
   SetVolume('CDAUDIO',Game.MixerVolumeCDLeft,Game.MixerVolumeCDRight);
+  { Staging: MT-32 level via mixer channel (no [mt32] gain key). }
+  If (Game.DosBoxKind=dbkStaging) and SameText(Trim(Game.MIDIDevice),'mt32') then begin
+    If TryStrToInt(Trim(Game.MIDIDeviceGainValue),I) then begin
+      If I<0 then I:=0 else If I>1000 then I:=1000;
+      St.Add('mixer MT32 '+IntToStr(I)+' /NOSHOW');
+    end;
+  end;
 
   { Setting num, caps and scroll lock and CuteMouse }
 
@@ -1482,9 +1489,34 @@ begin
         S:=StringReplace(S,'\','/',[rfReplaceAll]);
         result.Add('fluid.soundfont='+S);
       end;
-      If TryStrToInt(Trim(Game.FluidSoundFontGain),I) then begin
+      If TryStrToInt(Trim(Game.MIDIDeviceGainValue),I) then begin
         If I<1 then I:=1 else If I>800 then I:=800;
         result.Add('fluid.gain='+FloatToStrF(I/100.0,ffGeneral,15,4));
+      end;
+    end;
+    { DOSBox-X: MT-32 under [midi] when mididevice=mt32. }
+    If (Game.DosBoxKind=dbkX) and SameText(Trim(Game.MIDIDevice),'mt32') then begin
+      S:=Trim(Game.MIDIMT32RomDir);
+      If S<>'' then begin
+        S:=MakeAbsPath(S,PrgSetup.BaseDir);
+        S:=StringReplace(S,'\','/',[rfReplaceAll]);
+        result.Add('mt32.romdir='+S);
+      end;
+      S:=Trim(Game.MIDIMT32Model);
+      If S='' then S:='auto';
+      result.Add('mt32.model='+S);
+      S:=Trim(Game.MIDIMT32Mode);
+      If S='' then S:='auto';
+      result.Add('mt32.reverb.mode='+S);
+      S:=Trim(Game.MIDIMT32Time);
+      If S='' then S:='5';
+      result.Add('mt32.reverb.time='+S);
+      S:=Trim(Game.MIDIMT32Level);
+      If S='' then S:='3';
+      result.Add('mt32.reverb.level='+S);
+      If TryStrToInt(Trim(Game.MIDIDeviceGainValue),I) then begin
+        If I<0 then I:=0 else If I>1000 then I:=1000;
+        result.Add('mt32.output.gain='+IntToStr(I));
       end;
     end;
   end else begin
@@ -1508,18 +1540,33 @@ begin
       result.Add('');
       result.Add('[fluidsynth]');
       If IsOldStaging then begin
-        If TryStrToInt(Trim(Game.FluidSoundFontGain),I) then begin
+        If TryStrToInt(Trim(Game.MIDIDeviceGainValue),I) then begin
           If I<1 then I:=1 else If I>800 then I:=800;
           result.Add('soundfont='+S+' '+IntToStr(I));
         end else
           result.Add('soundfont='+S);
       end else begin
         result.Add('soundfont='+S);
-        If TryStrToInt(Trim(Game.FluidSoundFontGain),I) then begin
+        If TryStrToInt(Trim(Game.MIDIDeviceGainValue),I) then begin
           If I<1 then I:=1 else If I>800 then I:=800;
           result.Add('soundfont_volume='+IntToStr(I));
         end;
       end;
+    end;
+  end;
+
+  { Staging: [mt32] when mididevice=mt32 (old and new: model + optional romdir). }
+  If IsStaging and SameText(Trim(Game.MIDIDevice),'mt32') then begin
+    result.Add('');
+    result.Add('[mt32]');
+    S:=Trim(Game.MIDIMT32Model);
+    If S='' then S:='auto';
+    result.Add('model='+S);
+    S:=Trim(Game.MIDIMT32RomDir);
+    If S<>'' then begin
+      S:=MakeAbsPath(S,PrgSetup.BaseDir);
+      S:=StringReplace(S,'\','/',[rfReplaceAll]);
+      result.Add('romdir='+S);
     end;
   end;
 

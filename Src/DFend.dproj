@@ -1,0 +1,838 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{4dd53565-9020-4f96-a3fe-83abdf008ed0}</ProjectGuid>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+        <DCC_DependencyCheckOutputName>DFend.exe</DCC_DependencyCheckOutputName>
+        <MainSource>DFend.dpr</MainSource>
+        <Base>True</Base>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <ProjectName Condition="'$(ProjectName)'==''">DFend</ProjectName>
+        <TargetedPlatforms>1</TargetedPlatforms>
+        <AppType>Application</AppType>
+        <FrameworkType>VCL</FrameworkType>
+        <ProjectVersion>20.1</ProjectVersion>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base_Win64>true</Base_Win64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+        <Cfg_2_Win32>true</Cfg_2_Win32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <SanitizedProjectName>DFend</SanitizedProjectName>
+        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;System.Win;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_ExeOutput>..\</DCC_ExeOutput>
+        <DCC_UnitSearchPath>..\LocalSrc;..\Components\SevenZip;..\Components\ZipMaster;..\Components\BASS;..\Components\Abbrevia\source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_ResourcePath>..\LocalSrc;..\Components\SevenZip;..\Components\ZipMaster;..\Components\BASS;..\Components\Abbrevia\source;$(DCC_ResourcePath)</DCC_ResourcePath>
+        <DCC_ObjPath>..\LocalSrc;..\Components\SevenZip;..\Components\ZipMaster;..\Components\BASS;..\Components\Abbrevia\source;$(DCC_ObjPath)</DCC_ObjPath>
+        <DCC_IncludePath>..\LocalSrc;..\Components\SevenZip;..\Components\ZipMaster;..\Components\BASS;..\Components\Abbrevia\source;$(DCC_IncludePath)</DCC_IncludePath>
+        <VerInfo_MajorVer>2</VerInfo_MajorVer>
+        <VerInfo_Locale>1031</VerInfo_Locale>
+        <VerInfo_Keys>CompanyName=;FileDescription=DFendX;FileVersion=2.0.0.0;InternalName=DFendX;LegalCopyright=The DFendX Team;LegalTrademarks=;OriginalFilename=DFend.exe;ProductName=DFendX;ProductVersion=2.0.0.0;Comments=GPL v3</VerInfo_Keys>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <DCC_Namespace>Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
+        <Debugger_CWD>..\</Debugger_CWD>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win64)'!=''">
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+        <DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_Optimize>False</DCC_Optimize>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=2.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
+        <Debugger_CWD>..\</Debugger_CWD>
+    </PropertyGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Parameters>
+                    <Parameters Name="UseLauncher">False</Parameters>
+                    <Parameters Name="LoadAllSymbols">True</Parameters>
+                    <Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+                </Parameters>
+                <VersionInfo>
+                    <VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+                    <VersionInfo Name="AutoIncBuild">False</VersionInfo>
+                    <VersionInfo Name="MajorVer">2</VersionInfo>
+                    <VersionInfo Name="MinorVer">0</VersionInfo>
+                    <VersionInfo Name="Release">0</VersionInfo>
+                    <VersionInfo Name="Build">0</VersionInfo>
+                    <VersionInfo Name="Debug">False</VersionInfo>
+                    <VersionInfo Name="PreRelease">False</VersionInfo>
+                    <VersionInfo Name="Special">False</VersionInfo>
+                    <VersionInfo Name="Private">False</VersionInfo>
+                    <VersionInfo Name="DLL">False</VersionInfo>
+                    <VersionInfo Name="Locale">1031</VersionInfo>
+                    <VersionInfo Name="CodePage">1252</VersionInfo>
+                </VersionInfo>
+                <VersionInfoKeys>
+                    <VersionInfoKeys Name="CompanyName"/>
+                    <VersionInfoKeys Name="FileDescription">DFendX</VersionInfoKeys>
+                    <VersionInfoKeys Name="FileVersion">2.0.0.0</VersionInfoKeys>
+                    <VersionInfoKeys Name="InternalName">DFendX</VersionInfoKeys>
+                    <VersionInfoKeys Name="LegalCopyright">The DFendX Team</VersionInfoKeys>
+                    <VersionInfoKeys Name="LegalTrademarks"/>
+                    <VersionInfoKeys Name="OriginalFilename">DFend.exe</VersionInfoKeys>
+                    <VersionInfoKeys Name="ProductName">DFendX</VersionInfoKeys>
+                    <VersionInfoKeys Name="ProductVersion">2.0.0.0</VersionInfoKeys>
+                    <VersionInfoKeys Name="Comments">GPL v3</VersionInfoKeys>
+                </VersionInfoKeys>
+                <Source>
+                    <Source Name="MainSource">DFend.dpr</Source>
+                </Source>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k290.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp290.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
+            </Delphi.Personality>
+            <ModelSupport>False</ModelSupport>
+            <Platforms>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">False</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="MainUnit.pas">
+            <Form>DFendReloadedMainForm</Form>
+        </DCCReference>
+        <DCCReference Include="CommonComponents.pas"/>
+        <DCCReference Include="CommonHelpers.pas"/>
+        <DCCReference Include="CommonTools.pas"/>
+        <DCCReference Include="PrgSetupUnit.pas"/>
+        <DCCReference Include="SetupDosBoxFormUnit.pas">
+            <Form>SetupDosBoxForm</Form>
+        </DCCReference>
+        <DCCReference Include="LanguageSetupUnit.pas"/>
+        <DCCReference Include="PrgConsts.pas"/>
+        <DCCReference Include="VistaToolsUnit.pas"/>
+        <DCCReference Include="GameDBUnit.pas"/>
+        <DCCReference Include="GameDBToolsHelpers.pas"/>
+        <DCCReference Include="GameDBToolsUnit.pas"/>
+        <DCCReference Include="IconManagerFormUnit.pas">
+            <Form>IconManagerForm</Form>
+        </DCCReference>
+        <DCCReference Include="ProfileMountEditorFormUnit.pas">
+            <Form>ProfileMountEditorForm</Form>
+        </DCCReference>
+        <DCCReference Include="DosBoxUnit.pas"/>
+        <DCCReference Include="HistoryFormUnit.pas">
+            <Form>HistoryForm</Form>
+        </DCCReference>
+        <DCCReference Include="TemplateFormUnit.pas">
+            <Form>TemplateForm</Form>
+        </DCCReference>
+        <DCCReference Include="UninstallFormUnit.pas">
+            <Form>UninstallForm</Form>
+        </DCCReference>
+        <DCCReference Include="UninstallSelectFormUnit.pas">
+            <Form>UninstallSelectForm</Form>
+        </DCCReference>
+        <DCCReference Include="ViewImageFormUnit.pas">
+            <Form>ViewImageForm</Form>
+        </DCCReference>
+        <DCCReference Include="CreateConfFormUnit.pas">
+            <Form>CreateConfForm</Form>
+        </DCCReference>
+        <DCCReference Include="TemplateSelectProfileFormUnit.pas">
+            <Form>TemplateSelectProfileForm</Form>
+        </DCCReference>
+        <DCCReference Include="WizardFormUnit.pas">
+            <Form>WizardForm</Form>
+        </DCCReference>
+        <DCCReference Include="CreateShortcutFormUnit.pas">
+            <Form>CreateShortcutForm</Form>
+        </DCCReference>
+        <DCCReference Include="CreateImageUnit.pas">
+            <Form>CreateImageForm</Form>
+        </DCCReference>
+        <DCCReference Include="InfoFormUnit.pas">
+            <Form>InfoForm</Form>
+        </DCCReference>
+        <DCCReference Include="TransferFormUnit.pas">
+            <Form>TransferForm</Form>
+        </DCCReference>
+        <DCCReference Include="BuildInstallerFormUnit.pas">
+            <Form>BuildInstallerForm</Form>
+        </DCCReference>
+        <DCCReference Include="ResHookUnit.pas"/>
+        <DCCReference Include="SerialEditFormUnit.pas">
+            <Form>SerialEditForm</Form>
+        </DCCReference>
+        <DCCReference Include="BuildInstallerForSingleGameFormUnit.pas">
+            <Form>BuildInstallerForSingleGameForm</Form>
+        </DCCReference>
+        <DCCReference Include="UserInfoFormUnit.pas">
+            <Form>UserInfoForm</Form>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorFormUnit.pas">
+            <Form>ModernProfileEditorForm</Form>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorBaseFrameUnit.pas">
+            <Form>ModernProfileEditorBaseFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorGameInfoFrameUnit.pas">
+            <Form>ModernProfileEditorGameInfoFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorDirectoryFrameUnit.pas">
+            <Form>ModernProfileEditorDirectoryFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorDOSBoxFrameUnit.pas">
+            <Form>ModernProfileEditorDOSBoxFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorHardwareFrameUnit.pas">
+            <Form>ModernProfileEditorHardwareFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorCPUFrameUnit.pas">
+            <Form>ModernProfileEditorCPUFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorMemoryFrameUnit.pas">
+            <Form>ModernProfileEditorMemoryFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorGraphicsFrameUnit.pas">
+            <Form>ModernProfileEditorGraphicsFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ListViewImageUnit.pas"/>
+        <DCCReference Include="ModernProfileEditorKeyboardFrameUnit.pas">
+            <Form>ModernProfileEditorKeyboardFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="StatisticsFormUnit.pas">
+            <Form>StatisticsForm</Form>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorSoundFrameUnit.pas">
+            <Form>ModernProfileEditorSoundFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorSoundBlasterFrameUnit.pas">
+            <Form>ModernProfileEditorSoundBlasterFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorGUSFrameUnit.pas">
+            <Form>ModernProfileEditorGUSFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorMIDIFrameUnit.pas">
+            <Form>ModernProfileEditorMIDIFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorJoystickFrameUnit.pas">
+            <Form>ModernProfileEditorJoystickFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorDrivesFrameUnit.pas">
+            <Form>ModernProfileEditorDrivesFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorSerialPortsFrameUnit.pas">
+            <Form>ModernProfileEditorSerialPortsFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorSerialPortFrameUnit.pas">
+            <Form>ModernProfileEditorSerialPortFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorNetworkFrameUnit.pas">
+            <Form>ModernProfileEditorNetworkFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorDOSEnvironmentFrameUnit.pas">
+            <Form>ModernProfileEditorDOSEnvironmentFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorStartFrameUnit.pas">
+            <Form>ModernProfileEditorStartFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="CacheChooseFormUnit.pas">
+            <Form>CacheChooseForm</Form>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorMouseFrameUnit.pas">
+            <Form>ModernProfileEditorMouseFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorVolumeFrameUnit.pas">
+            <Form>ModernProfileEditorVolumeFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="IconLoaderUnit.pas"/>
+        <DCCReference Include="LanguageEditorStartFormUnit.pas">
+            <Form>LanguageEditorStartForm</Form>
+        </DCCReference>
+        <DCCReference Include="LanguageEditorFormUnit.pas">
+            <Form>LanguageEditorForm</Form>
+        </DCCReference>
+        <DCCReference Include="PlaySoundFormUnit.pas">
+            <Form>PlaySoundForm</Form>
+        </DCCReference>
+        <DCCReference Include="BassMedia.pas"/>
+        <DCCReference Include="MediaInterface.pas"/>
+        <DCCReference Include="WallpaperStyleFormUnit.pas">
+            <Form>WallpaperStyleForm</Form>
+        </DCCReference>
+        <DCCReference Include="CreateISOImageFormUnit.pas">
+            <Form>CreateISOImageForm</Form>
+        </DCCReference>
+        <DCCReference Include="ReadDriveUnit.pas"/>
+        <DCCReference Include="DriveReadFormUnit.pas">
+            <Form>DriveReadForm</Form>
+        </DCCReference>
+        <DCCReference Include="HashCalc.pas"/>
+        <DCCReference Include="SelectProfilesFormUnit.pas">
+            <Form>SelectProfilesForm</Form>
+        </DCCReference>
+        <DCCReference Include="SimpleXMLUnit.pas"/>
+        <DCCReference Include="CreateXMLFormUnit.pas">
+            <Form>CreateXMLForm</Form>
+        </DCCReference>
+        <DCCReference Include="ExpandImageFormUnit.pas">
+            <Form>ExpandImageForm</Form>
+        </DCCReference>
+        <DCCReference Include="WizardPrgFileUnit.pas">
+            <Form>WizardPrgFileFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="WizardBaseUnit.pas">
+            <Form>WizardBaseFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="WizardTemplateUnit.pas">
+            <Form>WizardTemplateFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="WizardFinishUnit.pas">
+            <Form>WizardFinishFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="WizardGameInfoUnit.pas">
+            <Form>WizardGameInfoFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="BuildImageFromFolderFormUnit.pas">
+            <Form>BuildImageFromFolderForm</Form>
+        </DCCReference>
+        <DCCReference Include="ImageTools.pas"/>
+        <DCCReference Include="SmallWaitFormUnit.pas">
+            <Form>SmallWaitForm</Form>
+        </DCCReference>
+        <DCCReference Include="MiniRunFormUnit.pas">
+            <Form>MiniRunForm</Form>
+        </DCCReference>
+        <DCCReference Include="ScummVMToolsUnit.pas"/>
+        <DCCReference Include="ModernProfileEditorScummVMGraphicsFrameUnit.pas">
+            <Form>ModernProfileEditorScummVMGraphicsFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorScummVMFrameUnit.pas">
+            <Form>ModernProfileEditorScummVMFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorScummVMSoundFrameUnit.pas">
+            <Form>ModernProfileEditorScummVMSoundFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ScummVMUnit.pas"/>
+        <DCCReference Include="ListScummVMGamesFormUnit.pas">
+            <Form>ListScummVMGamesForm</Form>
+        </DCCReference>
+        <DCCReference Include="WizardScummVMUnit.pas">
+            <Form>WizardScummVMFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="WizardScummVMSettingsUnit.pas">
+            <Form>WizardScummVMSettingsFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="DragNDropErrorFormUnit.pas">
+            <Form>DragNDropErrorForm</Form>
+        </DCCReference>
+        <DCCReference Include="ChecksumFormUnit.pas">
+            <Form>ChecksumForm</Form>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorPrinterFrameUnit.pas">
+            <Form>ModernProfileEditorPrinterFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFormUnit.pas">
+            <Form>SetupForm</Form>
+        </DCCReference>
+        <DCCReference Include="ExoDOSDBUnit.pas"/>
+        <DCCReference Include="SetupFrameExoDOSUnit.pas">
+            <Form>SetupFrameExoDOS</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameBaseUnit.pas">
+            <Form>SetupFrameBase</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameSurfaceUnit.pas">
+            <Form>SetupFrameSurface</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameToolbarUnit.pas">
+            <Form>SetupFrameToolbar</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameDirectoriesUnit.pas">
+            <Form>SetupFrameDirectories</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameLanguageUnit.pas">
+            <Form>SetupFrameLanguage</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameGamesListColumnsUnit.pas">
+            <Form>SetupFrameGamesListColumns</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameGamesListAppearanceUnit.pas">
+            <Form>SetupFrameGamesListAppearance</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameGamesListTreeAppearanceUnit.pas">
+            <Form>SetupFrameGamesListTreeAppearance</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameGamesListScreenshotAppearanceUnit.pas">
+            <Form>SetupFrameGamesListScreenshotAppearance</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameProfileEditorUnit.pas">
+            <Form>SetupFrameProfileEditor</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameDefaultValuesUnit.pas">
+            <Form>SetupFrameDefaultValues</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameProgramsUnit.pas">
+            <Form>SetupFramePrograms</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameDOSBoxUnit.pas">
+            <Form>SetupFrameDOSBox</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameScummVMUnit.pas">
+            <Form>SetupFrameScummVM</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameQBasicUnit.pas">
+            <Form>SetupFrameQBasic</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameWaveEncoderUnit.pas">
+            <Form>SetupFrameWaveEncoder</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameSecurityUnit.pas">
+            <Form>SetupFrameSecurity</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameServiceUnit.pas">
+            <Form>SetupFrameService</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameUpdateUnit.pas">
+            <Form>SetupFrameUpdate</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameFreeDOSUnit.pas">
+            <Form>SetupFrameFreeDOS</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameDOSBoxExtUnit.pas">
+            <Form>SetupFrameDOSBoxExt</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="TextViewerFormUnit.pas">
+            <Form>TextViewerForm</Form>
+        </DCCReference>
+        <DCCReference Include="SetupFrameWineUnit.pas">
+            <Form>SetupFrameWine</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="OperationModeInfoFormUnit.pas">
+            <Form>OperationModeInfoForm</Form>
+        </DCCReference>
+        <DCCReference Include="ZipInfoFormUnit.pas">
+            <Form>ZipInfoForm</Form>
+        </DCCReference>
+        <DCCReference Include="ProfileMountEditorDriveFrameUnit.pas">
+            <Form>ProfileMountEditorDriveFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ProfileMountEditorFloppyDriveFrameUnit.pas">
+            <Form>ProfileMountEditorFloppyDriveFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ProfileMountEditorCDDriveFrameUnit.pas">
+            <Form>ProfileMountEditorCDDriveFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ProfileMountEditorFloppyImage1FrameUnit.pas">
+            <Form>ProfileMountEditorFloppyImage1Frame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ProfileMountEditorFloppyImage2FrameUnit.pas">
+            <Form>ProfileMountEditorFloppyImage2Frame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ProfileMountEditorCDImageFrameUnit.pas">
+            <Form>ProfileMountEditorCDImageFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ProfileMountEditorHDImageFrameUnit.pas">
+            <Form>ProfileMountEditorHDImageFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ProfileMountEditorPhysFSFrameUnit.pas">
+            <Form>ProfileMountEditorPhysFSFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ProfileMountEditorZipFrameUnit.pas">
+            <Form>ProfileMountEditorZipFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ZipManagerUnit.pas"/>
+        <DCCReference Include="ZipWaitInfoFormUnit.pas">
+            <Form>ZipWaitInfoForm</Form>
+        </DCCReference>
+        <DCCReference Include="SetupFrameCompressionUnit.pas">
+            <Form>SetupFrameCompression</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="CopyProfileFormUnit.pas">
+            <Form>CopyProfileForm</Form>
+        </DCCReference>
+        <DCCReference Include="ScreensaverControlUnit.pas"/>
+        <DCCReference Include="ViewFilesFrameUnit.pas">
+            <Form>ViewFilesFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameDOSBoxFormUnit.pas">
+            <Form>SetupFrameDOSBoxForm</Form>
+        </DCCReference>
+        <DCCReference Include="LinkFileUnit.pas"/>
+        <DCCReference Include="LinkFileEditFormUnit.pas">
+            <Form>LinkFileEditForm</Form>
+        </DCCReference>
+        <DCCReference Include="ExtraExeEditFormUnit.pas">
+            <Form>ExtraExeEditForm</Form>
+        </DCCReference>
+        <DCCReference Include="SetupFrameGamesListScreenshotModeAppearanceUnit.pas">
+            <Form>SetupFrameGamesListScreenshotModeAppearance</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ImageCacheUnit.pas"/>
+        <DCCReference Include="ZipPackageUnit.pas"/>
+        <DCCReference Include="WindowsProfileUnit.pas"/>
+        <DCCReference Include="HelpTools.pas"/>
+        <DCCReference Include="HelpContextMap.pas"/>
+        <DCCReference Include="HelpConsts.pas"/>
+        <DCCReference Include="BuildZipPackagesFormUnit.pas">
+            <Form>BuildZipPackagesForm</Form>
+        </DCCReference>
+        <DCCReference Include="FullscreenInfoFormUnit.pas">
+            <Form>FullscreenInfoForm</Form>
+        </DCCReference>
+        <DCCReference Include="DOSBoxCountUnit.pas"/>
+        <DCCReference Include="QuickStartFormUnit.pas">
+            <Form>QuickStartForm</Form>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorScummVMGameFrameUnit.pas">
+            <Form>ModernProfileEditorScummVMGameFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameEditorUnit.pas">
+            <Form>SetupFrameEditor</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameViewerUnit.pas">
+            <Form>SetupFrameViewer</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ClassExtensions.pas"/>
+        <DCCReference Include="DOSBoxShortNameUnit.pas"/>
+        <DCCReference Include="FileNameConvertor.pas"/>
+        <DCCReference Include="RunPrgManagerUnit.pas"/>
+        <DCCReference Include="ModernProfileEditorHelperProgramsFrameUnit.pas">
+            <Form>ModernProfileEditorHelperProgramsFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameWindowsGamesUnit.pas">
+            <Form>SetupFrameWindowsGames</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameZipPrgsUnit.pas">
+            <Form>SetupFrameZipPrgs</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameCustomLanguageStringsUnit.pas">
+            <Form>SetupFrameCustomLanguageStrings</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SelectCDDriveToMountFormUnit.pas">
+            <Form>SelectCDDriveToMountForm</Form>
+        </DCCReference>
+        <DCCReference Include="SelectCDDriveToMountByDataFormUnit.pas">
+            <Form>SelectCDDriveToMountByDataForm</Form>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorScummVMHardwareFrameUnit.pas">
+            <Form>ModernProfileEditorScummVMHardwareFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="CreateShortcutsFormUnit.pas">
+            <Form>CreateShortcutsForm</Form>
+        </DCCReference>
+        <DCCReference Include="SetupFrameGameListIconModeAppearanceUnit.pas">
+            <Form>SetupFrameGameListIconModeAppearance</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ImportSelectTemplateFormUnit.pas">
+            <Form>ImportSelectTemplateForm</Form>
+        </DCCReference>
+        <DCCReference Include="Resample.pas"/>
+        <DCCReference Include="ImageStretch.pas"/>
+        <DCCReference Include="ModernProfileEditorAddtionalChecksumFrameUnit.pas">
+            <Form>ModernProfileEditorAddtionalChecksumFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="WaitFormUnit.pas">
+            <Form>WaitForm</Form>
+        </DCCReference>
+        <DCCReference Include="ScanGamesFolderFormUnit.pas">
+            <Form>ScanGamesFolderForm</Form>
+        </DCCReference>
+        <DCCReference Include="SelectTemplateForZipImportFormUnit.pas">
+            <Form>SelectTemplateForZipImportForm</Form>
+        </DCCReference>
+        <DCCReference Include="ChecksumScanner.pas"/>
+        <DCCReference Include="DownloadWaitFormUnit.pas">
+            <Form>DownloadWaitForm</Form>
+        </DCCReference>
+        <DCCReference Include="PackageBuilderUnit.pas"/>
+        <DCCReference Include="PackageDBCacheUnit.pas"/>
+        <DCCReference Include="PackageDBToolsUnit.pas"/>
+        <DCCReference Include="PackageDBUnit.pas"/>
+        <DCCReference Include="PackageManagerFormUnit.pas">
+            <Form>PackageManagerForm</Form>
+        </DCCReference>
+        <DCCReference Include="PackageManagerToolsUnit.pas"/>
+        <DCCReference Include="PackageManagerRepositoriesEditFormUnit.pas">
+            <Form>PackageManagerRepositoriesEditForm</Form>
+        </DCCReference>
+        <DCCReference Include="SetupFrameMenubarUnit.pas">
+            <Form>SetupFrameMenubar</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="SetupFrameUserInterpreterFrameUnit.pas">
+            <Form>SetupFrameUserInterpreterFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="PackageCreationFormUnit.pas">
+            <Form>PackageCreationForm</Form>
+        </DCCReference>
+        <DCCReference Include="TextEditPopupUnit.pas"/>
+        <DCCReference Include="SelectAutoSetupFormUnit.pas">
+            <Form>SelectAutoSetupForm</Form>
+        </DCCReference>
+        <DCCReference Include="MultipleProfilesEditorFormUnit.pas">
+            <Form>MultipleProfilesEditorForm</Form>
+        </DCCReference>
+        <DCCReference Include="SetupFrameMoreEmulatorsUnit.pas">
+            <Form>SetupFrameMoreEmulators</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="InstallationSupportFormUnit.pas">
+            <Form>InstallationSupportForm</Form>
+        </DCCReference>
+        <DCCReference Include="CreateImageToolsUnit.pas"/>
+        <DCCReference Include="RenameAllScreenshotsFormUnit.pas">
+            <Form>RenameAllScreenshotsForm</Form>
+        </DCCReference>
+        <DCCReference Include="DOSBoxTempUnit.pas"/>
+        <DCCReference Include="InternetDataWaitFormUnit.pas">
+            <Form>InternetDataWaitForm</Form>
+        </DCCReference>
+        <DCCReference Include="DataReaderFormUnit.pas">
+            <Form>DataReaderForm</Form>
+        </DCCReference>
+        <DCCReference Include="ProviderFormUnit.pas">
+            <Form>ProviderForm</Form>
+        </DCCReference>
+        <DCCReference Include="PackageManagerRepositoriesEditURLFormUnit.pas">
+            <Form>PackageManagerRepositoriesEditURLForm</Form>
+        </DCCReference>
+        <DCCReference Include="DataReaderConfigUnit.pas"/>
+        <DCCReference Include="DataReaderToolsUnit.pas"/>
+        <DCCReference Include="DataReaderThreadsUnit.pas"/>
+        <DCCReference Include="InstallationRunFormUnit.pas">
+            <Form>InstallationRunForm</Form>
+        </DCCReference>
+        <DCCReference Include="MakeBootImageFromProfileFormUnit.pas">
+            <Form>MakeBootImageFromProfileForm</Form>
+        </DCCReference>
+        <DCCReference Include="SetupFrameAutomaticConfigurationUnit.pas">
+            <Form>SetupFrameAutomaticConfiguration</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="CheatDBUnit.pas"/>
+        <DCCReference Include="CheatApplyFormUnit.pas">
+            <Form>CheatApplyForm</Form>
+        </DCCReference>
+        <DCCReference Include="CheatDBEditFormUnit.pas">
+            <Form>CheatDBEditForm</Form>
+        </DCCReference>
+        <DCCReference Include="CheatDBInternalPrivateerPositionUnit.pas">
+            <Form>CheatDBInternalPrivateerPositionForm</Form>
+        </DCCReference>
+        <DCCReference Include="CheatDBInternalUnit.pas"/>
+        <DCCReference Include="CheatDBToolsUnit.pas"/>
+        <DCCReference Include="CheatDBSearchUnit.pas"/>
+        <DCCReference Include="CheatSearchFormUnit.pas">
+            <Form>CheatSearchForm</Form>
+        </DCCReference>
+        <DCCReference Include="ProgramUpdateCheckUnit.pas"/>
+        <DCCReference Include="UpdateCheckFormUnit.pas">
+            <Form>UpdateCheckForm</Form>
+        </DCCReference>
+        <DCCReference Include="GameDBFilterUnit.pas"/>
+        <DCCReference Include="GameDBFilterToolsUnit.pas"/>
+        <DCCReference Include="ZipPackageDBGLFormUnit.pas">
+            <Form>ZipPackageDBGLForm</Form>
+        </DCCReference>
+        <DCCReference Include="FirstRunWizardFormUnit.pas">
+            <Form>FirstRunWizardForm</Form>
+        </DCCReference>
+        <DCCReference Include="LoggingUnit.pas"/>
+        <DCCReference Include="WindowsFileWarningFormUnit.pas">
+            <Form>WindowsFileWarningForm</Form>
+        </DCCReference>
+        <DCCReference Include="SetupFrameDOSBoxGlobalUnit.pas">
+            <Form>SetupFrameDOSBoxGlobal</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="DOSBoxLangEditFormUnit.pas">
+            <Form>DOSBoxLangEditForm</Form>
+        </DCCReference>
+        <DCCReference Include="DOSBoxLangTools.pas"/>
+        <DCCReference Include="DOSBoxLangStartFormUnit.pas">
+            <Form>DOSBoxLangStartForm</Form>
+        </DCCReference>
+        <DCCReference Include="SetupFrameDataPrivacyUnit.pas">
+            <Form>SetupFrameDataPrivacy</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="MIDITools.pas"/>
+        <DCCReference Include="DOSBoxFailedFormUnit.pas">
+            <Form>DOSBoxFailedForm</Form>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorInnovaFrameUnit.pas">
+            <Form>ModernProfileEditorInnovaFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="HistoryUnit.pas"/>
+        <DCCReference Include="ExportGamesListFormUnit.pas">
+            <Form>ExportGamesListForm</Form>
+        </DCCReference>
+        <DCCReference Include="DOSBoxOutputTestFormUnit.pas">
+            <Form>DOSBoxOutputTestForm</Form>
+        </DCCReference>
+        <DCCReference Include="SingleInstanceUnit.pas"/>
+        <DCCReference Include="ResetProfilesFormUnit.pas">
+            <Form>ResetProfilesForm</Form>
+        </DCCReference>
+        <DCCReference Include="FireDACSilentUnit.pas"/>
+        <DCCReference Include="ScreenshotsDBUnit.pas"/>
+        <DCCReference Include="NewScreenshotsCacheUnit.pas"/>
+        <DCCReference Include="DataReaderBaseUnit.pas"/>
+        <DCCReference Include="DataReaderTheGamesDBUnit.pas"/>
+        <DCCReference Include="DataReaderExoDOSUnit.pas"/>
+        <DCCReference Include="ToggleSwitchExUnit.pas"/>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+</Project>

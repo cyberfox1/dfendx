@@ -4,13 +4,6 @@ object SetupFrameUpdate: TSetupFrameUpdate
   Width = 583
   Height = 282
   TabOrder = 0
-  object DataReaderInfoLabel: TLabel
-    Left = 16
-    Top = 174
-    Width = 199
-    Height = 13
-    Caption = 'Mobygames reader configuration update:'
-  end
   object PackagesLabel: TLabel
     Left = 16
     Top = 80
@@ -39,15 +32,6 @@ object SetupFrameUpdate: TSetupFrameUpdate
     Height = 17
     Caption = 'Kennung der aktuellen Version in die Abfrage-URL integrieren'
     TabOrder = 1
-  end
-  object DataReaderComboBox: TComboBox
-    Left = 16
-    Top = 189
-    Width = 401
-    Height = 21
-    Style = csDropDownList
-    ItemHeight = 0
-    TabOrder = 4
   end
   object PackagesComboBox: TComboBox
     Left = 16

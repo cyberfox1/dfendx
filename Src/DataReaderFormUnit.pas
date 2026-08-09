@@ -1,10 +1,10 @@
-unit DataReaderFormUnit;
+﻿unit DataReaderFormUnit;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, Buttons, DataReaderBaseUnit;
+  Dialogs, StdCtrls, ExtCtrls, Buttons, DataReaderBaseUnit, Vcl.Mask;
 
 type
   TDataReaderForm = class(TForm)
@@ -31,6 +31,7 @@ type
     DescriptionCheckBox: TCheckBox;
     SourceLabel: TLabel;
     SourceComboBox: TComboBox;
+    btnSetDataReaderAPIKey: TButton;
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -41,6 +42,7 @@ type
     procedure SearchTypeCheckBoxClick(Sender: TObject);
     procedure DownloadCoverCheckBoxClick(Sender: TObject);
     procedure SourceComboBoxChange(Sender: TObject);
+    procedure btnSetDataReaderAPIKeyClick(Sender: TObject);
   private
     { Private-Deklarationen }
     GenreSt, DeveloperSt, PublisherSt, YearSt, CoverSt, NotesSt : TStringList;
@@ -62,8 +64,8 @@ implementation
 
 uses Math, LanguageSetupUnit, CommonHelpers, CommonTools, VistaToolsUnit,
      InternetDataWaitFormUnit, PrgSetupUnit, PrgConsts, IconLoaderUnit,
-     GameDBToolsUnit, GameDBToolsHelpers, DataReaderMobyUnit, DataReaderTheGamesDBUnit,
-     DataReaderHelpers, DataReaderExoDOSUnit;
+     GameDBToolsUnit, GameDBToolsHelpers, DataReaderTheGamesDBUnit,
+     DataReaderHelpers, DataReaderExoDOSUnit, DataReaderThreadsUnit;
 
 {$R *.dfm}
 
@@ -77,8 +79,7 @@ begin
   CoverSt:=TStringList.Create;
   NotesSt:=TStringList.Create;
 
-  {No config/network here. Active reader is created in SourceComboBoxChange;
-   Moby config loads lazily on first Search only.}
+  {No config/network here. Active reader is created in SourceComboBoxChange.}
   DataReader:=nil;
   ConfigOK:=True;
 
@@ -105,6 +106,7 @@ begin
 
   Caption:=LanguageSetup.DataReader;
   SourceLabel.Caption:=LanguageSetup.DataReaderSource;
+  btnSetDataReaderAPIKey.Caption:=LanguageSetup.DataReaderSetAPIKey;
   GameNameEdit.EditLabel.Caption:=LanguageSetup.GameName;
   SearchButton.Caption:=LanguageSetup.Search;
   SearchTypeCheckBox.Caption:=LanguageSetup.DataReaderSearchForDOSGames;
@@ -138,7 +140,8 @@ begin
   S:=Trim(PrgSetup.DataReaderActiveSettings);
   While length(S)<7 do S:=S+'X';
   If length(S)>7 then S:=Copy(S,1,7);
-  NameCheckBox.Checked:=(S[1]<>'-');
+  { Name: default on only for eXoDOS; Moby/TheGamesDB leave name unchecked. }
+  NameCheckBox.Checked:=(DataReader is TExoDOSDataReader);
   GenreCheckBox.Checked:=(S[2]<>'-');
   DeveloperCheckBox.Checked:=(S[3]<>'-');
   PublisherCheckBox.Checked:=(S[4]<>'-');
@@ -208,11 +211,10 @@ begin
   NotesSt.Clear;
 
   try
-    {Moby: load config on first Search only (not on source combo change).}
-    if (DataReader is TMobyDataReader) and (TMobyDataReader(DataReader).Config=nil) then begin
-      if not ShowDataReaderInternetConfigWaitDialog(Owner,DataReader,False,LanguageSetup.DataReaderDownloadCaption,LanguageSetup.DataReaderDownloadInfo,LanguageSetup.DataReaderDownloadError) then begin
-        exit;
-      end;
+    { TheGamesDB REST API requires ProgramSets/TheGamesDBAPIKey in DFendX.ini. }
+    if (DataReader is TTheGamesDBDataReader) and (Trim(PrgSetup.TheGamesDBAPIKey)='') then begin
+      MessageDlg('TheGamesDB API key is not set (ProgramSets/TheGamesDBAPIKey).',mtError,[mbOK],0);
+      exit;
     end;
 
     ListSuccess:=False;
@@ -255,8 +257,7 @@ begin
 
   Case SourceComboBox.ItemIndex of
     0 : DataReader:=TTheGamesDBDataReader.Create;
-    1 : DataReader:=TMobyDataReader.Create;
-    2 : DataReader:=TExoDOSDataReader.Create;
+    1 : DataReader:=TExoDOSDataReader.Create;
   end;
 
   ListBox.Items.Clear;
@@ -285,6 +286,26 @@ begin
   DescriptionCheckBox.Hint:='';
 
   SearchTypeCheckBox.Visible:=not (DataReader is TExoDOSDataReader);
+  btnSetDataReaderAPIKey.Enabled:=not (DataReader is TExoDOSDataReader);
+  { Name default on only for eXoDOS. }
+  NameCheckBox.Checked:=(DataReader is TExoDOSDataReader);
+  { TGDB API metadata path does not download covers yet. }
+  if DataReader is TTheGamesDBDataReader then begin
+    DownloadCoverCheckBox.Checked:=False;
+    DownloadCoverAllCheckBox.Checked:=False;
+  end;
+end;
+
+procedure TDataReaderForm.btnSetDataReaderAPIKeyClick(Sender: TObject);
+Var S: String;
+begin
+  if DataReader is TExoDOSDataReader then exit;
+  S:='';
+  If not InputQuery(LanguageSetup.DataReaderSetAPIKey,'',S) then exit;
+  if DataReader is TTheGamesDBDataReader then begin
+    PrgSetup.TheGamesDBAPIKey:=Trim(S);
+    PrgSetup.UpdateFile;
+  end;
 end;
 
 procedure TDataReaderForm.ListBoxClick(Sender: TObject);

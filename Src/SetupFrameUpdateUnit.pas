@@ -10,8 +10,6 @@ uses
 type
   TSetupFrameUpdate = class(TFrame, ISetupFrame)
     UpdateCheckBox: TCheckBox;
-    DataReaderInfoLabel: TLabel;
-    DataReaderComboBox: TComboBox;
     PackagesLabel: TLabel;
     PackagesComboBox: TComboBox;
     UpdateButton: TBitBtn;
@@ -40,7 +38,7 @@ type
 implementation
 
 uses ShellAPI, Math, LanguageSetupUnit, VistaToolsUnit, PrgSetupUnit, PrgConsts,
-     HelpConsts, IconLoaderUnit, InternetDataWaitFormUnit, DataReaderMobyUnit,
+     HelpConsts, IconLoaderUnit,
      CommonTools, MainUnit, DownloadWaitFormUnit, ProgramUpdateCheckUnit,
      CheatDBToolsUnit, UpdateCheckFormUnit;
 
@@ -63,9 +61,6 @@ begin
   ProgramUpdateComboBox.Items.Clear;
   While ProgramUpdateComboBox.Items.Count<4 do ProgramUpdateComboBox.Items.Add('');
 
-  DataReaderComboBox.Items.Clear;
-  While DataReaderComboBox.Items.Count<4 do DataReaderComboBox.Items.Add('');
-
   PackagesComboBox.Items.Clear;
   While PackagesComboBox.Items.Count<4 do PackagesComboBox.Items.Add('');
 
@@ -73,7 +68,6 @@ begin
   While CheatsComboBox.Items.Count<3 do CheatsComboBox.Items.Add('');
 
   ProgramUpdateComboBox.ItemIndex:=Max(0,Min(3,PrgSetup.CheckForUpdates));
-  DataReaderComboBox.ItemIndex:=Max(0,Min(3,PrgSetup.DataReaderCheckForUpdates));
   PackagesComboBox.ItemIndex:=Max(0,Min(3,PrgSetup.PackageListsCheckForUpdates));
   CheatsComboBox.ItemIndex:=Max(0,Min(2,PrgSetup.CheatsDBCheckForUpdates));
 
@@ -103,17 +97,6 @@ begin
     ProgramUpdateComboBox.Items[3]:=LanguageSetup.SetupFormUpdate3;
   finally
     ProgramUpdateComboBox.ItemIndex:=I;
-  end;
-
-  DataReaderInfoLabel.Caption:=LanguageSetup.SetupFormUpdateDataReader;
-  I:=DataReaderComboBox.ItemIndex;
-  try
-    DataReaderComboBox.Items[0]:=LanguageSetup.SetupFormUpdateDataReader0;
-    DataReaderComboBox.Items[1]:=LanguageSetup.SetupFormUpdateDataReader1;
-    DataReaderComboBox.Items[2]:=LanguageSetup.SetupFormUpdateDataReader2;
-    DataReaderComboBox.Items[3]:=LanguageSetup.SetupFormUpdateDataReader3;
-  finally
-    DataReaderComboBox.ItemIndex:=I;
   end;
 
   PackagesLabel.Caption:=LanguageSetup.SetupFormUpdatePackages;
@@ -157,7 +140,6 @@ begin
   UpdateCheckBox.Checked:=True;
 
   ProgramUpdateComboBox.ItemIndex:=0;
-  DataReaderComboBox.ItemIndex:=2;
   PackagesComboBox.ItemIndex:=0;
   CheatsComboBox.ItemIndex:=0;
 end;
@@ -167,7 +149,6 @@ begin
   PrgSetup.VersionSpecificUpdateCheck:=UpdateCheckBox.Checked;
 
   PrgSetup.CheckForUpdates:=ProgramUpdateComboBox.ItemIndex;
-  PrgSetup.DataReaderCheckForUpdates:=DataReaderComboBox.ItemIndex;
   PrgSetup.PackageListsCheckForUpdates:=PackagesComboBox.ItemIndex;
   PrgSetup.CheatsDBCheckForUpdates:=CheatsComboBox.ItemIndex;
 end;

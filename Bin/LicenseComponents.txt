@@ -39,15 +39,27 @@ written by Benjamin David Lunt
 
 mkdosfs.exe
 DOS filesystem image tool shipped as Bin\mkdosfs.exe
+(Forever Young Software MTOOLS; MinGW Win32 build of package sources)
+Full licence text: Bin\LicenseMTOOLS.txt
 (see also MTOOLs entry above)
 
 FreeDOS 1.0
 FreeDOS is a trademark of Jim Hall
 (http://www.freedos.org/)
 
-OggEnc v2.84 (libvorbis 1.2.0)
-(c) 2000-2005 Michael Smith & portions by John Edwards
-(http://www.vorbis.com/)
+OggEnc v2.88 (libvorbis 1.3.7-aoTuV-b6.03)
+(c) 2000-2015 Michael Smith & portions by John Edwards
+Windows binary: RareWares generic 32-bit build (2024)
+(https://www.rarewares.org/ogg-oggenc.php)
+(https://www.vorbis.com/ / https://xiph.org/vorbis/)
+Runtime: Bin\oggenc2.exe
+Requires libFLAC.dll beside oggenc2.exe (ships with the RareWares package;
+used for FLAC input support; also required to load the binary).
+
+libFLAC (FLAC library)
+(c) Josh Coalson / Xiph.Org Foundation
+(https://xiph.org/flac/)
+Runtime: Bin\libFLAC.dll
 
 Doszip Commander 1.41
 (c) 1996-2010 Hjort Nidudsson
@@ -75,7 +87,3 @@ BASS FLAC add-on
 (http://www.un4seen.com/)
 Runtime: Bin\bassflac.dll
 Full licence text: Bin\LicenseBASS.txt
-
-
-Artwork:
-See ATTRIBUTIONS.txt

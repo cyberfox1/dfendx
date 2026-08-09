@@ -9,7 +9,7 @@ LangString LANGNAME_NeedAdminRightsUpdate ${LANG_TURKISH} "Kurulum programý yö
 LangString LANGNAME_WelcomeText ${LANG_TURKISH} "Bu sihirbaz ${PrgName} programýnýn kurulumunda size baþtan sona rehberlik edecektir. \r\n\r\nDFendX açýk kaynak kodlu bir yazýlýmdýr ve GPL 3 lisansýna sahiptir. (Lisansý program içindeki Yardým | Hakkýnda kýsmýndan görebilirsiniz.) DFendX herhangi bir teminat veya garanti olmaksýzýn gelir.\r\n\r\nDevam etmek için Ýleri butonuna týklayýnýz."
 LangString LANGNAME_WelcomeTextUpdate ${LANG_TURKISH} "Bu sihirbaz ${PrgName} programýnýn güncellenmesinde size baþtan sona rehberlik edecektir.\r\n\r\nBu yükleyici için var olan bir DFendX kurulumu gerekiyor !\r\n\r\nDevam etmek için Ýleri butonuna týklayýn."
 LangString LANGNAME_Next ${LANG_TURKISH} "Ýleri"
-LicenseLangString LANGNAME_License ${LANG_TURKISH} "..\Bin\License.txt"
+LicenseLangString LANGNAME_License ${LANG_TURKISH} "..\LICENSE"
 LangString LANGNAME_LICENSE_TITLE ${LANG_TURKISH} "Bilgi"
 LangString LANGNAME_LICENSE_SUBTITLE ${LANG_TURKISH} "${PrgName} programý için ilave bilgi"
 LangString LANGNAME_LICENSE_TOP ${LANG_TURKISH} "Lütfen devam etmeden önce aþaðýdaki bilgilere dikkat edin:"
@@ -30,24 +30,17 @@ LangString LANGNAME_ConfirmDelUserData ${LANG_TURKISH} "$DataInstDir veri klasö
 LangString LANGNAME_ConfirmDelPrgDir ${LANG_TURKISH} "Kurulum klasöründe DFendX kurulumu tarafýndan oluþturulmamýþ bazý dosyalar bulunuyor. $INSTDIR klasörünü bütünüyle kaldýrmak istiyormusunuz ?"
 
 LangString LANGNAME_NoInstallationFound ${LANG_TURKISH} "Seçilen klasörde güncelleme yapýlabilir DFendX kurulumu yok."
-LangString LANGNAME_NotDFendXInstallation ${LANG_TURKISH} "This folder is not a DFendX installation. Need DFend.dat, DFend.exe, Bin\dfxvalidator.exe, and a DFendX File Description on DFend.exe."
+LangString LANGNAME_NotDFendXInstallation ${LANG_TURKISH} "Geçerli bir DFendX kurulumu değil."
+LangString LANGNAME_InstalledVersionNewer ${LANG_TURKISH} "Daha yeni bir DFendX sürümü zaten yüklü ($R8). Bu güncelleme ${VER_MAYOR}.${VER_MINOR1}.${VER_MINOR2} sürümü içindir ve sürüm düşürmek için kullanılamaz."
 
-LangString LANGNAME_Tools ${LANG_TURKISH} "Araçlar"
-LangString LANGNAME_FreeDosTools ${LANG_TURKISH} "DosBox içinde kullanmak için FreeDOS araçlarý"
-LangString LANGNAME_Doszip ${LANG_TURKISH} "Doszip Commander"
 LangString LANGNAME_DesktopShortcut ${LANG_TURKISH} "Masaüstü kýsayolu"
 
 LangString LANGNAME_InstallDFendReloaded ${LANG_TURKISH} "DFendX ana bileþenleri kuruluyor"
 LangString LANGNAME_InstallStartMenu ${LANG_TURKISH} "Baþlat menüsü baðlantýlarý oluþturuluyor"
-LangString LANGNAME_InstallFreeDOS ${LANG_TURKISH} "FreeDOS kuruluyor"
-LangString LANGNAME_InstallDOSZip ${LANG_TURKISH} "DOSZip Commander kuruluyor"
 LangString LANGNAME_InstallDesktopShortcut ${LANG_TURKISH} "Masaüstü kýsayolu oluþturuluyor"
 
 LangString LANGNAME_UpdateDFendReloaded ${LANG_TURKISH} "DFendX ana bileþenleri güncelleniyor"
 LangString LANGNAME_UpdateUninstaller ${LANG_TURKISH} "Kaldýrma programý güncelleniyor"
 
 LangString DESC_DFend ${LANG_TURKISH} "DFendX, Dos oyunlarýný idare etmeye yarayan grafik tabanlý kullanýcý arabirim programýdýr."
-LangString DESC_Tools ${LANG_TURKISH} "DOSBox 'ta kullanmak için araçlar."
-LangString DESC_FreeDosTools ${LANG_TURKISH} "DOSBox 'ta kullanmak için derlenmiþ FreeDOS komut satýrý araçlarý."
-LangString DESC_Doszip ${LANG_TURKISH} "Doszip Commander, DOSBox 'ta kullanýlabilecek Norton Commander benzeri bir programdýr."
 LangString DESC_DesktopShortcut ${LANG_TURKISH} "DFendX için masaüstü kýsayolu oluþturur."

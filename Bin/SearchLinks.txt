@@ -1,0 +1,11 @@
+The Games DB;https://thegamesdb.net/search.php?name=<GAMENAME_TGDB>&platform_id%5B%5D=1
+PCGamingWiki.com;https://www.pcgamingwiki.com/wiki/<GAMENAME_PCGW>
+Giant Bomb;https://giantbomb.com/wiki/Games/<GAMENAME_SLUG>
+Home of the Underdogs;https://homeoftheunderdogs.net/search.php?search_game=<GAMENAME_TGDB>
+My Abandonware;https://www.myabandonware.com/search/q/<GAMENAME_TGDB>
+LaunchBox GamesDB;https://gamesdb.launchbox-app.com/games/results/<GAMENAME_LAUNCHBOX>
+Hardcore Gaming 101;https://www.hardcoregaming101.net/?s=<GAMENAME_TGDB>
+The Cutting Room Floor;https://tcrf.net/<GAMENAME_PCGW>
+Squakenet.com;http://www.squakenet.com/pc_games/?q=<GAMENAME>
+Google.com;http://www.google.com/search?q=<GAMENAME>
+Wikipedia.org;http://en.wikipedia.org/wiki/<GAMENAME>

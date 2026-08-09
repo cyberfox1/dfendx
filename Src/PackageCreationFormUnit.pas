@@ -104,7 +104,7 @@ implementation
 
 uses ShlObj, Math, ClipBrd, XMLDoc, CommonHelpers, CommonTools, LanguageSetupUnit,
       VistaToolsUnit, HelpConsts, PrgSetupUnit, PrgConsts, PackageBuilderUnit, PackageBuilderHelpers,
-     IconLoaderUnit, ZipPackageUnit, ZipFormHelpers, ZipInfoFormUnit, HashCalc, MainUnit, System.Types, System.UITypes;
+     IconLoaderUnit, ZipPackageUnit, ZipFormHelpers, ZipInfoFormUnit, MainUnit, System.Types, System.UITypes;
 
 {$R *.dfm}
 

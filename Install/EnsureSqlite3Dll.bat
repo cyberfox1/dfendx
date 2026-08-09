@@ -1,7 +1,7 @@
 @echo off
 REM Ensure Bin\sqlite3.dll exists for packaging (FireDAC SQLite vendor lib).
 REM Prefers existing Bin\ copy; otherwise copies the 32-bit DLL from RAD Studio.
-REM Optional: also copy next to repo root DFend.exe when arg is "root".
+REM Optional: also copy next to DFend.exe at repo root when arg is "root" (or legacy "src").
 REM Usage:
 REM   EnsureSqlite3Dll.bat
 REM   EnsureSqlite3Dll.bat root
@@ -51,7 +51,11 @@ if errorlevel 1 (
 echo OK: Bin\sqlite3.dll
 
 :copy_root
-if /i not "%~1"=="root" exit /b 0
+if /i "%~1"=="root" goto :do_copy_root
+if /i "%~1"=="src" goto :do_copy_root
+exit /b 0
+
+:do_copy_root
 copy /y "%DEST_BIN%" "%REPO%\sqlite3.dll" >nul
 if errorlevel 1 (
   echo ERROR: copy sqlite3.dll to repo root failed

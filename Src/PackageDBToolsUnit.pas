@@ -29,9 +29,10 @@ Function UpdatePackageDB(const Owner : TComponent; const UpdateAllListe, Quite :
 
 implementation
 
-uses Windows, SysUtils, Forms, Dialogs, Controls, Math, System.Net.HttpClient, LanguageSetupUnit,
+uses Windows, SysUtils, Forms, Dialogs, Controls, Math, LanguageSetupUnit,
      CommonHelpers, CommonTools, PrgConsts, PrgSetupUnit, PackageDBUnit, DownloadWaitFormUnit,
-     HTTPDownloadHelpers, System.UITypes, Xml.Win.msxmldom, Winapi.msxml, System.Win.ComObj;
+     HTTPDownloadHelpers, System.NetEncoding, System.UITypes, Xml.Win.msxmldom, Winapi.msxml,
+     System.Win.ComObj;
 
 { Fresh MSXML 6 DOM with DTD allowed but externals not resolved — properties
   must be set before load (TXMLDocument.Active defaults are not enough). }
@@ -177,36 +178,27 @@ begin
 end;
 
 function DownloadFileFromInternet(const URL: String; const Quite : Boolean): TMemoryStream;
-Var HTTP: THTTPClient;
-    XMLDoc: TXMLDocument;
-    Resp: IHTTPResponse;
+Var XMLDoc: TXMLDocument;
+    Status: Integer;
 begin
   result:=nil;
 
-  HTTP:=THTTPClient.Create;
+  result:=TMemoryStream.Create;
   try
-    HTTP.HandleRedirects:=True;
-    HTTP.ConnectionTimeout:=10*1000;
-    HTTP.ResponseTimeout:=10*1000;
-    result:=TMemoryStream.Create;
+    if not THTTPDownloadHelper.HTTPRequestToStream('GET', URL, nil,
+      PrgSetup.HTTPUserAgent, '', 10*1000, 10*1000, result, Status, nil) then
+      raise Exception.Create('HTTP '+IntToStr(Status));
+    result.Position:=0;
+    XMLDoc:=TXMLDocument.Create(nil);
     try
-      Resp:=HTTP.Get(URL,result);
-      if (Resp=nil) or (not THTTPDownloadHelper.HTTPStatusOK(Resp.StatusCode)) then
-        raise Exception.Create('HTTP '+IntToStr(IfThen(Resp<>nil,Resp.StatusCode,-1)));
-      result.Position:=0;
-      XMLDoc:=TXMLDocument.Create(nil);
-      try
-        XMLDoc.LoadFromStream(result);
-        if not XMLDoc.Active then raise Exception.Create('');
-      finally
-        XMLDoc.Free;
-      end;
-    except
-      If not Quite then MessageDlg(Format(LanguageSetup.PackageManagerDownloadFailed,[URL]),mtError,[mbOK],0);
-      FreeAndNil(result);
+      XMLDoc.LoadFromStream(result);
+      if not XMLDoc.Active then raise Exception.Create('');
+    finally
+      XMLDoc.Free;
     end;
-  finally
-    HTTP.Free;
+  except
+    If not Quite then MessageDlg(Format(LanguageSetup.PackageManagerDownloadFailed,[URL]),mtError,[mbOK],0);
+    FreeAndNil(result);
   end;
 end;
 
@@ -323,7 +315,7 @@ end;
 
 Function URLFileNameFromFileName(const FileName : String) : String;
 begin
-  result:=Replace(FileName,' ','%20');
+  Result := TNetEncoding.URL.Encode(FileName);
 end;
 
 Function ReplaceBRs(const S : String) : String;

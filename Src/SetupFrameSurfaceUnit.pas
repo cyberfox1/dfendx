@@ -123,7 +123,7 @@ end;
 
 procedure TSetupFrameSurface.RestoreDefaults;
 begin
-  StartSizeComboBox.ItemIndex:=0;
+  StartSizeComboBox.ItemIndex:=1; { match PrgSetup default: restore last size/position }
 end;
 
 procedure TSetupFrameSurface.SaveSetup;

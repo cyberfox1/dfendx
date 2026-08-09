@@ -3,8 +3,6 @@ interface
 
 uses Graphics;
 
-{PrgSetup.ImageFilter: 0..8, 0=off, 1=simple&slow, 2=Box, 3=Triangle, 4=Hermite, 5=Bell, 6=B-Spline, 7=Lanczos3, 8=Mitchell}
-
 Function ScaleImage(const SourcePic : TPicture; const Factor : Double) : TBitmap; overload;
 Procedure ScaleImage(const Source, Dest : TBitmap; const DestW, DestH : Integer; const UseFiltering : Boolean = True); overload;
 Procedure ScaleImage(const Source, Dest : TBitmap; const UseFiltering : Boolean = True); overload;
@@ -13,7 +11,11 @@ Procedure ScaleImage(const Source : TIcon; const Dest : TBitmap; const UseFilter
 
 implementation
 
-uses Classes, Math, Resample, PrgSetupUnit, ResampleHelpers;
+uses Classes, Math, Resample, ResampleHelpers;
+
+{ Former PrgSetup.ImageFilter default was 6 (B-Spline). Fixed for leftover ScaleImage callers. }
+const
+  DefaultImageFilter = 6; { 0=off, 1=simple, 2=Box .. 6=B-Spline, 7=Lanczos3, 8=Mitchell }
 
 Procedure SimpleStretch(const Source,Dest : TBitmap);
 Type TScanLine=Array[0..0] of TColor;
@@ -51,7 +53,7 @@ Function ScaleImage(const SourcePic : TPicture; const Factor : Double) : TBitmap
 Var Source : TBitmap;
 var UseFilter : Integer;
 begin
-  UseFilter:=PrgSetup.ImageFilter-1;
+  UseFilter:=DefaultImageFilter-1;
 
   Source:=TBitmap.Create;
   try
@@ -79,7 +81,7 @@ Procedure ScaleImage(const Source, Dest : TBitmap; const DestW, DestH : Integer;
 Var TempDest : TBitmap;
     W,H,UseFilter : Integer;
 begin
-  If UseFiltering then UseFilter:=PrgSetup.ImageFilter-1 else UseFilter:=0;
+  If UseFiltering then UseFilter:=DefaultImageFilter-1 else UseFilter:=0;
 
   TempDest:=TBitmap.Create;
   try

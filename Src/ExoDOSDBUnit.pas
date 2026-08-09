@@ -54,7 +54,7 @@ type
 
 implementation
 
-uses LoggingUnit, FireDACSilentUnit;
+uses LoggingUnit, FireDACSilentUnit, CommonHelpers, PrgSetupUnit;
 
 constructor TExoDOSDB.Create(const ADBPath : String);
 begin
@@ -110,6 +110,7 @@ begin
   FConnection.ExecSQL('PRAGMA cache_size = -64000');
   FConnection.ExecSQL('DROP TABLE IF EXISTS Games');
   FConnection.ExecSQL('CREATE TABLE Games (ID INTEGER PRIMARY KEY, Title TEXT NOT NULL, Year TEXT, DataBlob TEXT)');
+  FConnection.ExecSQL('PRAGMA user_version = '+IntToStr(VersionToInt(PrgSetup.DFendVersion)));
   FConnection.ExecSQL('BEGIN');
 end;
 
@@ -260,6 +261,7 @@ begin
   FConnection.ExecSQL('PRAGMA cache_size = -64000');
   FConnection.ExecSQL('DROP TABLE IF EXISTS Media');
   FConnection.ExecSQL('CREATE TABLE Media (ID INTEGER PRIMARY KEY, Title TEXT NOT NULL, Category TEXT NOT NULL, Kind TEXT NOT NULL, FilePath TEXT NOT NULL)');
+  FConnection.ExecSQL('PRAGMA user_version = '+IntToStr(VersionToInt(PrgSetup.DFendVersion)));
   FConnection.ExecSQL('BEGIN');
 end;
 
@@ -340,7 +342,6 @@ begin
     Q.ParamByName('cat').AsString := Cat;
     if Prefix <> '' then
       Q.ParamByName('filter').AsString := Filter;
-    LogInfo('ExoMediaDB SQL: title="'+ANormalizedTitle+'" cat="'+Cat+'" filter="'+Filter+'" sql="'+SQL+'"');
     Q.Open;
     while not Q.Eof do begin
       result.Add(Q.FieldByName('FilePath').AsString);
