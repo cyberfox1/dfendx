@@ -6,7 +6,7 @@ A D-Fend Reloaded fork and modernization effort.
 
 <div align="center">
 
-[WIKI](https://github.com/cyberfox1/dfendx/wiki) - [CHANGES](https://github.com/cyberfox1/dfendx/blob/main/CHANGES) - [RELEASES](https://github.com/cyberfox1/dfendx/releases)
+[WIKI](https://github.com/cyberfox1/dfendx/wiki) - [CHANGES](https://github.com/cyberfox1/dfendx/blob/main/CHANGES) - [RELEASES](https://github.com/cyberfox1/dfendx/releases) - [BLOG](https://dfendx.hashnode.dev/)
 
 </div>
 

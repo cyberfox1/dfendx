@@ -2,7 +2,7 @@ DFendX Changelog
 
 Version 2.2.0 (08/16/2026)
 ==========================
-- (Initial) Support for DosBOX Pure Unleashed.
+- (Initial) Support for DOSBox Pure Unleashed.
 - Profile editor: frame invalidation when dosbox kind changes.
 - HTML Help is now rebuilt from markdown wiki (English only).
 - Renamed FluidSynth to Soundfont in UI for consistency.
