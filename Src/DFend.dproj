@@ -168,6 +168,7 @@
         </DCCReference>
         <DCCReference Include="LanguageSetupUnit.pas"/>
         <DCCReference Include="PrgConsts.pas"/>
+        <DCCReference Include="ConfOptDefaults.pas"/>
         <DCCReference Include="VistaToolsUnit.pas"/>
         <DCCReference Include="GameDBUnit.pas"/>
         <DCCReference Include="GameDBToolsHelpers.pas"/>
@@ -178,6 +179,7 @@
         <DCCReference Include="ProfileMountEditorFormUnit.pas">
             <Form>ProfileMountEditorForm</Form>
         </DCCReference>
+        <DCCReference Include="DosBoxConfUnit.pas"/>
         <DCCReference Include="DosBoxUnit.pas"/>
         <DCCReference Include="HistoryFormUnit.pas">
             <Form>HistoryForm</Form>

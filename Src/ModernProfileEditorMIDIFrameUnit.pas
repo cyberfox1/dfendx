@@ -35,35 +35,38 @@ type
     MT32LevelLabel: TLabel;
     procedure MIDISelectButtonClick(Sender: TObject);
     procedure MIDISelectListBoxClick(Sender: TObject);
-    procedure DeviceComboBoxChange(Sender: TObject);
+    procedure DeviceComboBoxChange(Sender: TObject); overload;
     procedure BtnFluidSynthPathClick(Sender: TObject);
     procedure tbFluidSynthGainSliderChange(Sender: TObject);
+    procedure FluidSynthPathBoxChange(Sender: TObject);
   private
-    FLoadedFluidPath: String;
-    FLoadedFluidGain: String;
-    FLoadedMT32RomDir: String;
     FLoadedMT32Model: String;
     FUpdatingFluidGainUI: Boolean;
-    ProfileDOSBoxInstallation: PString;
+    FGame: TGame;
+    FTempGame: TGame;
     FMIDIDeviceConfOpt: String;
     FMIDIDeviceStagingConfOpt: String;
     FMIDIDeviceStagingOldConfOpt: String;
     FMIDIDeviceXConfOpt: String;
+    FMIDIDevicePureConfOpt: String;
     FMT32ModelStagingConfOpt: String;
     FMT32ModelXConfOpt: String;
     LastMIDIDevice: String;
+    procedure DeviceComboBoxChange(Sender: TObject; UpdatePath: Boolean); overload;
     procedure ApplyFluidSynthPathVisibility;
+    procedure SetFluidSynthBoxPath;
     procedure ClearFluidSynthUI;
     procedure LoadFluidGainUI(const GainStr: String);
     function FormatFluidGainDisplay(const N: Integer): String;
-    function IsFluidSynthDevice: Boolean;
-    function GetDOSBoxDir: String;
     function GetSelectedDosBoxKind: TDOSBoxKind;
     procedure ApplyMIDIDeviceList;
     procedure ApplyMT32ModelList;
+    procedure PopulatePureMT32Models;
     procedure ShowFrame(Sender: TObject);
+    procedure Invalidate(Sender: TObject);
   public
     { Public-Deklarationen }
+    Constructor Create(AOwner : TComponent); override;
     Procedure InitGUI(var InitData : TModernProfileEditorInitData);
     Procedure SetGame(const Game : TGame; const LoadFromTemplate : Boolean);
     Procedure GetGame(const Game : TGame);
@@ -78,79 +81,60 @@ uses Math, VistaToolsUnit, LanguageSetupUnit, CommonHelpers, CommonTools, HelpCo
 
 { TModernProfileEditorMIDIFrame }
 
-function TModernProfileEditorMIDIFrame.IsFluidSynthDevice: Boolean;
+constructor TModernProfileEditorMIDIFrame.Create(AOwner: TComponent);
 begin
-  Result:=SameText(Trim(DeviceComboBox.Text),'fluidsynth');
-end;
-
-function TModernProfileEditorMIDIFrame.GetDOSBoxDir: String;
-begin
-  if (ProfileDOSBoxInstallation=nil) or (ProfileDOSBoxInstallation^= '') then
-    Result:=ResolveDOSBoxDir('')
-  else
-    Result:=ResolveDOSBoxDir(ProfileDOSBoxInstallation^);
+  inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
 end;
 
 function TModernProfileEditorMIDIFrame.GetSelectedDosBoxKind: TDOSBoxKind;
 begin
-  Result:=DetermineDosBoxKind(GetDOSBoxDir, PrgSetup.BaseDir);
+  Result:=FTempGame.DosBoxKind;
 end;
 
 procedure TModernProfileEditorMIDIFrame.ApplyMIDIDeviceList;
 Var Kind: TDOSBoxKind;
-    Version, S, ListSrc: String;
+    S, ListSrc: String;
     I: Integer;
-    NewStaging, OldStaging: Boolean;
     St: TStringList;
+    OldChange: TNotifyEvent;
 begin
   Kind:=GetSelectedDosBoxKind;
-  Version:=CheckDOSBoxVersion(GetDOSBoxDir);
-  OldStaging:=(Kind=dbkStaging) and (
-    (Trim(Version)='') or (CompareDOSBoxVersion(Version,'0.83.0.0')<0));
-  NewStaging:=(Kind=dbkStaging) and not OldStaging;
 
   { All device lists come from ConfOpt (same multi-list pattern as Render). }
   Case Kind of
     dbkStaging:
-      If OldStaging then ListSrc:=FMIDIDeviceStagingOldConfOpt
+      If FTempGame.IsOldStaging then ListSrc:=FMIDIDeviceStagingOldConfOpt
       else ListSrc:=FMIDIDeviceStagingConfOpt;
     dbkX:
       ListSrc:=FMIDIDeviceXConfOpt;
+    dbkPure:
+      ListSrc:=FMIDIDevicePureConfOpt;
     else
       ListSrc:=FMIDIDeviceConfOpt;
   end;
 
-  DeviceComboBox.Items.BeginUpdate;
-  try
-    DeviceComboBox.Items.Clear;
-    St:=ValueToList(ListSrc,';,');
-    try
-      DeviceComboBox.Items.AddStrings(St);
-    finally
-      St.Free;
-    end;
-  finally
-    DeviceComboBox.Items.EndUpdate;
-  end;
   S:=Trim(LastMIDIDevice);
-  { Aliases → canonical default for selection (DropDownList shows blank if still unknown). }
-  If NewStaging then begin
-    If (S='') or SameText(S,'default') or SameText(S,'auto') or SameText(S,'win32')
-       or SameText(S,'alsa') or SameText(S,'oss') or SameText(S,'coremidi') then
-      S:='port';
-  end else If OldStaging then begin
-    If (S='') or SameText(S,'default') then
-      S:='auto';
-  end else begin
-    If S='' then S:='default';
-  end;
+  If (S='') or SameText(S,'none') then
+    S:='none';
+  If SameText(S,'fluidsynth') then
+    S:='soundfont';
 
+  OldChange:=DeviceComboBox.OnChange;
+  DeviceComboBox.OnChange:=nil;
+  DeviceComboBox.Items.BeginUpdate;
+  DeviceComboBox.Items.Clear;
+  St:=ValueToList(ListSrc,';,');
+  DeviceComboBox.Items.AddStrings(St);
+  St.Free;
+  DeviceComboBox.Items.EndUpdate;
   DeviceComboBox.ItemIndex:=-1;
   for I:=0 to DeviceComboBox.Items.Count-1 do
     if SameText(Trim(DeviceComboBox.Items[I]),S) then begin
       DeviceComboBox.ItemIndex:=I;
       break;
     end;
+  DeviceComboBox.OnChange:=OldChange;
 
   ApplyMT32ModelList;
 end;
@@ -160,8 +144,11 @@ Var Kind: TDOSBoxKind;
     S, Want: String;
     St: TStringList;
     I: Integer;
+    ReverbOK, ModelOK: Boolean;
 begin
   Kind:=GetSelectedDosBoxKind;
+  ReverbOK:=Kind in [dbkStandard,dbkX];
+  ModelOK:=Kind in [dbkStaging,dbkX,dbkPure];
   Case Kind of
     dbkStaging: S:=FMT32ModelStagingConfOpt;
     dbkX:       S:=FMT32ModelXConfOpt;
@@ -173,24 +160,102 @@ begin
   If Want='' then Want:='auto';
 
   MT32ModelComboBox.Items.Clear;
+  MT32ModelComboBox.ItemIndex:=-1;
+  MT32ModelComboBox.Text:='';
   If S<>'' then begin
     St:=ValueToList(S,';,');
-    try
-      MT32ModelComboBox.Items.AddStrings(St);
-    finally
-      St.Free;
-    end;
+    MT32ModelComboBox.Items.AddStrings(St);
+    St.Free;
   end;
-  MT32ModelComboBox.Enabled:=Kind in [dbkStaging,dbkX];
-  MT32ModelLabel.Enabled:=MT32ModelComboBox.Enabled;
+  MT32ModelComboBox.Enabled:=ModelOK;
+  MT32ModelLabel.Enabled:=ModelOK;
+  MT32ModeComboBox.Enabled:=ReverbOK;
+  MT32TimeComboBox.Enabled:=ReverbOK;
+  MT32LevelComboBox.Enabled:=ReverbOK;
+  MT32ModeLabel.Enabled:=ReverbOK;
+  MT32TimeLabel.Enabled:=ReverbOK;
+  MT32LevelLabel.Enabled:=ReverbOK;
 
+  if ModelOK then
+    for I:=0 to MT32ModelComboBox.Items.Count-1 do
+      if SameText(Trim(MT32ModelComboBox.Items[I]),Want) then begin
+        MT32ModelComboBox.ItemIndex:=I;
+        break;
+      end;
+end;
+
+procedure CollectPureMT32Models(const Dir: String; Names: TStringList; Depth: Integer; MaxDepth: Integer = 32);
+const
+  ControlSuffix = '_CONTROL.ROM';
+Var Rec: TSearchRec;
+    I: Integer;
+    Full, EntryU, DeviceName: String;
+begin
+  If Depth>=MaxDepth then exit;
+  I:=FindFirst(Dir+'*.*',faAnyFile,Rec);
+  If I<>0 then exit;
+  try
+    While I=0 do begin
+      If (Rec.Name<>'') and (Rec.Name<>'.') and (Rec.Name<>'..') then begin
+        Full:=Dir+Rec.Name;
+        If (Rec.Attr and faDirectory)<>0 then
+          CollectPureMT32Models(Full+PathDelim,Names,Depth+1,MaxDepth)
+        else begin
+          EntryU:=ExtUpperCase(Rec.Name);
+          If (Length(EntryU)>Length(ControlSuffix)) and
+             (Copy(EntryU,Length(EntryU)-Length(ControlSuffix)+1,MaxInt)=ControlSuffix) then begin
+            DeviceName:=Copy(Rec.Name,1,Length(Rec.Name)-Length(ControlSuffix));
+            If (DeviceName<>'') and FileExists(Dir+DeviceName+'_PCM.ROM') then
+              Names.Add(DeviceName);
+          end;
+        end;
+      end;
+      I:=FindNext(Rec);
+    end;
+  finally
+    FindClose(Rec);
+  end;
+end;
+
+procedure TModernProfileEditorMIDIFrame.PopulatePureMT32Models;
+Var Root, Want: String;
+    Names: TStringList;
+    I: Integer;
+begin
+  If GetSelectedDosBoxKind<>dbkPure then exit;
+
+  Want:=Trim(MT32ModelComboBox.Text);
+  If Want='' then Want:=FLoadedMT32Model;
+
+  MT32ModelComboBox.Items.Clear;
   MT32ModelComboBox.ItemIndex:=-1;
+
+  Root:=Trim(FluidSynthPathBox.Text);
+  If Root='' then exit;
+  Root:=IncludeTrailingPathDelimiter(MakeAbsPath(Root,PrgSetup.BaseDir));
+  If not DirectoryExists(Root) then exit;
+
+  Names:=TStringList.Create;
+  try
+    Names.Sorted:=True;
+    Names.Duplicates:=dupIgnore;
+    Names.CaseSensitive:=False;
+    CollectPureMT32Models(Root,Names,0);
+    MT32ModelComboBox.Items.BeginUpdate;
+    try
+      MT32ModelComboBox.Items.AddStrings(Names);
+    finally
+      MT32ModelComboBox.Items.EndUpdate;
+    end;
+  finally
+    Names.Free;
+  end;
+
   for I:=0 to MT32ModelComboBox.Items.Count-1 do
     if SameText(Trim(MT32ModelComboBox.Items[I]),Want) then begin
       MT32ModelComboBox.ItemIndex:=I;
       break;
     end;
-  { No match → leave -1; do not force first item (would show a false value). }
 end;
 
 procedure TModernProfileEditorMIDIFrame.ShowFrame(Sender: TObject);
@@ -198,7 +263,13 @@ begin
   if DeviceComboBox.ItemIndex>=0 then
     LastMIDIDevice:=DeviceComboBox.Text;
   ApplyMIDIDeviceList;
-  DeviceComboBoxChange(Self);
+  DeviceComboBoxChange(Self,False);
+end;
+
+procedure TModernProfileEditorMIDIFrame.Invalidate(Sender: TObject);
+begin
+  DeviceComboBox.ItemIndex:=-1;
+  MT32ModelComboBox.ItemIndex:=-1;
 end;
 
 function TModernProfileEditorMIDIFrame.FormatFluidGainDisplay(const N: Integer): String;
@@ -214,14 +285,20 @@ end;
 
 procedure TModernProfileEditorMIDIFrame.LoadFluidGainUI(const GainStr: String);
 Var N: Integer;
+    Pure: Boolean;
 begin
+  Pure:=GetSelectedDosBoxKind=dbkPure;
+  If Pure then
+    tbFluidSynthGainSlider.Max:=500
+  else
+    tbFluidSynthGainSlider.Max:=800;
   FUpdatingFluidGainUI:=True;
   try
-    If TryStrToInt(Trim(GainStr),N) then begin
-      N:=Max(tbFluidSynthGainSlider.Min,Min(tbFluidSynthGainSlider.Max,N));
+    If TryStrToInt(Trim(GainStr),N) and (N>=tbFluidSynthGainSlider.Min) and (N<=tbFluidSynthGainSlider.Max) then begin
       tbFluidSynthGainSlider.Position:=N;
       lbFluidSynthGainValue.Text:=FormatFluidGainDisplay(N);
     end else begin
+      { Empty or out of range for this kind → unselected (same as no stored value). }
       lbFluidSynthGainValue.Text:='';
       tbFluidSynthGainSlider.Position:=100;
     end;
@@ -235,26 +312,35 @@ Var IsFS, IsMT: Boolean;
     Kind: TDOSBoxKind;
 begin
   Kind:=GetSelectedDosBoxKind;
-  IsFS:=SameText(Trim(DeviceComboBox.Text),'fluidsynth');
+  IsFS:=SameText(Trim(DeviceComboBox.Text),'soundfont');
   IsMT:=SameText(Trim(DeviceComboBox.Text),'mt32');
-  { Synth settings (soundfont/ROM dir + gain): Staging/X only, not classic. }
-  FluidSynthGroupBox.Visible:=(Kind in [dbkStaging,dbkX]) and (IsFS or IsMT);
+  FluidSynthGroupBox.Visible:=(Kind in [dbkStaging,dbkX,dbkPure]) and (IsFS or IsMT);
   If not FluidSynthGroupBox.Visible then exit;
 
   FluidSynthGroupBox.Caption:=LanguageSetup.ProfileEditorSoundMIDIFluidSynth;
   If IsFS then begin
     FluidSynthPathBox.EditLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIFluidSynthSoundfont;
     BtnFluidSynthPath.Hint:=LanguageSetup.ChooseFile;
-    FluidSynthPathBox.Text:=FLoadedFluidPath;
   end else begin
-    { device is mt32 }
     FluidSynthPathBox.EditLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIMT32RomDir;
     BtnFluidSynthPath.Hint:=LanguageSetup.ChooseFolder;
-    FluidSynthPathBox.Text:=FLoadedMT32RomDir;
+    If Kind=dbkPure then PopulatePureMT32Models;
   end;
   { Gain slider is shared; do not reload profile gain on device change. }
   tbFluidSynthGainSlider.Enabled:=True;
   lbFluidSynthGainValue.Enabled:=True;
+end;
+
+procedure TModernProfileEditorMIDIFrame.SetFluidSynthBoxPath;
+Var Cur: String;
+begin
+  Cur:=Trim(DeviceComboBox.Text);
+  If SameText(Cur,'soundfont') then begin
+    If FGame<>nil then FluidSynthPathBox.Text:=Trim(FGame.FluidSoundFont) else FluidSynthPathBox.Text:='';
+  end else If SameText(Cur,'mt32') then begin
+    If FGame<>nil then FluidSynthPathBox.Text:=Trim(FGame.MIDIMT32RomDir) else FluidSynthPathBox.Text:='';
+  end else
+    FluidSynthPathBox.Text:='';
 end;
 
 procedure TModernProfileEditorMIDIFrame.InitGUI(var InitData : TModernProfileEditorInitData);
@@ -275,21 +361,21 @@ begin
   NoFlicker(tbFluidSynthGainSlider);
   NoFlicker(lbFluidSynthGainValue);
 
-  ProfileDOSBoxInstallation:=InitData.CurrentDOSBoxInstallation;
   FMIDIDeviceConfOpt:=InitData.GameDB.ConfOpt.MIDIDevice;
   FMIDIDeviceStagingConfOpt:=InitData.GameDB.ConfOpt.MIDIDeviceStaging;
   FMIDIDeviceStagingOldConfOpt:=InitData.GameDB.ConfOpt.MIDIDeviceStagingOld;
   FMIDIDeviceXConfOpt:=InitData.GameDB.ConfOpt.MIDIDeviceX;
+  FMIDIDevicePureConfOpt:=InitData.GameDB.ConfOpt.MIDIDevicePure;
   FMT32ModelStagingConfOpt:=InitData.GameDB.ConfOpt.MT32ModelStaging;
   FMT32ModelXConfOpt:=InitData.GameDB.ConfOpt.MT32ModelX;
   InitData.OnShowFrame:=ShowFrame;
+  InitData.OnInvalidate:=Invalidate;
 
   InfoLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIInfo;
   TypeLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIType;
   St:=ValueToList(InitData.GameDB.ConfOpt.MPU401,';,'); try TypeComboBox.Items.AddStrings(St); finally St.Free; end;
   DeviceLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIDevice;
   LastMIDIDevice:='';
-  ApplyMIDIDeviceList;
   AdditionalSettingsEdit.EditLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIConfigInfo;
   MIDISelectButton.Caption:=LanguageSetup.ProfileEditorSoundMIDIConfigButton;
   MIDISelectLabel1.Caption:=LanguageSetup.ProfileEditorSoundMIDIConfigButtonInfo;
@@ -339,8 +425,8 @@ begin
     St.Free;
   end;
 
-  { Start hidden until device selection is known (SetGame / combo change). }
-  ApplyFluidSynthPathVisibility;
+  FluidSynthGroupBox.Visible:=False;
+  MT32SettingsGroupBox.Visible:=False;
 
   HelpContext:=ID_ProfileEditSoundMIDI;
 end;
@@ -360,6 +446,7 @@ procedure TModernProfileEditorMIDIFrame.tbFluidSynthGainSliderChange(Sender: TOb
 begin
   If FUpdatingFluidGainUI then Exit;
   lbFluidSynthGainValue.Text:=FormatFluidGainDisplay(tbFluidSynthGainSlider.Position);
+  FTempGame.MIDIDeviceGainValue:=IntToStr(tbFluidSynthGainSlider.Position);
 end;
 
 Procedure SetComboBox(const ComboBox : TComboBox; const Value : String; const Default : String); overload;
@@ -370,12 +457,10 @@ end;
 
 procedure TModernProfileEditorMIDIFrame.SetGame(const Game: TGame; const LoadFromTemplate: Boolean);
 begin
+  FGame:=Game;
   SetComboBox(TypeComboBox,Game.MIDIType,'intelligent');
   LastMIDIDevice:=Game.MIDIDevice;
 
-  FLoadedFluidPath:=Trim(Game.FluidSoundFont);
-  FLoadedFluidGain:=Trim(Game.MIDIDeviceGainValue);
-  FLoadedMT32RomDir:=Trim(Game.MIDIMT32RomDir);
   FLoadedMT32Model:=Trim(Game.MIDIMT32Model);
   If FLoadedMT32Model='' then FLoadedMT32Model:='auto';
 
@@ -386,32 +471,29 @@ begin
   MT32TimeComboBox.ItemIndex:=Max(0,MT32TimeComboBox.Items.IndexOf(Game.MIDIMT32Time));
   MT32LevelComboBox.ItemIndex:=Max(0,MT32LevelComboBox.Items.IndexOf(Game.MIDIMT32Level));
 
-  { Profile gain once per open; device switches leave the slider alone. }
-  LoadFluidGainUI(FLoadedFluidGain);
+  LoadFluidGainUI(Trim(Game.MIDIDeviceGainValue));
+  FTempGame.MIDIDeviceGainValue:='';
 
-  { Do not treat as a device change: keep loaded ROM dir / model. }
   DeviceComboBoxChange(self);
 end;
 
 procedure TModernProfileEditorMIDIFrame.DeviceComboBoxChange(Sender: TObject);
-Var Prev, Cur: String;
 begin
-  Prev:=Trim(LastMIDIDevice);
-  Cur:=Trim(DeviceComboBox.Text);
+  DeviceComboBoxChange(Sender,True);
+end;
 
-  { Only capture path when actually leaving fluidsynth/mt32 for another device. }
-  If not SameText(Prev,Cur) then begin
-    If SameText(Prev,'fluidsynth') then
-      FLoadedFluidPath:=Trim(FluidSynthPathBox.Text)
-    else If SameText(Prev,'mt32') then
-      FLoadedMT32RomDir:=Trim(FluidSynthPathBox.Text);
-  end;
+procedure TModernProfileEditorMIDIFrame.DeviceComboBoxChange(Sender: TObject; UpdatePath: Boolean);
+Var Cur: String;
+begin
+  Cur:=Trim(DeviceComboBox.Text);
   LastMIDIDevice:=Cur;
 
   MT32SettingsGroupBox.Visible:=SameText(Cur,'mt32');
-  If not SameText(Cur,'fluidsynth') and not SameText(Cur,'mt32') then
+  If not SameText(Cur,'soundfont') and not SameText(Cur,'mt32') then
     ClearFluidSynthUI;
   ApplyFluidSynthPathVisibility;
+  If UpdatePath then
+    SetFluidSynthBoxPath;
 end;
 
 procedure TModernProfileEditorMIDIFrame.BtnFluidSynthPathClick(Sender: TObject);
@@ -428,7 +510,7 @@ begin
     S:=MakeRelPath(IncludeTrailingPathDelimiter(S),PrgSetup.BaseDir);
     If S='' then exit;
     FluidSynthPathBox.Text:=S;
-    FLoadedMT32RomDir:=S;
+    PopulatePureMT32Models;
     exit;
   end;
 
@@ -451,51 +533,58 @@ begin
     S:=MakeRelPath(OD.FileName,PrgSetup.BaseDir);
     If S='' then exit;
     FluidSynthPathBox.Text:=S;
-    FLoadedFluidPath:=S;
   finally
     OD.Free;
   end;
 end;
 
+procedure TModernProfileEditorMIDIFrame.FluidSynthPathBoxChange(Sender: TObject);
+Var Root: String;
+begin
+  If GetSelectedDosBoxKind<>dbkPure then exit;
+  If not SameText(Trim(DeviceComboBox.Text),'mt32') then exit;
+  Root:=Trim(FluidSynthPathBox.Text);
+  If Root='' then exit;
+  Root:=IncludeTrailingPathDelimiter(MakeAbsPath(Root,PrgSetup.BaseDir));
+  If not DirectoryExists(Root) then exit;
+  PopulatePureMT32Models;
+end;
+
 procedure TModernProfileEditorMIDIFrame.GetGame(const Game: TGame);
-Var PathNow, GainNow: String;
+Var PathNow: String;
     Kind: TDOSBoxKind;
     IsFS, IsMT: Boolean;
 begin
   Game.MIDIType:=TypeComboBox.Text;
-  Game.MIDIDevice:=DeviceComboBox.Text;
+  If DeviceComboBox.ItemIndex>=0 then
+    Game.MIDIDevice:=DeviceComboBox.Text;
   Game.MIDIConfig:=AdditionalSettingsEdit.Text;
 
-  IsFS:=SameText(Trim(DeviceComboBox.Text),'fluidsynth');
-  IsMT:=SameText(Trim(DeviceComboBox.Text),'mt32');
+  IsFS:=(DeviceComboBox.ItemIndex>=0) and SameText(Trim(DeviceComboBox.Text),'soundfont');
+  IsMT:=(DeviceComboBox.ItemIndex>=0) and SameText(Trim(DeviceComboBox.Text),'mt32');
   PathNow:=Trim(FluidSynthPathBox.Text);
-  GainNow:=IntToStr(tbFluidSynthGainSlider.Position);
   Kind:=GetSelectedDosBoxKind;
 
-  { Gain/path when Synth settings is usable (Staging/X + fluidsynth|mt32). }
-  If (Kind in [dbkStaging,dbkX]) and (IsFS or IsMT) then begin
-    If GainNow<>FLoadedFluidGain then begin
-      Game.MIDIDeviceGainValue:=GainNow;
-      FLoadedFluidGain:=GainNow;
-    end;
-    If IsFS and (PathNow<>FLoadedFluidPath) then
-      Game.FluidSoundFont:=PathNow;
-  end;
+  If (IsFS or IsMT) and (Trim(FTempGame.MIDIDeviceGainValue)<>'') then
+    Game.MIDIDeviceGainValue:=IntToStr(tbFluidSynthGainSlider.Position);
 
-  { MT-32 keys: only write when device is mt32; leave profile keys otherwise. }
+  If (Kind in [dbkStaging,dbkX,dbkPure]) and IsFS then
+    Game.FluidSoundFont:=PathNow;
+
   If IsMT then begin
-    Game.MIDIMT32Mode:=MT32ModeComboBox.Text;
-    Game.MIDIMT32Time:=MT32TimeComboBox.Text;
-    Game.MIDIMT32Level:=MT32LevelComboBox.Text;
-    If Kind in [dbkStaging,dbkX] then begin
+    If Kind in [dbkStandard,dbkX] then begin
+      Game.MIDIMT32Mode:=MT32ModeComboBox.Text;
+      Game.MIDIMT32Time:=MT32TimeComboBox.Text;
+      Game.MIDIMT32Level:=MT32LevelComboBox.Text;
+    end;
+    If Kind in [dbkStaging,dbkX,dbkPure] then begin
       If MT32ModelComboBox.ItemIndex>=0 then begin
         Game.MIDIMT32Model:=MT32ModelComboBox.Text;
         FLoadedMT32Model:=Game.MIDIMT32Model;
       end;
-      { Always write path when Staging/X + mt32 (empty clears). }
-      Game.MIDIMT32RomDir:=PathNow;
-      FLoadedMT32RomDir:=PathNow;
     end;
+    If Kind in [dbkStaging,dbkX,dbkPure] then
+      Game.MIDIMT32RomDir:=PathNow;
   end;
 end;
 

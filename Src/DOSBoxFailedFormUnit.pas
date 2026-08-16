@@ -40,12 +40,13 @@ Procedure ShowDOSBoxFailedDialog(const AOwner : TComponent; const AGameDB : TGam
 implementation
 
 uses LanguageSetupUnit, VistaToolsUnit, CommonHelpers, CommonTools, IconLoaderUnit, PrgSetupUnit,
-     GameDBToolsHelpers, GameDBHelpers;
+     GameDBToolsHelpers, GameDBHelpers, PrgConsts;
 
 {$R *.dfm}
 
 procedure TDOSBoxFailedForm.FormShow(Sender: TObject);
 Var St : TStringList;
+    ListSrc : String;
 begin
   SetVistaFonts(self);
   Font.Charset:=CharsetNameToFontCharSet(LanguageSetup.CharsetName);
@@ -58,7 +59,18 @@ begin
   CloseDOSBoxCheckBox.Caption:=LanguageSetup.GameCloseDOSBoxAfterGameExit;
   ShowConsoleCheckBox.Caption:=LanguageSetup.DOSBoxStartFailedShowConsole;
   RenderLabel.Caption:=LanguageSetup.GameRender;
-  St:=ValueToList(GameDB.ConfOpt.Render,';,'); try RenderComboBox.Items.AddStrings(St); finally St.Free; end;
+  Case Game.DosBoxKind of
+    dbkStaging: ListSrc:=GameDB.ConfOpt.RenderStaging;
+    dbkX:       ListSrc:=GameDB.ConfOpt.RenderX;
+    else        ListSrc:=GameDB.ConfOpt.Render;
+  end;
+  St:=ValueToList(ListSrc,';,');
+  try
+    RenderComboBox.Items.Clear;
+    RenderComboBox.Items.AddStrings(St);
+  finally
+    St.Free;
+  end;
   SDLLabel.Caption:=LanguageSetup.SetupFormDOSBoxSDLVideodriver;
   SDLComboBox.Items[0]:=SDLComboBox.Items[0]+' ('+LanguageSetup.Default+')';
   RemoteLabel.Caption:=LanguageSetup.DOSBoxStartFailedRemoteInfo;
@@ -87,10 +99,12 @@ begin
   End;
 
   S:=Trim(ExtUpperCase(Game.Render));
-  RenderComboBox.ItemIndex:=0;
+  RenderComboBox.ItemIndex:=-1;
   For I:=0 to RenderComboBox.Items.Count-1 do If Trim(ExtUpperCase(RenderComboBox.Items[I]))=S then begin
     RenderComboBox.ItemIndex:=I; break;
   end;
+  If (RenderComboBox.ItemIndex<0) and (RenderComboBox.Items.Count>0) then
+    RenderComboBox.ItemIndex:=0;
 
   If Trim(ExtUpperCase(PrgSetup.DOSBoxSettings[0].SDLVideodriver))='WINDIB' then SDLComboBox.ItemIndex:=1 else SDLComboBox.ItemIndex:=0;
   RemoteLabel.Visible:=IsRemoteSession and (SDLComboBox.ItemIndex=0);
@@ -104,7 +118,8 @@ begin
   end else begin
     If ShowConsoleCheckBox.Checked then Game.ShowConsoleWindow:=1 else Game.ShowConsoleWindow:=0;
   end;
-  Game.Render:=RenderComboBox.Text;
+  If RenderComboBox.ItemIndex>=0 then
+    Game.Render:=RenderComboBox.Text;
   Game.NoDOSBoxFailedDialog:=DoNotShowAgainCheckBox.Checked;
   Game.StoreAllValues;
 

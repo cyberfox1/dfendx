@@ -14,6 +14,7 @@ object ModernProfileEditorForm: TModernProfileEditorForm
   KeyPreview = True
   Position = poOwnerFormCenter
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
   TextHeight = 13

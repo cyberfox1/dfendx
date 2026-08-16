@@ -278,7 +278,7 @@ begin
   if I<>0 then exit;
   try
     while I=0 do begin
-      if (Rec.Name<>'.') and (Rec.Name<>'..') then begin
+      if (Rec.Name<>'') and (Rec.Name[1]<>'.') then begin
         FullPath:=Dir+Rec.Name;
         if (Rec.Attr and faDirectory)<>0 then begin
           if (Rec.Name[1]<>'.') and (Rec.Name[1]<>'_') then

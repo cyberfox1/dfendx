@@ -70,7 +70,7 @@ implementation
 
 uses ShlObj, Math, LanguageSetupUnit, VistaToolsUnit, CommonHelpers, CommonTools,
      SetupDosBoxFormUnit, PrgConsts, IconLoaderUnit, DOSBoxLangTools,
-     TextEditPopupUnit, HelpConsts, DOSBoxUnitHelpers;
+     TextEditPopupUnit, HelpConsts, DOSBoxUnitHelpers, GameDBToolsHelpers;
 
 {$R *.dfm}
 
@@ -223,7 +223,7 @@ begin
 end;
 
 procedure TSetupFrameDOSBoxForm.DosBoxDirEditChange(Sender: TObject);
-Var S,S2 : String;
+Var S,S2,AbsDir,Version : String;
     I,J : Integer;
     St : TStringList;
 begin
@@ -249,7 +249,14 @@ begin
   finally
     St.Free;
   end;
-  WarningButton.Visible:=OldDOSBoxVersion(CheckDOSBoxVersion(DosBoxDirEdit.Text));
+  AbsDir:=Trim(DosBoxDirEdit.Text);
+  Version:='';
+  if AbsDir<>'' then begin
+    AbsDir:=MakeAbsPath(AbsDir,PrgSetup.BaseDir);
+    AbsDir:=IncludeTrailingPathDelimiter(AbsDir);
+    DetermineDosBoxKind(AbsDir, Version);
+  end;
+  WarningButton.Visible:=OldDOSBoxVersion(Version);
   DosBoxDirEdit.Width:=IfThen(WarningButton.Visible,WarningButton.Left-4,WarningButton.Left+WarningButton.Width)-DosBoxDirEdit.Left;
 end;
 
@@ -347,8 +354,16 @@ begin
 end;
 
 procedure TSetupFrameDOSBoxForm.WarningButtonClick(Sender: TObject);
+Var AbsDir, Version: String;
 begin
-  DOSBoxOutdatedWarning(DosBoxDirEdit.Text);
+  AbsDir:=Trim(DosBoxDirEdit.Text);
+  Version:='';
+  if AbsDir<>'' then begin
+    AbsDir:=MakeAbsPath(AbsDir,PrgSetup.BaseDir);
+    AbsDir:=IncludeTrailingPathDelimiter(AbsDir);
+    DetermineDosBoxKind(AbsDir, Version);
+  end;
+  DOSBoxOutdatedWarning(Version);
 end;
 
 { global }

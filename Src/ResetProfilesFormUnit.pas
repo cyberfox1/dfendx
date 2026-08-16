@@ -69,8 +69,8 @@ begin
   SetVistaFonts(self);
   Font.Charset:=CharsetNameToFontCharSet(LanguageSetup.CharsetName);
 
-  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,False);
-  AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,False);
+  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,gbtTemplateDB,False);
+  AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,gbtAutoSetupDB,False);
 
   PageControl.ActivePageIndex:=0;
 end;

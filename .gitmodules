@@ -1,0 +1,3 @@
+[submodule "Src/wiki"]
+	path = Src/wiki
+	url = git@github.com:cyberfox1/dfendx.wiki.git

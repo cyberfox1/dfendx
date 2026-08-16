@@ -1,5 +1,7 @@
-* DosBOXPure Unleashed support
 * Restore program update checking
+* Modern ScummVM support
+* Voodoo/glide uplift
+* DOSBox Pure gus options
 - 7zip dll version upgrade
 - 64-bit build
 ? WinXP support

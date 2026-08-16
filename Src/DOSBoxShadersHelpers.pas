@@ -29,7 +29,7 @@ function GatherDOSBoxShaders(const ParentPaths: TStrings;
 
 { Staging: OpenGL filled; Direct3D empty. }
 function GetDOSBoxStagingShaders(const DosBoxPath: string;
-  const Version: string): TDOSBoxShaderBackendMaps;
+  IsOldStaging: Boolean): TDOSBoxShaderBackendMaps;
 
 { X: OpenGL from glshaders\*.glsl; Direct3D from shaders\*.fx. }
 function GetDOSBoxXShaders(const DosBoxPath: string): TDOSBoxShaderBackendMaps;
@@ -41,7 +41,7 @@ function GetDOSBoxStandardShaders(const DosBoxPath: string): TDOSBoxShaderBacken
 
 { Kind switch: Staging / X / standard-style. }
 function GetDOSBoxShaders(const DosBoxPath: string; Kind: TDOSBoxKind;
-  const Version: string): TDOSBoxShaderBackendMaps;
+  IsOldStaging: Boolean): TDOSBoxShaderBackendMaps;
 
 function JoinRelPath(const Prefix, Name: string): string;
 function IsShaderFileName(const FileName: string): Boolean;
@@ -391,7 +391,7 @@ begin
 end;
 
 function GetDOSBoxStagingShaders(const DosBoxPath: string;
-  const Version: string): TDOSBoxShaderBackendMaps;
+  IsOldStaging: Boolean): TDOSBoxShaderBackendMaps;
 var
   Parents: TStringList;
   ShadersDir, Base: string;
@@ -399,7 +399,7 @@ begin
   Result := CreateEmptyShaderBackendMaps;
   FreeShaderMap(Result.OpenGL);
 
-  if StagingIsLegacyGlShaders(Version) then
+  if IsOldStaging then
     ShadersDir := DosBoxStagingShadersDirLegacy
   else
     ShadersDir := DosBoxStagingShadersDir;
@@ -531,11 +531,11 @@ begin
 end;
 
 function GetDOSBoxShaders(const DosBoxPath: string; Kind: TDOSBoxKind;
-  const Version: string): TDOSBoxShaderBackendMaps;
+  IsOldStaging: Boolean): TDOSBoxShaderBackendMaps;
 begin
   case Kind of
     dbkStaging:
-      Result := GetDOSBoxStagingShaders(DosBoxPath, Version);
+      Result := GetDOSBoxStagingShaders(DosBoxPath, IsOldStaging);
     dbkX:
       Result := GetDOSBoxXShaders(DosBoxPath);
   else

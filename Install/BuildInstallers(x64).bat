@@ -16,11 +16,6 @@ call BuildHelp.bat
 if errorlevel 1 exit /b 1
 
 echo.
-echo === EnsureSqlite3Dll ^(FireDAC vendor lib for installers^) ===
-call "%~dp0EnsureSqlite3Dll.bat"
-if errorlevel 1 exit /b 1
-
-echo.
 echo === makensis DFendX-UpdateSetup.nsi ===
 makensis DFendX-UpdateSetup.nsi
 if errorlevel 1 exit /b 1

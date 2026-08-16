@@ -182,8 +182,8 @@ begin
 
   If PrgSetup.ScanFolderUseFileName then PopupNameFilename.Checked:=True else PopupNameFoldername.Checked:=True;
 
-  AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,False);
-  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,False);
+  AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,gbtAutoSetupDB,False);
+  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,gbtTemplateDB,False);
 
   NewGames:=TList.Create;
 

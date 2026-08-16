@@ -2,7 +2,7 @@ unit GameDBToolsHelpers;
 
 interface
 
-uses Classes, PrgConsts;
+uses Classes, PrgConsts, CommonHelpers;
 
 function IsWindowsExeMode(const ProfileMode: String): Boolean;
 function TryStrToHex(const S: String; var Hex: Integer): Boolean;
@@ -19,7 +19,11 @@ function EncodeUserHTMLSymbolsOnly(const S, CharsetHTMLTranslate: String): Strin
 function EncodeHTMLSymbols(const S, CharsetHTMLTranslate: String): String;
 function DecodeHTMLSymbols(const S, CharsetHTMLTranslate: String): String;
 
-function DetermineDosBoxKind(const Path, BaseDir: String): TDOSBoxKind;
+function IsDBX(const Info: TExeInfoFields; out Version: String): Boolean;
+function IsDBStaging(const Info: TExeInfoFields; out Version: String): Boolean;
+function IsDBPure(const Info: TExeInfoFields; out Version: String): Boolean;
+function IsDBStandard(const Info: TExeInfoFields; const ExeName: String; out Version: String): Boolean;
+function DetermineDosBoxKind(const Path: String; out Version: String): TDOSBoxKind;
 function DOSBoxKindToDisplay(Kind: TDOSBoxKind): String;
 function DOSBoxKindToIconFileName(Kind: TDOSBoxKind): String;
 { Multi-size ICO basename under IconSets\DOSBoxKind\ for the given kind. }
@@ -28,7 +32,6 @@ function DOSBoxKindToPreviewFileName(Kind: TDOSBoxKind): String;
 
 { Exe directory without CommonTools/VCL (ParamStr(0)). }
 function ProgramInstallDir: String;
-function GetExeFileDescription(const ExePath: String): String;
 
 { Screenshot pane pick: lower prio first; same prio prefers larger file via inverted size key. }
 { True when taller than wide and h/w <= 1.8 (not overly elongated). }
@@ -41,7 +44,7 @@ function ExtractPathFromScreenshotPaneSortKey(const SortKey: String): String;
 
 implementation
 
-uses Windows, SysUtils, Math, CommonHelpers;
+uses Windows, SysUtils, Math, DOSBoxUnitHelpers;
 
 function ProgramInstallDir: String;
 begin
@@ -281,85 +284,116 @@ begin
   end;
 end;
 
-function GetExeFileDescription(const ExePath: String): String;
-var
-  Size, Handle: DWORD;
-  Buffer: Pointer;
-  Len: UINT;
-  Value: Pointer;
-  Trans: PLongWord;
-  LangCharset, Query: String;
-  FileName: String;
+function ValidPEVersion(const Raw: String; out Version: String): Boolean;
 begin
-  Result := '';
-  FileName := ExePath;
-  UniqueString(FileName);
-  Size := GetFileVersionInfoSize(PChar(FileName), Handle);
-  if Size = 0 then Exit;
-  GetMem(Buffer, Size);
-  try
-    if not GetFileVersionInfo(PChar(FileName), Handle, Size, Buffer) then Exit;
-    if not VerQueryValue(Buffer, '\VarFileInfo\Translation', Pointer(Trans), Len) then Exit;
-    if (Trans = nil) or (Len < SizeOf(LongWord)) then Exit;
-    LangCharset := IntToHex(LoWord(Trans^), 4) + IntToHex(HiWord(Trans^), 4);
-    Query := '\StringFileInfo\' + LangCharset + '\FileDescription';
-    if VerQueryValue(Buffer, PChar(Query), Value, Len) and (Value <> nil) then
-      Result := PChar(Value);
-  finally
-    FreeMem(Buffer);
-  end;
+  Version := NormalizeProductVersionString(Raw);
+  Result := (Version <> '') and (CompareDOSBoxVersion(Version, '0.0.0.0') > 0);
 end;
 
-function DetermineDosBoxKind(const Path, BaseDir: String): TDOSBoxKind;
-var
-  AbsDir, ExeName, Desc, UpperDesc: String;
-  SR: TSearchRec;
-  Found: Boolean;
+function IsDBX(const Info: TExeInfoFields; out Version: String): Boolean;
 begin
+  Result := False;
+  Version := '';
+  if Pos('DOSBOX-X', ExtUpperCase(Info.FileDescription)) = 0 then
+    Exit;
+  Result := ValidPEVersion(Info.ProductVersion, Version);
+end;
+
+function IsDBStaging(const Info: TExeInfoFields; out Version: String): Boolean;
+begin
+  Result := False;
+  Version := '';
+  if Pos('STAGING', ExtUpperCase(Info.FileDescription)) = 0 then
+    Exit;
+  Result := ValidPEVersion(Info.ProductVersion, Version);
+end;
+
+function IsDBPure(const Info: TExeInfoFields; out Version: String): Boolean;
+var
+  UpperDesc, UpperProd: String;
+begin
+  Result := False;
+  Version := '';
+  UpperDesc := ExtUpperCase(Info.FileDescription);
+  UpperProd := ExtUpperCase(Info.ProductName);
+  if (Pos('DOSBOXPURE', UpperDesc) = 0) and (Pos('DOSBOXPURE', UpperProd) = 0) then
+    Exit;
+  Version := Trim(Info.BinaryProductVersion);
+  Result := (Version <> '') and (CompareDOSBoxVersion(Version, '0.0.0.0') > 0);
+  if not Result then
+    Version := '';
+end;
+
+function IsDBStandard(const Info: TExeInfoFields; const ExeName: String; out Version: String): Boolean;
+begin
+  Result := False;
+  Version := '';
+  if not SameText(ExeName, 'dosbox.exe') then
+    Exit;
+  if Pos('DOSBOX', ExtUpperCase(Info.FileDescription)) = 0 then
+    Exit;
+  Result := ValidPEVersion(Info.ProductVersion, Version);
+end;
+
+function DetermineDosBoxKind(const Path: String; out Version: String): TDOSBoxKind;
+var
+  AbsDir, ExePath: String;
+  Info: TExeInfoFields;
+  SR: TSearchRec;
+begin
+  Version := '';
   Result := dbkNone;
   if Trim(Path) = '' then Exit;
 
   Result := dbkUnknown;
-  AbsDir := IncludeTrailingPathDelimiter(MakeAbsPath(Path, BaseDir));
+  AbsDir := IncludeTrailingPathDelimiter(Path);
   if not DirectoryExists(AbsDir) then Exit;
 
-  Found := False;
-  ExeName := '';
-  if FindFirst(AbsDir + 'dosbox*.exe', faAnyFile, SR) = 0 then
+  if FindFirst(AbsDir + 'dosbox*.exe', faAnyFile, SR) <> 0 then Exit;
   try
     repeat
-      if (SR.Attr and faDirectory) = 0 then
+      if (SR.Attr and faDirectory) <> 0 then
+        Continue;
+
+      ExePath := AbsDir + SR.Name;
+      Info := GetExeInfoFields(ExePath);
+
+      if IsDBX(Info, Version) then
       begin
-        ExeName := SR.Name;
-        Found := True;
-        Break;
+        Result := dbkX;
+        Exit;
+      end;
+      if IsDBStaging(Info, Version) then
+      begin
+        Result := dbkStaging;
+        Exit;
+      end;
+      if IsDBPure(Info, Version) then
+      begin
+        Result := dbkPure;
+        Exit;
+      end;
+      if IsDBStandard(Info, SR.Name, Version) then
+      begin
+        Result := dbkStandard;
+        Exit;
       end;
     until FindNext(SR) <> 0;
   finally
     SysUtils.FindClose(SR);
   end;
-  if not Found then Exit;
-
-  Desc := GetExeFileDescription(AbsDir + ExeName);
-  UpperDesc := ExtUpperCase(Desc);
-
-  if Pos('DOSBOX-X', UpperDesc) > 0 then
-    Result := dbkX
-  else if Pos('STAGING', UpperDesc) > 0 then
-    Result := dbkStaging
-  else if SameText(ExeName, 'dosbox.exe') and (Pos('DOSBOX', UpperDesc) > 0) then
-    Result := dbkStandard
-  else
-    Result := dbkUnknown;
+  Version := '';
+  Result := dbkUnknown;
 end;
 
 function DOSBoxKindToDisplay(Kind: TDOSBoxKind): String;
 begin
   case Kind of
-    dbkStandard: Result := DosBoxKindStandard;
-    dbkX:        Result := DosBoxKindX;
-    dbkStaging:  Result := DosBoxKindStaging;
-    dbkUnknown:  Result := DosBoxKindUnknown;
+    dbkStandard: Result := DosBoxKindDisplayStandard;
+    dbkX:        Result := DosBoxKindDisplayX;
+    dbkStaging:  Result := DosBoxKindDisplayStaging;
+    dbkPure:     Result := DosBoxKindDisplayPure;
+    dbkUnknown:  Result := DosBoxKindDisplayUnknown;
   else
     Result := '';
   end;
@@ -371,6 +405,7 @@ begin
     dbkStandard: Result := 'dosbox-standard.ico';
     dbkX:        Result := 'dosbox-x.ico';
     dbkStaging:  Result := 'dosbox-staging.ico';
+    dbkPure:     Result := 'dosbox-pure.ico';
   else
     { dbkNone, dbkUnknown }
     Result := 'dosbox-unknown.ico';
@@ -383,6 +418,7 @@ begin
     dbkStandard: Result := 'dosbox-standard.png';
     dbkX:        Result := 'dosbox-x.png';
     dbkStaging:  Result := 'dosbox-staging.png';
+    dbkPure:     Result := 'dosbox-pure.png';
   else
     Result := 'dosbox-unknown.png';
   end;

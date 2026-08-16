@@ -33,10 +33,11 @@ type
     procedure GameInfoValueListEditorEditButtonClick(Sender: TObject);
   private
     { Private-Deklarationen }
+    FTempGame : TGame;
     LinkFile : TLinkFile;
     PProfileName,PCaptureDir : PString;
     GameDB : TGameDB;
-    ProfileExe,ProfileSetup,ProfileScummVMGameName,ProfileScummVMPath,ProfileDOSBoxInstallation,ProfileCaptureDir : PString;
+    ProfileExe,ProfileSetup,ProfileScummVMGameName,ProfileScummVMPath,ProfileCaptureDir : PString;
     FOnProfileNameChange : TTextEvent;
     WWWNames, WWWLinks : TStringList;
     Procedure LoadLinks;
@@ -64,6 +65,7 @@ uses Math, LanguageSetupUnit, VistaToolsUnit, CommonHelpers, HelpConsts,
 constructor TModernProfileEditorGameInfoFrame.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
   WWWNames:=TStringList.Create;
   WWWLinks:=TStringList.Create;
 end;
@@ -150,7 +152,6 @@ begin
   ProfileSetup:=InitData.CurrentProfileSetup;
   ProfileScummVMGameName:=InitData.CurrentScummVMGameName;
   ProfileScummVMPath:=InitData.CurrentScummVMPath;
-  ProfileDOSBoxInstallation:=InitData.CurrentDOSBoxInstallation;
   ProfileCaptureDir:=InitData.CurrentCaptureDir;
   FOnProfileNameChange:=InitData.OnProfileNameChange;
 
@@ -177,7 +178,7 @@ begin
     3 : begin
           If Trim(PCaptureDir^)='' then S:='' else S:=MakeAbsPath(PCaptureDir^,PrgSetup.BaseDir);
           If ShowDataReaderDialog(self,PProfileName^,Name,Genre,Developer,Publisher,Year,Internet,Notes,S) then with GameInfoValueListEditor.Strings do begin
-            If Name <>'' then FOnProfileNameChange(self,Name,ProfileExe^,ProfileSetup^,ProfileScummVMGameName^,ProfileScummVMPath^,ProfileDOSBoxInstallation^,ProfileCaptureDir^);
+            If Name <>'' then FOnProfileNameChange(self,Name,ProfileExe^,ProfileSetup^,ProfileScummVMGameName^,ProfileScummVMPath^,ProfileCaptureDir^);
             If Genre<>'' then ValueFromIndex[0]:=Genre;
             If Developer<>'' then ValueFromIndex[1]:=Developer;
             If Publisher<>'' then ValueFromIndex[2]:=Publisher;

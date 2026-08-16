@@ -27,10 +27,12 @@ type
     procedure CustomKeyMapperEditChange(Sender: TObject);
   private
     { Private-Deklarationen }
-    FCustomDOSBoxDir : String;
-    Function CheckIsDOSBOXDefaultMapperFile(const Game: TGame; const MapperFile : String) : Boolean;
+    FTempGame : TGame;
+    Function CheckIsDOSBOXDefaultMapperFile(const MapperFile : String) : Boolean;
+    procedure ShowFrame(Sender : TObject);
   public
     { Public-Deklarationen }
+    Constructor Create(AOwner : TComponent); override;
     Procedure InitGUI(var InitData : TModernProfileEditorInitData);
     Procedure SetGame(const Game : TGame; const LoadFromTemplate : Boolean);
     Procedure GetGame(const Game : TGame);
@@ -44,6 +46,12 @@ uses LanguageSetupUnit, VistaToolsUnit, CommonHelpers, CommonTools, PrgSetupUnit
 {$R *.dfm}
 
 { TModernProfileEditorKeyboardFrame }
+
+constructor TModernProfileEditorKeyboardFrame.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
+end;
 
 procedure TModernProfileEditorKeyboardFrame.InitGUI(var InitData : TModernProfileEditorInitData);
 Var St : TStringList;
@@ -97,23 +105,26 @@ begin
   AddDefaultValueHint(KeyboardLayoutComboBox);
   AddDefaultValueHint(CodepageComboBox);
 
+  InitData.OnShowFrame:=ShowFrame;
   HelpContext:=ID_ProfileEditKeyboard;
 end;
 
-Function TModernProfileEditorKeyboardFrame.CheckIsDOSBOXDefaultMapperFile(const Game: TGame; const MapperFile : String) : Boolean;
+Function TModernProfileEditorKeyboardFrame.CheckIsDOSBOXDefaultMapperFile(const MapperFile : String) : Boolean;
 Var S : String;
 begin
-  S:=DefaultMapperFileForProfile(Game.CustomDOSBoxDir);
+  S:=DefaultMapperFileForProfile(FTempGame.CustomDOSBoxDir);
   If (Copy(S,1,2)='.\') and (Copy(MapperFile,1,2)<>'.\') then S:=Copy(S,3,MaxInt);
   result:=ExtUpperCase(MapperFile)=ExtUpperCase(S);
+end;
+
+procedure TModernProfileEditorKeyboardFrame.ShowFrame(Sender : TObject);
+begin
 end;
 
 procedure TModernProfileEditorKeyboardFrame.SetGame(const Game: TGame; const LoadFromTemplate: Boolean);
 Var S,T : String;
     I : Integer;
 begin
-  FCustomDOSBoxDir:=Game.CustomDOSBoxDir;
-
   If KeyboardLayoutComboBox.Items.Count>0 then begin
     If Trim(ExtUpperCase(KeyboardLayoutComboBox.Items[0]))='DEFAULT'
       then KeyboardLayoutComboBox.ItemIndex:=0
@@ -168,7 +179,7 @@ begin
 
   S:=Trim(ExtUpperCase(Game.CustomKeyMappingFile));
   If (S<>'') and (S<>'DEFAULT') then begin
-    If CheckIsDOSBOXDefaultMapperFile(Game,S) then S:='';
+    If CheckIsDOSBOXDefaultMapperFile(S) then S:='';
   end;
   If (S='') or (S='DEFAULT') then begin
     DefaultKeyMapperFileRadioButton.Checked:=True;
@@ -208,7 +219,7 @@ Var S : String;
 begin
   DosBoxTxtOpenDialog.Title:=LanguageSetup.SetupFormDosBoxMapperFileTitle;
   DosBoxTxtOpenDialog.Filter:=LanguageSetup.SetupFormDosBoxMapperFileFilter;
-  S:=MapperBrowseInitialDir(FCustomDOSBoxDir,CustomKeyMapperEdit.Text);
+  S:=MapperBrowseInitialDir(FTempGame.CustomDOSBoxDir,CustomKeyMapperEdit.Text);
   If S='' then S:=PrgDataDir;
   DosBoxTxtOpenDialog.InitialDir:=S;
   if not DosBoxTxtOpenDialog.Execute then exit;

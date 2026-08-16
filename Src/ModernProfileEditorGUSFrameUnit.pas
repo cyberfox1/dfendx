@@ -20,8 +20,10 @@ type
     PathEdit: TLabeledEdit;
   private
     { Private-Deklarationen }
+    FTempGame : TGame;
   public
     { Public-Deklarationen }
+    Constructor Create(AOwner : TComponent); override;
     Procedure InitGUI(var InitData : TModernProfileEditorInitData);
     Procedure SetGame(const Game : TGame; const LoadFromTemplate : Boolean);
     Procedure GetGame(const Game : TGame);
@@ -34,6 +36,12 @@ uses VistaToolsUnit, LanguageSetupUnit, CommonHelpers, HelpConsts;
 {$R *.dfm}
 
 { TFrame1 }
+
+constructor TModernProfileEditorGUSFrame.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
+end;
 
 procedure TModernProfileEditorGUSFrame.InitGUI(var InitData : TModernProfileEditorInitData);
 Var St : TStringList;

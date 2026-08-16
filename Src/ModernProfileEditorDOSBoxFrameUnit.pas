@@ -1,11 +1,11 @@
-unit ModernProfileEditorDOSBoxFrameUnit;
+﻿unit ModernProfileEditorDOSBoxFrameUnit;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, GameDBUnit, ModernProfileEditorFormUnit, StdCtrls, ExtCtrls, Buttons,
-  ComCtrls, PrgConsts;
+  ComCtrls, PrgConsts, System.TypInfo;
 
 type
   TModernProfileEditorDOSBoxFrame = class(TFrame, IModernProfileEditorFrame)
@@ -32,6 +32,7 @@ type
     UserConsoleComboBox: TComboBox;
     RunAsAdminCheckBox: TCheckBox;
     DBKindIcon: TImage;
+    lbInstallChangeWarning: TLabel;
     procedure CustomDOSBoxInstallationButtonClick(Sender: TObject);
     procedure CustomDOSBoxInstallationEditChange(Sender: TObject);
     procedure ButtonWork(Sender: TObject);
@@ -41,8 +42,9 @@ type
     procedure UserConsoleCheckBoxClick(Sender: TObject);
   private
     { Private-Deklarationen }
+    FTempGame : TGame;
     DosBoxLang : TStringList;
-    ProfileName,ProfileExe,ProfileSetup,ProfileDOSBoxInstallation,ProfileCaptureDir : PString;
+    ProfileName,ProfileExe,ProfileSetup,ProfileCaptureDir : PString;
     FOnProfileNameChange : TTextEvent;
     Procedure UpdateLanguageList;
     Procedure SelectInLanguageList(const LangName : String);
@@ -78,6 +80,7 @@ const BPriority : Array[0..4] of String = ('pause','lower','normal','higher','hi
 constructor TModernProfileEditorDOSBoxFrame.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
   DosBoxLang:=TStringList.Create;
 end;
 
@@ -131,6 +134,7 @@ begin
   RunAsAdminCheckBox.Visible:=PrgSetup.OfferRunAsAdmin;
   DefaultDOSBoxInstallationRadioButton.Caption:=LanguageSetup.GameDOSBoxVersionDefault;
   CustomDOSBoxInstallationRadioButton.Caption:=LanguageSetup.GameDOSBoxVersionCustom;
+  lbInstallChangeWarning.Caption:=LanguageSetup.ProfileEditorInstallChangeWarning;
   CustomDOSBoxInstallationButton.Hint:=LanguageSetup.ChooseFolder;
   UserLanguageCheckBox.Caption:=LanguageSetup.GameDOSBoxLanguageCustom;
   UserConsoleCheckBox.Caption:=LanguageSetup.GameDOSBoxConsole;
@@ -158,7 +162,6 @@ begin
   ProfileName:=InitData.CurrentProfileName;
   ProfileExe:=InitData.CurrentProfileExe;
   ProfileSetup:=InitData.CurrentProfileSetup;
-  ProfileDOSBoxInstallation:=InitData.CurrentDOSBoxInstallation;
   ProfileCaptureDir:=InitData.CurrentCaptureDir;
   FOnProfileNameChange:=InitData.OnProfileNameChange;
   { Page is created hidden; refresh kind icon when the user opens this tree node. }
@@ -282,31 +285,35 @@ begin
 end;
 
 procedure TModernProfileEditorDOSBoxFrame.UpdateDOSBoxInstallationString;
+Var S : String;
+    TG : TGame;
+    OldKind : TDOSBoxKind;
 begin
-  If DefaultDOSBoxInstallationRadioButton.Checked then begin
-    ProfileDOSBoxInstallation^:=DOSBoxComboInstallValue(DOSBoxInstallationComboBox);
-  end else begin
-    ProfileDOSBoxInstallation^:=CustomDOSBoxInstallationEdit.Text;
-  end;
+  TG:=TModernProfileEditorForm(Owner).TempGame;
+  OldKind:=TG.DosBoxKind;
+  If DefaultDOSBoxInstallationRadioButton.Checked then
+    S:=DOSBoxComboInstallValue(DOSBoxInstallationComboBox)
+  else
+    S:=CustomDOSBoxInstallationEdit.Text;
+  TG.CustomDOSBoxDir:=S;
+  If TG.DosBoxKind<>OldKind then
+    TModernProfileEditorForm(Owner).InvalidateFrames;
 end;
 
 procedure TModernProfileEditorDOSBoxFrame.UpdateLanguageList;
-Var Save,DosBoxDir,InstallValue : String;
+Var Save,DosBoxDir : String;
     Idx : Integer;
 begin
   If DefaultDOSBoxInstallationRadioButton.Checked then begin
     Idx:=DOSBoxInstallationComboBox.ItemIndex;
-    If (Idx<0) or (Idx>=PrgSetup.DOSBoxSettingsCount) then begin
-      DosBoxDir:='';
-      InstallValue:='';
-    end else begin
+    If (Idx<0) or (Idx>=PrgSetup.DOSBoxSettingsCount) then
+      DosBoxDir:=''
+    else
       DosBoxDir:=IncludeTrailingPathDelimiter(PrgSetup.DOSBoxSettings[Idx].DosBoxDir);
-      InstallValue:=DOSBoxComboInstallValue(DOSBoxInstallationComboBox);
-    end;
-    FOnProfileNameChange(self,ProfileName^,ProfileExe^,ProfileSetup^,'','',InstallValue,ProfileCaptureDir^);
+    FOnProfileNameChange(self,ProfileName^,ProfileExe^,ProfileSetup^,'','',ProfileCaptureDir^);
   end else begin
     DosBoxDir:=IncludeTrailingPathDelimiter(CustomDOSBoxInstallationEdit.Text);
-    FOnProfileNameChange(self,ProfileName^,ProfileExe^,ProfileSetup^,'','',CustomDOSBoxInstallationEdit.Text,ProfileCaptureDir^);
+    FOnProfileNameChange(self,ProfileName^,ProfileExe^,ProfileSetup^,'','',ProfileCaptureDir^);
   end;
 
   If UserLanguageComboBox.ItemIndex>=0 then Save:=UserLanguageComboBox.Items[UserLanguageComboBox.ItemIndex] else Save:='';
@@ -434,25 +441,8 @@ begin
 end;
 
 procedure TModernProfileEditorDOSBoxFrame.UpdateDBKindIconFromSelection;
-var
-  Kind: TDOSBoxKind;
-  Idx: Integer;
 begin
-  { Display-only: never mutates Game / combo / radio / Profile* strings. }
-  Kind := dbkNone;
-  if DefaultDOSBoxInstallationRadioButton.Checked then
-  begin
-    Idx := DOSBoxInstallationComboBox.ItemIndex;
-    if (Idx >= 0) and (Idx < PrgSetup.DOSBoxSettingsCount) then
-    begin
-      Kind := PrgSetup.DOSBoxSettings[Idx].DosBoxKind;
-      if (Kind = dbkNone) or (Kind = dbkUnknown) then
-        Kind := DetermineDosBoxKind(PrgSetup.DOSBoxSettings[Idx].DosBoxDir, PrgSetup.BaseDir);
-    end;
-  end
-  else if Trim(CustomDOSBoxInstallationEdit.Text) <> '' then
-    Kind := DetermineDosBoxKind(CustomDOSBoxInstallationEdit.Text, PrgSetup.BaseDir);
-  UpdateDBKindIcon(Kind);
+  UpdateDBKindIcon(TModernProfileEditorForm(Owner).TempGame.DosBoxKind);
 end;
 
 procedure TModernProfileEditorDOSBoxFrame.DOSBoxInstallationTypeClick(Sender: TObject);
@@ -527,7 +517,7 @@ var
   St: TStringList;
   Idx: Integer;
   Setting: TDOSBoxSetting;
-  RawDir, AbsDir, ExeName, Desc, UpperDesc: String;
+  RawDir, AbsDir, ExeName, Desc, UpperDesc, Version: String;
   SR: TSearchRec;
   Kind: TDOSBoxKind;
   N: Integer;
@@ -563,13 +553,15 @@ begin
     St.Add('');
 
     St.Add('--- DetermineDosBoxKind(raw Dir) ---');
-    Kind := DetermineDosBoxKind(RawDir, PrgSetup.BaseDir);
-    St.Add('Result Ord=' + IntToStr(Ord(Kind)) + ' display=' + DOSBoxKindToDisplay(Kind));
+    Kind := DetermineDosBoxKind(RawDir, Version);
+    St.Add('Result Ord=' + IntToStr(Ord(Kind)) + ' display=' + DOSBoxKindToDisplay(Kind) +
+      ' Version=' + Version);
     St.Add('');
 
     St.Add('--- DetermineDosBoxKind(abs Dir) ---');
-    Kind := DetermineDosBoxKind(AbsDir, PrgSetup.BaseDir);
-    St.Add('Result Ord=' + IntToStr(Ord(Kind)) + ' display=' + DOSBoxKindToDisplay(Kind));
+    Kind := DetermineDosBoxKind(AbsDir, Version);
+    St.Add('Result Ord=' + IntToStr(Ord(Kind)) + ' display=' + DOSBoxKindToDisplay(Kind) +
+      ' Version=' + Version);
     St.Add('');
 
     St.Add('--- dosbox*.exe scan (FindFirst order) ---');

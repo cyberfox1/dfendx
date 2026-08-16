@@ -28,6 +28,7 @@ type
       Shift: TShiftState);
   private
     { Private-Deklarationen }
+    FTempGame : TGame;
     Mounting : TStringList;
     ProfileExe, ProfileSetup, ProfileName : PString;
     FGetFrame : TGetFrameFunction;
@@ -57,6 +58,7 @@ uses Math, VistaToolsUnit, LanguageSetupUnit, CommonHelpers, PrgSetupUnit,
 constructor TModernProfileEditorDrivesFrame.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
   Mounting:=nil;
 end;
 

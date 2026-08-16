@@ -800,7 +800,7 @@ begin
     If ScummVMMode(G) or WindowsExeMode(G) then continue;
     If First then begin
       Kind:=G.DosBoxKind;
-      Dir:=ResolveDOSBoxDir(G.CustomDOSBoxDir);
+      Dir:=G.GetDBInstallPath;
       First:=False;
     end else If G.DosBoxKind<>Kind then begin
       Combo.Items.Clear;

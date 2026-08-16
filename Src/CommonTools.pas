@@ -27,7 +27,7 @@ Procedure CenterWindowFromProcessID(const ProcessID : THandle);
 Procedure HideWindowFromProcessIDAndTitle(const ProcessID : THandle; const Title : String);
 Function CheckDOSBoxVersionDirect(const Nr : Integer; const Path : String) : String; {saidly not working}
 Function CheckDOSBoxVersionDirect2(const Nr : Integer; const Path : String) : String; {saidly not working}
-Procedure DOSBoxOutdatedWarning(const DOSBoxPath : String);
+Procedure DOSBoxOutdatedWarning(const Version : String);
 
 Function GetFileDateAsString : String;
 
@@ -611,13 +611,13 @@ begin
   end;
 end;
 
-Procedure DOSBoxOutdatedWarning(const DOSBoxPath : String);
+Procedure DOSBoxOutdatedWarning(const Version : String);
 Var S : String;
     I : Integer;
 begin
   S:=FloatToStr(MinSupportedDOSBoxVersion);
   For I:=1 to length(S) do If S[I]=',' then S[I]:='.';
-  MessageDlg(Format(LanguageSetup.MessageDOSBoxOutdated,[CheckDOSBoxVersion(DOSBoxPath),S]),mtWarning,[mbOk],0);
+  MessageDlg(Format(LanguageSetup.MessageDOSBoxOutdated,[Version,S]),mtWarning,[mbOk],0);
 end;
 
 Function GetFileDateAsString : String;

@@ -109,7 +109,7 @@ begin
                 NewGame.CaptureFolder:=MakeRelPath(S,PrgSetup.BaseDir,True); NewGame.StoreAllValues;
                 B:=True;
               end else begin
-                If IncludeTrailingPathDelimiter(ExtUpperCase(MakeAbsPath(NewGame.DataDir,PrgSetup.BaseDir)))=S then begin
+                If ExtUpperCase(NewGame.ResolveDataDir)=S then begin
                   S:=IncludeTrailingPathDelimiter(Dest+Rec.Name);
                   I:=0;
                   While (not PrgSetup.IgnoreDirectoryCollisions) and DirectoryExists(IncludeTrailingPathDelimiter(S)) do begin
@@ -879,7 +879,7 @@ begin
   OrigDir:=Dir;
   Dir:=OnlySubFolderCheck(Dir);
 
-  AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,False);
+  AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,gbtAutoSetupDB,False);
   StartableFiles:=TStringList.Create;
   try
     AutoSetup:=GetTemplateFromFolderExt(False,Dir,AutoSetupDB,StartableFiles);
@@ -890,7 +890,7 @@ begin
       exit;
     end;
     try
-      TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,False);
+      TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,gbtTemplateDB,False);
       try
         If ArchiveFileName<>'' then AlternateProfileNameSource:='' else begin
           AlternateProfileNameSource:=OrigDir;

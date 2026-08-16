@@ -5,11 +5,11 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, StdCtrls, Buttons, ExtCtrls, ImgList, GameDBUnit, LinkFileUnit,
-  Menus, System.ImageList;
+  Menus, System.ImageList, PrgConsts;
 
 Type TFrameClass=class of TFrame;  
 
-Type TTextEvent=Procedure(Sender : TObject; const ProfileName, ProfileExe, ProfileSetup, ProfileScummVMGameName, ProfileScummVMPath, ProfileDOSBoxInstallation, ProfileCaptureDir : String) of object;
+Type TTextEvent=Procedure(Sender : TObject; const ProfileName, ProfileExe, ProfileSetup, ProfileScummVMGameName, ProfileScummVMPath, ProfileCaptureDir : String) of object;
      TResetEvent=Procedure(Sender : TObject; const Template : TGame) of object;
      TCheckValueEvent=Procedure(Sender : TObject; var OK : Boolean) of object;
      TGetFrameFunction=Function(const FrameClass : TFrameClass) : TFrame of object;
@@ -20,9 +20,10 @@ Type TModernProfileEditorInitData=record
   OnCheckValue : TCheckValueEvent;
   OnProfileNameChangedCallback : TNotifyEvent;
   OnShowFrame : TNotifyEvent;
+  OnInvalidate : TNotifyEvent;
   GameDB: TGameDB;
   EditingTemplate : Boolean;
-  CurrentProfileName, CurrentProfileExe, CurrentProfileSetup, CurrentScummVMGameName, CurrentScummVMPath, CurrentDOSBoxInstallation, CurrentCaptureDir : PString;
+  CurrentProfileName, CurrentProfileExe, CurrentProfileSetup, CurrentScummVMGameName, CurrentScummVMPath, CurrentCaptureDir : PString;
   SearchLinkFile : TLinkFile;
   AllowDefaultValueReset : Boolean;
   GetFrame : TGetFrameFunction;
@@ -43,6 +44,7 @@ Type TFrameRecord=record
   ResetToDefault : TResetEvent;
   CheckValue : TCheckValueEvent;
   ShowFrame : TNotifyEvent;
+  Invalidate : TNotifyEvent;
   ProfileNameChangedCallback : TNotifyEvent;
   AllowDefaultValueReset : Boolean;
 end;
@@ -70,18 +72,19 @@ type
     procedure OKButtonClick(Sender: TObject);
     procedure TreeChange(Sender: TObject; Node: TTreeNode);
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ShowConfButtonClick(Sender: TObject);
     procedure ToolsButtonClick(Sender: TObject);
   private
     { Private-Deklarationen }
-    ProfileName, ProfileExe, ProfileSetup, ProfileScummVMGameName, ProfileScummVMPath, ProfileDOSBoxInstallation, ProfileCaptureDir : String;
+    ProfileName, ProfileExe, ProfileSetup, ProfileScummVMGameName, ProfileScummVMPath, ProfileCaptureDir : String;
     BaseFrame, StartFrame : TFrame;
     ScummVM, WindowsMode : Boolean;
     ResetThisPageMenuItems : Array of TMenuItem;
     Procedure LoadData;
-    Procedure SetProfileNameEvent(Sender : TObject; const AProfileName, AProfileExe, AProfileSetup, AProfileScummVMGameName, AProfileScummVMPath, AProfileDOSBoxInstallation, AProfileCaptureDir : String);
+    Procedure SetProfileNameEvent(Sender : TObject; const AProfileName, AProfileExe, AProfileSetup, AProfileScummVMGameName, AProfileScummVMPath, AProfileCaptureDir : String);
     Function AddTreeNode(const ParentTreeNode : TTreeNode; const F : TFrame; const I : IModernProfileEditorFrame; const Name : String; const PageCode : Integer; const ImageIndex : Integer) : TTreeNode;
     Procedure InitToolsMenu;
     Procedure PopupMenuWork(Sender: TObject);
@@ -95,6 +98,7 @@ type
     LastVisibleFrame : TFrame;
     MoveStatus : Integer;
     LoadTemplate, Game : TGame;
+    TempGame : TGame;
     GameDB : TGameDB;
     RestoreLastPosition : Boolean;
     EditingTemplate : Boolean;
@@ -105,6 +109,7 @@ type
     FrameList : Array of TFrameRecord;
     SilentMode : Boolean;
     Procedure InitGUI;
+    Procedure InvalidateFrames;
   end;
 
 var
@@ -137,7 +142,7 @@ uses ShellAPI, Math, VistaToolsUnit, LanguageSetupUnit,
      ModernProfileEditorScummVMHardwareFrameUnit, ModernProfileEditorAddtionalChecksumFrameUnit,
      ModernProfileEditorInnovaFrameUnit,
       IconLoaderUnit, GameDBToolsUnit, GameDBToolsHelpers, GameDBHelpers, PrgSetupUnit, CommonHelpers, CommonTools, DOSBoxUnit,
-      DOSBoxUnitHelpers, PrgConsts, HelpConsts, SelectAutoSetupFormUnit, ScummVMUnit,
+      DOSBoxUnitHelpers, HelpConsts, SelectAutoSetupFormUnit, ScummVMUnit,
       WindowsProfileUnit, DOSBoxTempUnit, MainUnit, System.Types, System.UITypes,
       ModernProfileEditorFormHelpers;
 
@@ -154,6 +159,12 @@ begin
   NewExeFileName:='';
   HideGameInfoPage:=False;
   SilentMode:=False;
+  TempGame:=nil;
+end;
+
+procedure TModernProfileEditorForm.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(TempGame);
 end;
 
 Function TModernProfileEditorForm.AddTreeNode(const ParentTreeNode : TTreeNode; const F : TFrame; const I : IModernProfileEditorFrame; const Name : String; const PageCode : Integer; const ImageIndex : Integer) : TTreeNode;
@@ -187,13 +198,13 @@ begin
     OnResetToDefault:=nil;
     OnCheckValue:=nil;
     OnShowFrame:=nil;
+    OnInvalidate:=nil;
     AllowDefaultValueReset:=True;
     CurrentProfileName:=@ProfileName;
     CurrentProfileExe:=@ProfileExe;
     CurrentProfileSetup:=@ProfileSetup;
     CurrentScummVMGameName:=@ProfileScummVMGameName;
     CurrentScummVMPath:=@ProfileScummVMPath;
-    CurrentDOSBoxInstallation:=@ProfileDOSBoxInstallation;
     CurrentCaptureDir:=@ProfileCaptureDir;
   end;
   InitData.GameDB:=GameDB;
@@ -207,6 +218,7 @@ begin
     ResetToDefault:=InitData.OnResetToDefault;
     CheckValue:=InitData.OnCheckValue;
     ShowFrame:=InitData.OnShowFrame;
+    Invalidate:=InitData.OnInvalidate;
     ProfileNameChangedCallback:=InitData.OnProfileNameChangedCallback;
     AllowDefaultValueReset:=InitData.AllowDefaultValueReset;
   end;
@@ -272,7 +284,7 @@ begin
   M:=TMenuItem.Create(ToolsPopupMenu); M.Caption:='-'; ToolsPopupMenu.Items.Add(M);
 
   {Reset to template}
-  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,False);
+  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,gbtTemplateDB,False);
   try
     If TemplateDB.Count>0 then begin
 
@@ -404,7 +416,7 @@ begin
           try ResetTo(G,rmAll); finally G.Free; end;
         end;
     4 : begin
-          DB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,False);
+          DB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,gbtAutoSetupDB,False);
           try
             Nr:=ShowSelectAutoSetupDialog(self,DB);
             If Nr>=0 then ResetTo(DB[Nr],rmThis);
@@ -413,7 +425,7 @@ begin
           end;
         end;
     5 : begin
-          DB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,False);
+          DB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,gbtAutoSetupDB,False);
           try
             Nr:=ShowSelectAutoSetupDialog(self,DB);
             If Nr>=0 then ResetTo(DB[Nr],rmAll);
@@ -432,15 +444,15 @@ begin
           try ResetTo(G,rmAllButThis); finally G.Free; end;
        end;
     10000..19999 : begin
-                     DB:=TGameDB.Create(PrgDataDir+TemplateSubDir,False);
+                     DB:=TGameDB.Create(PrgDataDir+TemplateSubDir,gbtTemplateDB,False);
                      try ResetTo(DB[(Sender as TComponent).Tag-10000],rmThis); finally DB.Free; end;
                    end;
     20000..29999 : begin
-                     DB:=TGameDB.Create(PrgDataDir+TemplateSubDir,False);
+                     DB:=TGameDB.Create(PrgDataDir+TemplateSubDir,gbtTemplateDB,False);
                      try ResetTo(DB[(Sender as TComponent).Tag-20000],rmAll); finally DB.Free; end;
                    end;
     30000..39999 : begin
-                     DB:=TGameDB.Create(PrgDataDir+TemplateSubDir,False);
+                     DB:=TGameDB.Create(PrgDataDir+TemplateSubDir,gbtTemplateDB,False);
                      try ResetTo(DB[(Sender as TComponent).Tag-30000],rmAllButThis); finally DB.Free; end;
                    end;
   end;
@@ -570,12 +582,18 @@ end;
 procedure TModernProfileEditorForm.FormShow(Sender: TObject);
 Var I : Integer;
 begin
+  FreeAndNil(TempGame);
+  TempGame:=TGame.Create(PrgSetup);
+  if Game<>nil then
+    TempGame.AssignFrom(Game);
+
   InitGUI;
 
   UserIconLoader.DirectLoad(ImageList,'ModernProfileEditor');
 
   If (Game=nil) and (LoadTemplate<>nil) then begin
     Game:=LoadTemplate;
+    TempGame.AssignFrom(Game);
     try LoadData; finally Game:=nil; end;
 
     If Trim(NewProfileName)<>'' then ProfileName:=NewProfileName else ProfileName:='';
@@ -588,7 +606,6 @@ begin
     ProfileSetup:='';
     ProfileScummVMGameName:='';
     ProfileScummVMPath:='';
-    ProfileDOSBoxInstallation:='';
     ProfileCaptureDir:='';
   end else begin
     LoadData;
@@ -608,7 +625,6 @@ begin
     ProfileSetup:=Game.SetupExe;
     ProfileScummVMGameName:=Game.ScummVMGame;
     ProfileScummVMPath:=Game.ScummVMSavePath;
-    ProfileDOSBoxInstallation:=Game.CustomDOSBoxDir;
     ProfileCaptureDir:=Game.CaptureFolder;
   end;
 
@@ -617,7 +633,7 @@ begin
     TModernProfileEditorBaseFrame(BaseFrame).GameExeEdit.Text:=ProfileExe;
   end;
 
-  SetProfileNameEvent(self,ProfileName,ProfileExe,ProfileSetup,ProfileScummVMGameName,ProfileScummVMPath,ProfileDOSBoxInstallation,ProfileCaptureDir);
+  SetProfileNameEvent(self,ProfileName,ProfileExe,ProfileSetup,ProfileScummVMGameName,ProfileScummVMPath,ProfileCaptureDir);
 
   If RestoreLastPosition then begin
     If LastPageExt>=0 then begin
@@ -657,7 +673,17 @@ begin
   For I:=0 to Tree.Items.Count-1 do FrameList[Integer(Tree.Items[I].Data)].IFrame.SetGame(Game,LoadTemplate<>nil);
 end;
 
-procedure TModernProfileEditorForm.SetProfileNameEvent(Sender: TObject; const AProfileName, AProfileExe, AProfileSetup, AProfileScummVMGameName, AProfileScummVMPath, AProfileDOSBoxInstallation, AProfileCaptureDir : String);
+procedure TModernProfileEditorForm.InvalidateFrames;
+Var I : Integer;
+begin
+  For I:=0 to length(FrameList)-1 do begin
+    If FrameList[I].Frame is TModernProfileEditorDOSBoxFrame then continue;
+    If Assigned(FrameList[I].Invalidate) then
+      FrameList[I].Invalidate(Self);
+  end;
+end;
+
+procedure TModernProfileEditorForm.SetProfileNameEvent(Sender: TObject; const AProfileName, AProfileExe, AProfileSetup, AProfileScummVMGameName, AProfileScummVMPath, AProfileCaptureDir : String);
 Var S : String;
     B : Boolean;
     I : Integer;
@@ -669,7 +695,6 @@ begin
   ProfileSetup:=AProfileSetup;
   ProfileScummVMGameName:=AProfileScummVMGameName;
   ProfileScummVMPath:=AProfileScummVMPath;
-  ProfileDOSBoxInstallation:=AProfileDOSBoxInstallation;
   ProfileCaptureDir:=AProfileCaptureDir;
 
   If Trim(ProfileName)='' then begin
@@ -895,10 +920,8 @@ Var D : Double;
 begin
   If (AGame<>nil) and (Trim(ExtUpperCase(AGame.VideoCard))='VGA') then begin
     I:=GetDOSBoxNr(AGame);
-    If I>=0 then
-      S:=CheckDOSBoxVersion(PrgSetup.DOSBoxSettings[I].DosBoxDir)
-    else
-      S:=CheckDOSBoxVersion(ResolveDOSBoxDir(AGame.CustomDOSBoxDir));
+    If I<0 then I:=0;
+    S:=PrgSetup.DOSBoxSettings[I].DosBoxVersion;
     For I:=1 to length(S) do If (S[I]=',') or (S[I]='.') then S[I]:=FormatSettings.DecimalSeparator;
     if not TryStrToFloat(S,D) then D:=0.72;
     If D>0.72 then begin AGame.VideoCard:='svga_s3'; AGame.StoreAllValues; end;

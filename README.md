@@ -4,13 +4,19 @@ A D-Fend Reloaded fork and modernization effort.
 
 <img src="Install/Images/main.png" width="800"/>
 
+<div align="center">
+
+[WIKI](https://github.com/cyberfox1/dfendx/wiki) - [CHANGES](https://github.com/cyberfox1/dfendx/blob/main/CHANGES) - [RELEASES](https://github.com/cyberfox1/dfendx/releases)
+
+</div>
+
 ## New Features
 
-### DOSBox-X and DOSBox Staging support
+### DOSBox-X, DOSBox Staging and DOSBox Pure Unleashed support
 
-DFendX has first level support for both of these modern DOSBox forks. This includes:
+DFendX has first level support for these modern DOSBox forks. This includes:
 
-* Inbuilt MT32 and FluidSynth MIDI emulation configuration.
+* Inbuilt MT32 and SoundFont MIDI emulation configuration.
 * VSync options.
 * Inactive screen behaviour options.
 * Ouput render, pixel shaders and preset selection.
@@ -46,7 +52,7 @@ This project is licensed under the [GNU GPL v3](LICENSE).
 
 ## Compatibility
 
- Windows 7 and above.
+ Windows 7 32-bit and above.
 
 ## Acknowledgements
 

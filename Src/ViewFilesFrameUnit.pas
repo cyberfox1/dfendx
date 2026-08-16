@@ -190,8 +190,8 @@ begin
   B:=(Trim(Game.DataDir)<>'');
 
   If B then begin
-    If not DirectoryExists(MakeAbsPath(Game.DataDir,PrgSetup.BaseDir)) then begin
-      If not ForceDirectories(MakeAbsPath(Game.DataDir,PrgSetup.BaseDir)) then begin
+    If not DirectoryExists(Game.ResolveDataDir) then begin
+      If not ForceDirectories(Game.ResolveDataDir) then begin
         Game.DataDir:='';
         Game.StoreAllValues;
         B:=False;
@@ -225,7 +225,7 @@ begin
 
   If B then begin
     hChangeNotification:=FindFirstChangeNotification(
-      PChar(MakeAbsPath(Game.DataDir,PrgSetup.BaseDir)),
+      PChar(Game.ResolveDataDir),
       True,
       FILE_NOTIFY_CHANGE_FILE_NAME or FILE_NOTIFY_CHANGE_DIR_NAME or FILE_NOTIFY_CHANGE_ATTRIBUTES or FILE_NOTIFY_CHANGE_SIZE or FILE_NOTIFY_CHANGE_LAST_WRITE or FILE_NOTIFY_CHANGE_SECURITY
     );
@@ -241,7 +241,7 @@ begin
     N:=Tree.Items.AddChild(nil,LanguageSetup.ViewDataFilesRoot);
     N.ImageIndex:=0;
     N.SelectedIndex:=1;
-    SelSaveNode:=ReadTree(N,IncludeTrailingPathDelimiter(MakeAbsPath(Game.DataDir,PrgSetup.BaseDir)),SelSaveName);
+    SelSaveNode:=ReadTree(N,Game.ResolveDataDir,SelSaveName);
     Tree.FullExpand;
 
     If (SelSaveNode<>nil) and (SelSaveNode<>N) then begin
@@ -285,7 +285,7 @@ end;
 procedure TViewFilesFrame.SetupDataDirButtonClick(Sender: TObject);
 begin
   Game.DataDir:=MakeRelPath(GetNewDataFolderName,PrgSetup.BaseDir);
-  ForceDirectories(MakeAbsPath(Game.DataDir,PrgSetup.BaseDir));
+  ForceDirectories(Game.ResolveDataDir);
   SetGame(Game);
 end;
 
@@ -320,7 +320,7 @@ begin
     result:=N.Text+result;
     N:=N.Parent;
   end;
-  result:=IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(MakeAbsPath(Game.DataDir,PrgSetup.BaseDir))+result);
+  result:=IncludeTrailingPathDelimiter(Game.ResolveDataDir+result);
 end;
 
 procedure TViewFilesFrame.TreeChange(Sender: TObject; Node: TTreeNode);
@@ -461,7 +461,7 @@ begin
   Case (Sender as TComponent).Tag of
     0 : SetGame(Game);
     1 : begin
-          S:=MakeAbsPath(Game.DataDir,PrgSetup.BaseDir);
+          S:=Game.ResolveDataDir;
           ShellExecute(Handle,'open',PChar(S),nil,PChar(S),SW_SHOW);
         end;
     2 : RunFile(False);

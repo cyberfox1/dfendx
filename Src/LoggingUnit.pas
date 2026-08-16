@@ -16,7 +16,7 @@ Function GetLogLevel : TLogLevel;
 
 implementation
 
-uses SysUtils, ShlObj, CommonTools, CommonHelpers, SyncObjs, PrgSetupUnit;
+uses SysUtils, ShlObj, CommonTools, CommonHelpers, SyncObjs;
 
 var StartupLogFile : String ='';
     LogLock : TCriticalSection;
@@ -87,8 +87,6 @@ initialization
       StartupLogFile:='';
     end;
   end;
-  { PrgSetupUnit inits first (uses dependency); apply [ProgramSets] LogLevel. }
-  SetLogLevel(PrgSetup.LogLevel);
 
 finalization
   LogLock.Free;

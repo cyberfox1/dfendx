@@ -3,7 +3,7 @@ interface
 
 {DEFINE SpeedTest}
 
-uses Classes, CommonComponents, GameDBHelpers;
+uses Classes, CommonComponents, GameDBHelpers, PrgConsts, PrgSetupUnit, ConfOptDefaults;
 
 Type TConfOpt=class(TConfOptH)
   public
@@ -18,12 +18,32 @@ Type TGameDB=class;
 
      TGame=class(TGameH)
   private
+    FBoundTo: TEphemeralDOSBoxInstall;
     function GetGameDB: TGameDB;
     procedure SetGameDB(const Value: TGameDB);
+    function GetIsStaging: Boolean;
+    function GetIsPure: Boolean;
+    function GetIsDBX: Boolean;
+    function GetIsOldStaging: Boolean;
+    function GetIsNewStaging: Boolean;
   public
+    Destructor Destroy; override;
     Procedure CreateConfFile; override;
+    procedure SetDosBoxKind(const PreviousCustomDOSBoxDir, NewCustomDOSBoxDir: String); override;
+    function GetDBInstall: TDOSBoxSetting;
+    function GetDBVersion: String;
+    function GetDBInstallPath: String;
+    function ResolveDataDir: String;
+    function GetValidMidiDevice: String;
+    function GetValidMidiGain(out Value: Integer): Boolean;
 
     property GameDB : TGameDB read GetGameDB write SetGameDB;
+    property BoundTo: TEphemeralDOSBoxInstall read FBoundTo;
+    property IsStaging: Boolean read GetIsStaging;
+    property IsPure: Boolean read GetIsPure;
+    property IsDBX: Boolean read GetIsDBX;
+    property IsOldStaging: Boolean read GetIsOldStaging;
+    property IsNewStaging: Boolean read GetIsNewStaging;
 end;
 
       TGameDB=class(TGameDBH)
@@ -33,7 +53,7 @@ end;
     Procedure LoadGameFromFile(const FileName : String; const DOSFileDate : Integer);
     Procedure LoadList;
   public
-    Constructor Create(const ADir : String; const ATimeStampCheck : Boolean = True);
+    Constructor Create(const ADir : String; const ADBType : TGameDBType; const ATimeStampCheck : Boolean = True);
     Function Add(const AName : String) : Integer; overload;
     Function Delete(const Index : Integer) : Boolean; overload;
     Function Delete(const AGame : TGame) : Boolean; overload;
@@ -43,9 +63,192 @@ end;
 
 implementation
 
-uses Windows, SysUtils, Messages, Forms, Dialogs, Math, CommonTools, CommonHelpers, PrgConsts,
-     PrgSetupUnit, LanguageSetupUnit, GameDBToolsUnit, WaitFormUnit, DOSBoxUnit,
+uses Windows, SysUtils, Messages, Forms, Dialogs, Math, CommonTools, CommonHelpers,
+     LanguageSetupUnit, GameDBToolsUnit, GameDBToolsHelpers, WaitFormUnit, DOSBoxUnit,
      LoggingUnit, System.UITypes;
+
+destructor TGame.Destroy;
+begin
+  if FBoundTo<>nil then begin
+    FBoundTo.Unbind;
+    FBoundTo:=nil;
+  end;
+  inherited Destroy;
+end;
+
+function TGame.GetDBInstall: TDOSBoxSetting;
+var
+  Idx: Integer;
+begin
+  Result := nil;
+  Idx := ResolveDOSBoxInstallIndex(CustomDOSBoxDir);
+  if Idx >= 0 then
+    Result := PrgSetup.DOSBoxSettings[Idx]
+  else
+    Result := PrgSetup.GetEphemeralDOSBoxInstall(CustomDOSBoxDir);
+end;
+
+function TGame.GetDBVersion: String;
+var
+  Install: TDOSBoxSetting;
+  AbsDir: String;
+begin
+  Result := '';
+  Install := GetDBInstall;
+  if Install <> nil then begin
+    Result := Install.DosBoxVersion;
+    Exit;
+  end;
+  AbsDir := ResolveDOSBoxDir(CustomDOSBoxDir);
+  if AbsDir = '' then
+    Exit;
+  DetermineDosBoxKind(AbsDir, Result);
+end;
+
+function TGame.GetDBInstallPath: String;
+var
+  Install: TDOSBoxSetting;
+begin
+  Install := GetDBInstall;
+  if Install <> nil then
+    Result := Install.DosBoxDirAbs
+  else
+    Result := ResolveDOSBoxDir(CustomDOSBoxDir);
+end;
+
+function TGame.ResolveDataDir: String;
+begin
+  Result := '';
+  if Trim(DataDir) = '' then
+    Exit;
+  Result := IncludeTrailingPathDelimiter(MakeAbsPath(DataDir, PrgSetup.BaseDir));
+end;
+
+function TGame.GetValidMidiDevice: String;
+var
+  D, List: String;
+  Install: TDOSBoxSetting;
+begin
+  Result := '';
+  D := Trim(MIDIDevice);
+  if (D = '') or SameText(D, 'none') then
+    Exit;
+  if GameDB = nil then
+    Exit;
+  case DosBoxKind of
+    dbkStaging: begin
+      Install := GetDBInstall;
+      if (Install <> nil) and Install.IsOldStaging then
+        List := GameDB.ConfOpt.MIDIDeviceStagingOld
+      else
+        List := GameDB.ConfOpt.MIDIDeviceStaging;
+    end;
+    dbkX:
+      List := GameDB.ConfOpt.MIDIDeviceX;
+    dbkPure:
+      List := GameDB.ConfOpt.MIDIDevicePure;
+  else
+    List := GameDB.ConfOpt.MIDIDevice;
+  end;
+  if IsValueInList(List, D) then
+    Result := D;
+end;
+
+function TGame.GetValidMidiGain(out Value: Integer): Boolean;
+var
+  V, MaxG: Integer;
+begin
+  Result := False;
+  Value := 0;
+  if not TryStrToInt(Trim(MIDIDeviceGainValue), V) then
+    Exit;
+  if DosBoxKind = dbkPure then
+    MaxG := 500
+  else
+    MaxG := 800;
+  if (V < 0) or (V > MaxG) then
+    Exit;
+  Value := V;
+  Result := True;
+end;
+
+function TGame.GetIsStaging: Boolean;
+begin
+  Result := DosBoxKind = dbkStaging;
+end;
+
+function TGame.GetIsPure: Boolean;
+begin
+  Result := DosBoxKind = dbkPure;
+end;
+
+function TGame.GetIsDBX: Boolean;
+begin
+  Result := DosBoxKind = dbkX;
+end;
+
+function TGame.GetIsOldStaging: Boolean;
+var
+  Install: TDOSBoxSetting;
+begin
+  Result := False;
+  if not IsStaging then
+    Exit;
+  Install := GetDBInstall;
+  if Install <> nil then
+    Result := Install.IsOldStaging
+  else
+    Result := True;
+end;
+
+function TGame.GetIsNewStaging: Boolean;
+begin
+  Result := IsStaging and not IsOldStaging;
+end;
+
+procedure TGame.SetDosBoxKind(const PreviousCustomDOSBoxDir, NewCustomDOSBoxDir: String);
+var
+  S, Ver, AbsDir: String;
+  Idx: Integer;
+  Kind: TDOSBoxKind;
+  OldEphem, NewEphem: TEphemeralDOSBoxInstall;
+begin
+  OldEphem := FBoundTo;
+  NewEphem := nil;
+  S := Trim(NewCustomDOSBoxDir);
+
+  if S = '' then
+    FDosBoxKind := dbkNone
+  else begin
+    Idx := ResolveDOSBoxInstallIndex(S);
+    if Idx >= 0 then
+      FDosBoxKind := PrgSetup.DOSBoxSettings[Idx].DosBoxKind
+    else begin
+      NewEphem := PrgSetup.GetEphemeralDOSBoxInstall(S);
+      if NewEphem <> nil then
+        FDosBoxKind := NewEphem.DosBoxKind
+      else begin
+        AbsDir := IncludeTrailingPathDelimiter(MakeAbsPath(S, PrgSetup.BaseDir));
+        if not DirectoryExists(AbsDir) then
+          FDosBoxKind := dbkNone
+        else begin
+          Kind := DetermineDosBoxKind(AbsDir, Ver);
+          if (Kind <> dbkNone) and (Kind <> dbkUnknown) and (Trim(Ver) <> '') then begin
+            NewEphem := PrgSetup.AddEphemeralDOSBoxInstall(S, Kind, Ver);
+            FDosBoxKind := Kind;
+          end else
+            FDosBoxKind := dbkUnknown;
+        end;
+      end;
+    end;
+  end;
+
+  if (NewEphem <> nil) and (NewEphem <> OldEphem) then
+    NewEphem.Bind;
+  FBoundTo:=NewEphem;
+  if (OldEphem <> nil) and (OldEphem <> NewEphem) then
+    OldEphem.Unbind;
+end;
 
 { TConfOpt }
 
@@ -116,6 +319,10 @@ begin
   AddStringRec(60,'MIDIDeviceX','value',DefaultValuesMIDIDeviceX);
   AddStringRec(61,'MT32ModelStaging','value',DefaultValuesMT32ModelStaging);
   AddStringRec(62,'MT32ModelX','value',DefaultValuesMT32ModelX);
+  AddStringRec(63,'vsyncPure','value',DefaultValueVSyncPure);
+  AddStringRec(64,'scalePure','value',DefaultValueScalePure);
+  AddStringRec(65,'shaderPure','value',DefaultValueShaderPure);
+  AddStringRec(66,'MIDIDevicePure','value',DefaultValuesMIDIDevicePure);
 
   CacheAllStrings;
 end;
@@ -153,7 +360,7 @@ end;
 
 { TGameDB }
 
-constructor TGameDB.Create(const ADir : String; const ATimeStampCheck : Boolean);
+constructor TGameDB.Create(const ADir : String; const ADBType : TGameDBType; const ATimeStampCheck : Boolean);
 Var Msg : tagMSG;
     B : Boolean;
 begin
@@ -162,6 +369,7 @@ begin
   FConfOpt:=TConfOpt.Create;
   If ATimeStampCheck then FConfOpt.CacheAllStrings;
   FDir:=IncludeTrailingPathDelimiter(ADir);
+  FDBType:=ADBType;
   FTimeStampCheck:=ATimeStampCheck;
   B:=False;
   If Application.MainForm<>nil then begin
@@ -192,7 +400,6 @@ end;
 Procedure TGameDB.LoadGameFromFile(const FileName: String; const DOSFileDate : Integer);
 Var Game : TGame;
 begin
-  { No per-profile logs here — LoadList can run this hundreds of times. }
   If PrgSetup.BinaryCache and GetLoadBinCacheOffset(FileName,DOSFileDate) then begin
     Game:=TGame.CreateDelayed(FileName,FTimeStampCheck);
     try
@@ -200,13 +407,11 @@ begin
       Game.LoadFromStream(BinLoadCache);
       Game.LoadCache;
     except
-      LogInfo('Cache failed, burning cache for all profiles and loading from prof file');
       Game.Free;
       Game:=TGame.Create(FileName);
       BurnLoadBinCache;
     end;
     If Game.GameExeMD5='' then begin
-      LogInfo('No game exe MD5 sum. May be there is just no MD5 sum stored but may be also this cached profile is damaged. Loading this profile from prof file for safety reasons.');
       Game.Free;
       Game:=TGame.Create(FileName);
     end;
@@ -230,9 +435,7 @@ procedure TGameDB.LoadList;
 Var I : Integer;
     List : TStringList;
     {$IFDEF SpeedTest}C0,{$ENDIF}C1,C2 : UInt64;
-    T0 : UInt64;
 begin
-  T0:=GetTickCount64;
   Clear;
   ForceDirectories(FDir);
 
@@ -245,8 +448,6 @@ begin
   WaitForm:=nil;
 
     try
-      LogInfo('LoadList: '+FDir+' count='+IntToStr(List.Count)+' cache='+BoolToStr(PrgSetup.BinaryCache,True));
-
       FGameList.Capacity:=List.Count;
       C1:=GetTickCount64;
 
@@ -257,10 +458,11 @@ begin
 
       If List.Count>100 then begin
         C2:=GetTickCount64;
-        LogInfo('LoadList: first 100 took '+FloatToStrF(Double(C2-C1),ffFixed,8,0)+'ms estimated total '+IntToStr(Integer(C2-C1)*List.Count div 100)+'ms');
         If Integer(C2-C1)*List.Count div 100>150 then begin
-          LogInfo('LoadList: showing WaitForm');
-          WaitForm:=CreateWaitForm(nil,LanguageSetup.MessageLoadingDataBase,List.Count);
+          If FDBType=gbtUserDB then
+            WaitForm:=CreateWaitForm(nil,LanguageSetup.MessageLoadingProfiles,List.Count)
+          else
+            WaitForm:=CreateWaitForm(nil,LanguageSetup.MessageLoadingDataBase,List.Count);
         end;
         For I:=100 to List.Count-1 do begin
           If (WaitForm<>nil) and ((I mod 50)=0) then WaitForm.Step(I);
@@ -276,10 +478,9 @@ begin
     If Assigned(WaitForm) then FreeAndNil(WaitForm);
   end;
 
-  LogInfo('LoadList: done in '+FloatToStrF(Double(GetTickCount64-T0),ffFixed,8,0)+'ms');
-
   If PrgSetup.BinaryCache then begin
     DoneLoadBinCache;
+    RefreshDosBoxKinds;
   end;
 
   If Application.MainForm<>nil then ForceForegroundWindow(Application.MainForm.Handle);

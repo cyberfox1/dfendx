@@ -1,5 +1,15 @@
 DFendX Changelog
 
+Version 2.2.0 (08/16/2026)
+==========================
+- (Initial) Support for DosBOX Pure Unleashed.
+- Profile editor: frame invalidation when dosbox kind changes.
+- HTML Help is now rebuilt from markdown wiki (English only).
+- Renamed FluidSynth to Soundfont in UI for consistency.
+- Bypass eXoDOS config.com to preserve settings for eXoDOS games.
+- [Fix] Startup crash with large number of profiles.
+
+
 Version 2.1.0 (08/09/2026)
 ==========================
 - MT32 support for DOSBox Staging and X (model/romdir/gain).
@@ -8,7 +18,7 @@ Version 2.1.0 (08/09/2026)
 - Upgraded ogggenc2 and mkdosfs utilities to latest versions.
 - Switched to WIC for most image operations (much faster scaling).
 - Refreshed list of Search Links with active websites.
-- Langauge translation updates.
+- Language translation updates.
 - Added olivetti and pc3270 machine types (DOSBox-X only).
 - [Removed] The old Indy HTTP library (and with it, FTP support).
 - [Removed] Mobygames as a metadata source.

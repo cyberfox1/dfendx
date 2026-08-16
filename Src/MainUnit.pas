@@ -580,11 +580,16 @@ Var S : String;
     CacheDir : String;
     DOSBoxSearch : TDOSBoxSearchResult;
 begin
+  SetLogLevel(PrgSetup.LogLevel);
+
   If PrgSetup.SingleInstance then begin
     If InstanceRunning(hEvent) then begin TerminateProcess(GetCurrentProcess,0); exit; end;
   end;
 
   LogInfo('### Start of FormCreate ###');
+
+  LogInfo('Loading language');
+  LoadLanguage(PrgSetup.Language);
 
   {Caption:=Caption+' THIS IS A TEST VERSION ! (Beta 1 of version 1.5)';}
   {Caption:=Caption+' (Release candidate 1 of version 1.4.4)';}
@@ -622,7 +627,7 @@ begin
   StartCaptureChangeNotify;
 
   LogInfo('Loading games data base');
-  GameDB:=TGameDB.Create(PrgDataDir+GameListSubDir);
+  GameDB:=TGameDB.Create(PrgDataDir+GameListSubDir,gbtUserDB);
   ScummVMGamesList:=TScummVMGamesList.Create;
 
   LogInfo('Creating screenshots cache');
@@ -655,8 +660,6 @@ begin
   ViewFilesFrame.Parent:=DataFilesTab;
   ViewFilesFrame.OnUpdateGamesList:=UpdateGamesListByViewFilesFrame;
 
-  LogInfo('Loading language');
-  LoadLanguage(PrgSetup.Language);
   LoadMenuLanguage;
 
   LogInfo('Calling InitGUI');
@@ -1422,7 +1425,6 @@ end;
 procedure TDFendReloadedMainForm.InitViewStyle;
 Var S : String;
     I : Integer;
-    VS : TViewStyle;
 begin
   S:=Trim(ExtUpperCase(PrgSetup.ListViewStyle));
   I:=3;
@@ -1489,11 +1491,10 @@ begin
   end;
 
   TreeViewChange(TreeView,TreeView.Selected);
-  VS:=ListView.ViewStyle;
-  If ListView.ViewStyle=vsReport then ListView.ViewStyle:=vsSmallIcon else ListView.ViewStyle:=vsReport;
-  ListView.ViewStyle:=VS;
+  { ViewStyle flip removed: expensive rebuild on large lists. }
 
-  If ListView.ViewStyle=vsSmallIcon then ListView.Arrange(arDefault);
+  If ListView.ViewStyle=vsSmallIcon then
+    ListView.Arrange(arDefault);
 end;
 
 Procedure TDFendReloadedMainForm.LoadAbandonLinks;
@@ -1633,11 +1634,13 @@ begin
 
   LogInfo('### End of PostShow ###'+#13);
 
-  If DesiredLogLevel=llOff then begin
-    LogInfo('*** Turning log off ***'+#13);
-    SetLogLevel(llOff);
-  end else
+  LogInfo('*** Turning log off ***'+#13);
+  SetLogLevel(llOff);
+  If DesiredLogLevel<>llOff then begin
+    {$IFDEF DEBUG}
     SetLogLevel(DesiredLogLevel);
+    {$ENDIF}
+  end
   finally
     FPostShowGateEnabled:=False;
   end;
@@ -1759,29 +1762,16 @@ Var TreeUpdateNeededAgain : Boolean = False;
 procedure TDFendReloadedMainForm.TreeViewChange(Sender: TObject; Node: TTreeNode);
 Var S : String;
     IL1, IL2 : TImageList;
-    T0, TPhase, TLoop : UInt64;
-    NodeLabel : String;
 begin
   If TreeUpdateInProgress then begin
-    LogInfo('TreeViewChange: Tree update in progress not rebuilding games list yet');
     TreeUpdateNeededAgain:=True;
     exit;
   end;
-
-  T0:=GetTickCount64;
-  If TreeView.Selected=nil then
-    NodeLabel:='(nil)'
-  else If TreeView.Selected.Parent=nil then
-    NodeLabel:=TreeView.Selected.Text
-  else
-    NodeLabel:=TreeView.Selected.Parent.Text+' / '+TreeView.Selected.Text;
-  LogInfo('### Start of TreeViewChange ### node="'+NodeLabel+'" GameDB.Count='+IntToStr(GameDB.Count)+' ListView.Items='+IntToStr(ListView.Items.Count)+' tick='+IntToStr(T0));
 
   TreeUpdateInProgress:=True;
   try
     repeat
       TreeUpdateNeededAgain:=False;
-      TLoop:=GetTickCount64;
 
       If GameDB.Count>1 then FirstRunInfoPanel.Visible:=False;
 
@@ -1789,59 +1779,41 @@ begin
       If ListView.SmallImages=nil then IL2:=ListviewImageList else IL2:=ListView.SmallImages as TImageList;
 
       { Flush notes for the previously selected profile before we drop selection. }
-      TPhase:=GetTickCount64;
-      LogInfo('TreeViewChange: UpdateGameNotes start');
       UpdateGameNotes; LastSelectedGame:=nil;
-      LogInfo('TreeViewChange: UpdateGameNotes done in '+FloatToStrF(Double(GetTickCount64-TPhase),ffFixed,8,0)+'ms');
 
       { Tree filter must not re-select a profile (avoids media-panel / SelectItem work). }
-      TPhase:=GetTickCount64;
-      LogInfo('TreeViewChange: Unselect profile list (no media reload for a game)');
       If ListView.Selected<>nil then begin
         ListView.Selected:=nil;
         ListView.ItemFocused:=nil;
       end;
       ListViewSelectItem(ListView,nil,False);
-      LogInfo('TreeViewChange: Unselect done in '+FloatToStrF(Double(GetTickCount64-TPhase),ffFixed,8,0)+'ms');
 
       ListView.Items.BeginUpdate;
       try
         If SearchEdit.Font.Color<>clGray then S:=SearchEdit.Text else S:='';
 
-        TPhase:=GetTickCount64;
         If TreeView.Selected=nil then begin
-          LogInfo('TreeViewChange: AddGamesToList start (all) search="'+S+'"');
           AddGamesToList(ListView,IL2,IL1,ImageList,GameDB,RemoveUnderline(LanguageSetup.All),'',S,PrgSetup.ShowExtraInfo,ListSort,ListSortReverse,False,False,False,MenuViewsScreenshots.Checked);
         end else begin
           If TreeView.Selected.Parent=nil then begin
-            LogInfo('TreeViewChange: AddGamesToList start (main) group="'+TreeView.Selected.Text+'" search="'+S+'"');
             AddGamesToList(ListView,IL2,IL1,ImageList,GameDB,TreeView.Selected.Text,'',S,PrgSetup.ShowExtraInfo,ListSort,ListSortReverse,False,False,False,MenuViewsScreenshots.Checked);
           end else begin
-            LogInfo('TreeViewChange: AddGamesToList start (sub) group="'+TreeView.Selected.Parent.Text+'" sub="'+TreeView.Selected.Text+'" search="'+S+'"');
             AddGamesToList(ListView,IL2,IL1,ImageList,GameDB,TreeView.Selected.Parent.Text,TreeView.Selected.Text,S,PrgSetup.ShowExtraInfo,ListSort,ListSortReverse,False,False,False,MenuViewsScreenshots.Checked);
           end;
         end;
-        LogInfo('TreeViewChange: AddGamesToList done in '+FloatToStrF(Double(GetTickCount64-TPhase),ffFixed,8,0)+'ms resultItems='+IntToStr(ListView.Items.Count));
 
         { Keep list unselected after rebuild so ListViewSelectItem media path never runs for filter. }
-        TPhase:=GetTickCount64;
         If ListView.Selected<>nil then begin
-          LogInfo('TreeViewChange: clearing residual selection after rebuild');
           ListView.Selected:=nil;
           ListView.ItemFocused:=nil;
         end;
-        LogInfo('TreeViewChange: post-rebuild selection clear in '+FloatToStrF(Double(GetTickCount64-TPhase),ffFixed,8,0)+'ms selected='+BoolToStr(ListView.Selected<>nil,True));
       finally
-        TPhase:=GetTickCount64;
         ListView.Items.EndUpdate;
-        LogInfo('TreeViewChange: ListView.Items.EndUpdate in '+FloatToStrF(Double(GetTickCount64-TPhase),ffFixed,8,0)+'ms');
       end;
-      LogInfo('TreeViewChange: loop body done in '+FloatToStrF(Double(GetTickCount64-TLoop),ffFixed,8,0)+'ms needAgain='+BoolToStr(TreeUpdateNeededAgain,True));
     until not TreeUpdateNeededAgain;
   finally
     TreeUpdateInProgress:=False;
   end;
-  LogInfo('### End of TreeViewChange ### total='+FloatToStrF(Double(GetTickCount64-T0),ffFixed,8,0)+'ms node="'+NodeLabel+'"');
 end;
 
 procedure TDFendReloadedMainForm.ListViewAdvancedCustomDrawItem(Sender: TCustomListView; Item: TListItem; State: TCustomDrawState; Stage: TCustomDrawStage; var DefaultDraw: Boolean);
@@ -2513,7 +2485,7 @@ begin
   end;
 
   If B2 then begin
-    Dir:=IncludeTrailingPathDelimiter(MakeAbsPath(G.DataDir,PrgSetup.BaseDir));
+    Dir:=G.ResolveDataDir;
     if DirectoryExists(Dir) then begin
       FilesAdded:=AddDirToMenu(Dir,True,MenuProfileOpenFileInDataFolder,PopupOpenFileInDataFolder,0);
       MenuProfileOpenFileInDataFolder.Enabled:=FilesAdded;
@@ -2658,7 +2630,7 @@ begin
   end;
 
   if (ListView.Selected=nil) or (ListView.Selected.Data=nil) or (Trim(TGame(ListView.Selected.Data).DataDir)='') then exit;
-  Dir:=IncludeTrailingPathDelimiter(MakeAbsPath(TGame(ListView.Selected.Data).DataDir,PrgSetup.BaseDir));
+  Dir:=TGame(ListView.Selected.Data).ResolveDataDir;
   If not DirectoryExists(Dir) then exit;
 
   {I=2 open folder, I=1 open file}
@@ -2712,7 +2684,7 @@ begin
   while AddButtonMenuAddFromTemplate.Count>0 do AddButtonMenuAddFromTemplate.Items[0].Free;
   while TrayIconPopupAddFromTemplate.Count>0 do TrayIconPopupAddFromTemplate.Items[0].Free;
 
-  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,False);
+  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,gbtTemplateDB,False);
   try
     MenuProfileAddFromTemplate.Visible:=(TemplateDB.Count>0);
     AddButtonMenuAddFromTemplate.Visible:=(TemplateDB.Count>0);
@@ -3063,7 +3035,7 @@ begin
    TemplateDB:=nil;
 
    If TemplateNr>=0 then begin
-     TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,False);
+     TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,gbtTemplateDB,False);
      DefaultGame:=TemplateDB[TemplateNr];
    end else begin
      DefaultGame:=TGame.Create(PrgSetup);
@@ -3199,7 +3171,7 @@ begin
                   if SetupRel<>'' then
                     SetupRel:=MakeRelPath(SetupRel,PrgSetup.BaseDir);
 
-                  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,False);
+                  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,gbtTemplateDB,False);
                   try
                     TemplateFound:=False;
                     for I:=0 to TemplateDB.Count-1 do
@@ -3408,7 +3380,7 @@ begin
              end;
       1011 : begin
                Enabled:=False;
-               AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,False);
+               AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,gbtAutoSetupDB,False);
                try
                  S:=ShowPackageManagerDialog(self,GameDB,AutoSetupDB);
                  If S<>'' then begin
@@ -3752,7 +3724,7 @@ begin
                ShellExecute(Handle,'open',PChar(S),nil,PChar(S),SW_SHOW);
              end;
       4008 : If (ListView.Selected<>nil) and (ListView.Selected.Data<>nil) then begin
-               S:=MakeAbsPath(TGame(ListView.Selected.Data).DataDir,PrgSetup.BaseDir);
+               S:=TGame(ListView.Selected.Data).ResolveDataDir;
                ShellExecute(Handle,'open',PChar(S),nil,PChar(S),SW_SHOW);
              end;
       4010 : If (ListView.Selected<>nil) and (ListView.Selected.Data<>nil) then begin
@@ -3904,7 +3876,7 @@ begin
       5015 : ShowBuildImageFromFolderDialog(self);
       5016 : begin
                {$IFDEF CheckDoubleChecksums}
-               AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,False);
+               AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,gbtAutoSetupDB,False);
                Enabled:=False;
                try
                  St:=CheckDoubleChecksums(AutoSetupDB);
@@ -4056,7 +4028,7 @@ begin
     exit;
   end;
 
-  VerString:=CheckDOSBoxVersion(PrgSetup.DOSBoxSettings[0].DosBoxDir);
+  VerString:=PrgSetup.DOSBoxSettings[0].DosBoxVersion;
   S:=VerString; For I:=1 to length(S) do if (S[I]=',') or (S[I]='.') then S[I]:=FormatSettings.DecimalSeparator;
   If not TryStrToFloat(S,D) then D:=0.72;
 
@@ -4080,7 +4052,7 @@ Var D : Double;
     VerString,S : String;
     I : Integer;
 begin
-  VerString:=CheckDOSBoxVersion(PrgSetup.DOSBoxSettings[0].DosBoxDir);
+  VerString:=PrgSetup.DOSBoxSettings[0].DosBoxVersion;
   S:=VerString; For I:=1 to length(S) do if (S[I]=',') or (S[I]='.') then S[I]:=FormatSettings.DecimalSeparator;
   If not TryStrToFloat(S,D) then D:=0.72;
 
@@ -5186,12 +5158,12 @@ begin
 
     if DirectoryExists(FileName) then begin
       B:=False;
-      If (G<>nil) and (Trim(G.DataDir)<>'') and DirectoryExists(MakeAbsPath(G.DataDir,PrgSetup.BaseDir)) then begin
+      If (G<>nil) and (Trim(G.DataDir)<>'') and DirectoryExists(G.ResolveDataDir) then begin
         B:=(MessageDlg(Format(LanguageSetup.DragDropImportFolderConfirmation,[FileName,G.Name]),mtConfirmation,[mbYes,mbNo],0)<>mrYes);
       end;
       If B then begin
         {Copy to DataDir}
-        S:=IncludeTrailingPathDelimiter(MakeAbsPath(G.DataDir,PrgSetup.BaseDir))+ExtractFileName(FileName);
+        S:=G.ResolveDataDir+ExtractFileName(FileName);
         If not ForceDirectories(S) then begin ErrorCode:=Format(LanguageSetup.MessageCouldNotCreateDir,[S]); exit; end;
         If not CopyFiles(FileName,S,True,True) then ErrorCode:=Format(LanguageSetup.MessageCouldNotCopyFiles,[FileName,S]);
       end else begin
@@ -5369,8 +5341,8 @@ begin
 
     {Otherwise try to copy the file to the game DataDir}
     If G<>nil then begin
-      If (Trim(G.DataDir)<>'') and DirectoryExists(MakeAbsPath(G.DataDir,PrgSetup.BaseDir)) then begin
-        S:=IncludeTrailingPathDelimiter(MakeAbsPath(G.DataDir,PrgSetup.BaseDir))+ExtractFileName(FileName);
+      If (Trim(G.DataDir)<>'') and DirectoryExists(G.ResolveDataDir) then begin
+        S:=G.ResolveDataDir+ExtractFileName(FileName);
         If FileExists(S) then begin
           If MessageDlg(Format(LanguageSetup.MessageConfirmationOverwriteFile,[S]),mtConfirmation,[mbYes,mbNo],0)<>mrYes then exit;
         end;

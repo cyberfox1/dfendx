@@ -5,6 +5,7 @@
 DBKIND_STANDARD RCDATA "..\\IconSets\\DOSBoxKind\\dosbox-standard.ico"
 DBKIND_X        RCDATA "..\\IconSets\\DOSBoxKind\\dosbox-x.ico"
 DBKIND_STAGING  RCDATA "..\\IconSets\\DOSBoxKind\\dosbox-staging.ico"
+DBKIND_PURE     RCDATA "..\\IconSets\\DOSBoxKind\\dosbox-pure.ico"
 DBKIND_UNKNOWN  RCDATA "..\\IconSets\\DOSBoxKind\\dosbox-unknown.ico"
 GENDOC          RCDATA "..\\IconSets\\Modern\\gendoc.ico"
 DOCSICON        RCDATA "..\\IconSets\\Modern\\docsicon.ico"

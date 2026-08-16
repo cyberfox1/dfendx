@@ -54,6 +54,29 @@ if (-not $chmcmdExe) {
 }
 Write-Host "Using chmcmd: $chmcmdExe"
 
+$wiki2help = Join-Path $PSScriptRoot 'wiki2help.py'
+$wikiSrc = Join-Path $RepoRoot 'Src\wiki'
+$helpEn = Join-Path $RepoRoot 'Help\English'
+$py = $null
+if ($env:WIKI_PYTHON -and (Test-Path -LiteralPath $env:WIKI_PYTHON)) {
+  $py = (Resolve-Path -LiteralPath $env:WIKI_PYTHON).Path
+} else {
+  foreach ($name in @('python.exe', 'python')) {
+    $cmd = Get-Command $name -ErrorAction SilentlyContinue
+    if ($cmd) { $py = $cmd.Source; break }
+  }
+}
+if (-not $py) { throw "python.exe not found (needed for Install\wiki2help.py)" }
+if (-not (Test-Path -LiteralPath $wiki2help)) { throw "Missing $wiki2help" }
+if (-not (Test-Path -LiteralPath (Join-Path $wikiSrc 'Home.md'))) { throw "Missing Src\wiki\Home.md" }
+Write-Host ""
+Write-Host "=== wiki2help: Src\wiki -> Help\English ==="
+& $py $wiki2help $wikiSrc -o $helpEn
+if ($LASTEXITCODE -ne 0) { throw "wiki2help.py failed (exit $LASTEXITCODE)" }
+if (-not (Test-Path -LiteralPath (Join-Path $helpEn 'Index.html'))) {
+  throw "wiki2help did not produce Help\English\Index.html"
+}
+
 function Build-OneChm {
   param(
     [string]$LangDirRel,
@@ -153,14 +176,8 @@ function Build-OneChm {
   $destDir = Join-Path $RepoRoot 'Lang'
   if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir | Out-Null }
   $dest = Join-Path $destDir $ChmName
-  try {
-    Copy-Item -Force -LiteralPath $built -Destination $dest
-    Write-Host ("  OK -> Lang\{0} ({1} bytes)" -f $ChmName, (Get-Item $built).Length)
-  } catch {
-    $alt = $dest + '.new'
-    Copy-Item -Force -LiteralPath $built -Destination $alt
-    Write-Warning ("Lang\{0} is locked (close DFend/help). Wrote Lang\{0}.new - replace after close." -f $ChmName)
-  }
+  Copy-Item -Force -LiteralPath $built -Destination $dest
+  Write-Host ("  OK -> Lang\{0} ({1} bytes)" -f $ChmName, (Get-Item $built).Length)
   Remove-Item -Force -LiteralPath $gen -ErrorAction SilentlyContinue
 }
 

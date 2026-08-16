@@ -364,7 +364,7 @@ begin
 
     { Build "DOSBox DOS" profile }
 
-    NewGameDB:=TGameDB.Create(DestPrgDir+GameListSubDir);
+    NewGameDB:=TGameDB.Create(DestPrgDir+GameListSubDir,gbtUserDB);
     try
       BuildDefaultDosProfile(NewGameDB,False);
     finally

@@ -1,7 +1,9 @@
 unit PrgSetupUnit;
 interface
 
-uses Classes, CommonComponents, PrgConsts;
+uses Classes, SysUtils, Generics.Collections, CommonComponents, PrgConsts;
+
+Type EImmutableObject=class(Exception);
 
 Type TOperationMode=(omPrgDir, omUserDir, omPortable);
 
@@ -33,14 +35,18 @@ Type TDOSBoxSetting=class
     Procedure InitDirs;
     Procedure DoneDirs;
     Procedure UpdateDosBoxKind;
+    function GetDosBoxDirAbs: String;
   public
     Constructor Create(const APrgSetup : TBasePrgSetup; const ANr : Integer);
     Destructor Destroy; override;
     property Nr : Integer read FNr write FNr;
 
-    property Name : String read FName write FName;
+    procedure SetName(const Value: String);
+    property Name : String read FName write SetName;
     procedure SetDosBoxDir(const Value: String);
     property DosBoxDir : String read FDosBoxDir write SetDosBoxDir;
+    { Fully resolved install directory (trailing delimiter); '' if DosBoxDir empty. }
+    property DosBoxDirAbs : String read GetDosBoxDirAbs;
     property DosBoxMapperFile : String read FDosBoxMapperFile write FDosBoxMapperFile;
     property DosBoxLanguage : String read FDosBoxLanguage write FDosBoxLanguage;
     property SDLVideodriver : String read FSDLVideodriver write FSDLVideodriver;
@@ -61,6 +67,16 @@ Type TDOSBoxSetting=class
     property DosBoxVersion : String read FDosBoxVersion;
     { True when Staging and version is empty or < 0.83.0.0 (see CompareDOSBoxVersion). }
     function IsOldStaging: Boolean;
+end;
+
+Type TEphemeralDOSBoxInstall=class(TDOSBoxSetting)
+  private
+    FRefCount : Integer;
+  public
+    Constructor Create(const APrgSetup: TBasePrgSetup; const AbsDirNoSlash: String; const AKind: TDOSBoxKind; const AVersion: String; const AName: String);
+    Procedure Bind;
+    Procedure Unbind;
+    property RefCount : Integer read FRefCount write FRefCount;
 end;
 
 Type TPackerSetting=class
@@ -89,6 +105,8 @@ Type TPackerSetting=class
 Type TPrgSetup=class(TBasePrgSetup)
   private
     FDOSBox, FPacker : TList;
+    FEphemeralDOSBox : TDictionary<String,TEphemeralDOSBoxInstall>;
+    FEphemeralCreateCount : Integer;
     FDOSBoxBasedUserInterpretersPrograms, FDOSBoxBasedUserInterpretersParameters, FDOSBoxBasedUserInterpretersExtensions : TStringList;
     FWindowsBasedEmulatorsNames, FWindowsBasedEmulatorsPrograms, FWindowsBasedEmulatorsParameters, FWindowsBasedEmulatorsExtensions : TStringList;
     FHTTPUserAgent : String;
@@ -106,6 +124,7 @@ Type TPrgSetup=class(TBasePrgSetup)
     Function GetListCount(Index : Integer) : Integer;
     Function GetDOSBoxSettings(I : Integer) : TDOSBoxSetting;
     Function GetPackerSettings(I : Integer) : TPackerSetting;
+    Function NormalizeEphemeralPathKey(const RawPath: String): String;
   public
     Constructor Create(const SetupFile : String = '');
     Destructor Destroy; override;
@@ -120,6 +139,9 @@ Type TPrgSetup=class(TBasePrgSetup)
     Function AddPackerSettings(const Name : String) : Integer;
     Function DeletePackerSettings(const ANr : Integer) : Boolean;
     Function SwapPackerSettings(const ANr1, ANr2 : Integer) : Boolean;
+
+    Function GetEphemeralDOSBoxInstall(const RawPath: String): TEphemeralDOSBoxInstall;
+    Function AddEphemeralDOSBoxInstall(const RawPath: String; const AKind: TDOSBoxKind; const AVersion: String): TEphemeralDOSBoxInstall;
 
     {True when ExoDOSDir and ExoDOSVersion are both non-empty after Trim.}
     Function HasValidExoInstallation : Boolean;
@@ -341,7 +363,7 @@ Function PrgDataDir : String;
 Function WineSupportEnabled : Boolean;
 
 Procedure DOSBoxSettingToDOSBoxData(const DOSBoxSetting : TDOSBoxSetting; var DOSBoxData : TDOSBoxData);
-Procedure DOSBoxDataToDOSBoxSetting(const DOSBoxData : TDOSBoxData; const DOSBoxSetting : TDOSBoxSetting);
+Function DOSBoxDataToDOSBoxSetting(const DOSBoxData : TDOSBoxData; const DOSBoxSetting : TDOSBoxSetting) : String;
 Procedure InitDOSBoxData(var DOSBoxData : TDOSBoxData);
 Procedure MoveDataFile(const FileName : String);
 Procedure ReadOperationMode;
@@ -349,7 +371,7 @@ Procedure UpdateSettingsFilesLocation;
 
 implementation
 
-uses Windows, ShlObj, SysUtils, Forms, Math, CommonHelpers, CommonTools, Dialogs,
+uses Windows, ShlObj, Forms, Math, CommonHelpers, CommonTools, Dialogs,
      GameDBToolsHelpers, DOSBoxUnitHelpers;
 
 { TDOSBoxSetting }
@@ -358,15 +380,19 @@ constructor TDOSBoxSetting.Create(const APrgSetup: TBasePrgSetup; const ANr: Int
 begin
   inherited Create;
   FPrgSetup:=APrgSetup;
-  FNr:=ANr;
-  ReadSettings;
-  InitDirs;
+  If not (Self is TEphemeralDOSBoxInstall) then begin
+    FNr:=ANr;
+    ReadSettings;
+    InitDirs;
+  end;
 end;
 
 destructor TDOSBoxSetting.Destroy;
 begin
-  DoneDirs;
-  WriteSettings;
+  If not (Self is TEphemeralDOSBoxInstall) then begin
+    DoneDirs;
+    WriteSettings;
+  end;
   inherited Destroy;
 end;
 
@@ -439,21 +465,39 @@ begin
   end;
 end;
 
+procedure TDOSBoxSetting.SetName(const Value: String);
+begin
+  If Self is TEphemeralDOSBoxInstall then
+    raise EImmutableObject.Create('Ephemeral DOSBox install Name is immutable');
+  FName := Value;
+end;
+
 procedure TDOSBoxSetting.SetDosBoxDir(const Value: String);
 begin
+  If Self is TEphemeralDOSBoxInstall then
+    raise EImmutableObject.Create('Ephemeral DOSBox install DosBoxDir is immutable');
   FDosBoxDir := Value;
   UpdateDosBoxKind;
 end;
 
-procedure TDOSBoxSetting.UpdateDosBoxKind;
+function TDOSBoxSetting.GetDosBoxDirAbs: String;
 begin
-  if Trim(FDosBoxDir) = '' then begin
+  Result := '';
+  if Trim(FDosBoxDir) = '' then
+    Exit;
+  Result := IncludeTrailingPathDelimiter(MakeAbsPath(FDosBoxDir, PrgSetup.BaseDir));
+end;
+
+procedure TDOSBoxSetting.UpdateDosBoxKind;
+var
+  AbsDir: String;
+begin
+  AbsDir := GetDosBoxDirAbs;
+  if AbsDir = '' then begin
     FDosBoxKind := dbkNone;
     FDosBoxVersion := '';
-  end else begin
-    FDosBoxKind := DetermineDosBoxKind(FDosBoxDir, PrgSetup.BaseDir);
-    FDosBoxVersion := CheckDOSBoxVersion(FDosBoxDir);
-  end;
+  end else
+    FDosBoxKind := DetermineDosBoxKind(AbsDir, FDosBoxVersion);
 end;
 
 function TDOSBoxSetting.IsOldStaging: Boolean;
@@ -466,6 +510,35 @@ begin
     Exit;
   end;
   Result := CompareDOSBoxVersion(FDosBoxVersion, '0.83.0.0') < 0;
+end;
+
+constructor TEphemeralDOSBoxInstall.Create(const APrgSetup: TBasePrgSetup; const AbsDirNoSlash: String; const AKind: TDOSBoxKind; const AVersion: String; const AName: String);
+begin
+  inherited Create(APrgSetup,-1);
+  FDosBoxDir:=AbsDirNoSlash;
+  FDosBoxKind:=AKind;
+  FDosBoxVersion:=AVersion;
+  FName:=AName;
+  FRefCount:=0;
+end;
+
+Procedure TEphemeralDOSBoxInstall.Bind;
+begin
+  Inc(FRefCount);
+end;
+
+Procedure TEphemeralDOSBoxInstall.Unbind;
+{Var Key: String;
+    Setup: TPrgSetup;}
+begin
+  If FRefCount<=0 then Exit;
+  Dec(FRefCount);
+  If FRefCount>0 then Exit;
+  {Setup:=TPrgSetup(FPrgSetup);
+  Key:=Setup.NormalizeEphemeralPathKey(FDosBoxDir);
+  If Key<>'' then
+    Setup.FEphemeralDOSBox.Remove(Key);
+  Free;}
 end;
 
 { TPackerSetting }
@@ -528,6 +601,8 @@ begin
 
   FDOSBox:=TList.Create;
   FPacker:=TList.Create;
+  FEphemeralDOSBox:=TDictionary<String,TEphemeralDOSBoxInstall>.Create;
+  FEphemeralCreateCount:=0;
   FDOSBoxBasedUserInterpretersPrograms:=TStringList.Create;
   FDOSBoxBasedUserInterpretersParameters:=TStringList.Create;
   FDOSBoxBasedUserInterpretersExtensions:=TStringList.Create;
@@ -548,10 +623,14 @@ end;
 
 destructor TPrgSetup.Destroy;
 Var I : Integer;
+    E : TEphemeralDOSBoxInstall;
 begin
   DeleteOldDOSBoxSettings;
   For I:=0 to FDOSBox.Count-1 do TDOSBoxSetting(FDOSBox[I]).Free;
   FDOSBox.Free;
+
+  For E in FEphemeralDOSBox.Values do E.Free;
+  FEphemeralDOSBox.Free;
 
   DeleteOldPackerSettings;
   For I:=0 to FPacker.Count-1 do TPackerSetting(FPacker[I]).Free;
@@ -967,6 +1046,36 @@ begin
   If (I<0) or (I>=FDOSBox.Count) then result:=nil else result:=TDOSBoxSetting(FDOSBox[I]);
 end;
 
+Function TPrgSetup.NormalizeEphemeralPathKey(const RawPath: String): String;
+begin
+  Result:=Trim(RawPath);
+  If Result='' then Exit;
+  Result:=ExcludeTrailingPathDelimiter(MakeAbsPath(Result,BaseDir));
+  Result:=ExtLowerCase(Result);
+end;
+
+Function TPrgSetup.GetEphemeralDOSBoxInstall(const RawPath: String): TEphemeralDOSBoxInstall;
+Var Key: String;
+begin
+  Result:=nil;
+  Key:=NormalizeEphemeralPathKey(RawPath);
+  If Key='' then Exit;
+  FEphemeralDOSBox.TryGetValue(Key,Result);
+end;
+
+Function TPrgSetup.AddEphemeralDOSBoxInstall(const RawPath: String; const AKind: TDOSBoxKind; const AVersion: String): TEphemeralDOSBoxInstall;
+Var Key, InstallName: String;
+begin
+  Result:=nil;
+  Key:=NormalizeEphemeralPathKey(RawPath);
+  If Key='' then Exit;
+  If FEphemeralDOSBox.TryGetValue(Key,Result) then Exit;
+  Inc(FEphemeralCreateCount);
+  InstallName:='__ephemeralInstall'+IntToStr(FEphemeralCreateCount);
+  Result:=TEphemeralDOSBoxInstall.Create(Self,Key,AKind,AVersion,InstallName);
+  FEphemeralDOSBox.Add(Key,Result);
+end;
+
 Function TPrgSetup.GetPackerSettings(I : Integer) : TPackerSetting;
 begin
   If (I<0) or (I>=FPacker.Count) then result:=nil else result:=TPackerSetting(FPacker[I]);
@@ -1087,8 +1196,10 @@ begin
   DOSBoxData.WaitOnError:=DOSBoxSetting.WaitOnError;
 end;
 
-Procedure DOSBoxDataToDOSBoxSetting(const DOSBoxData : TDOSBoxData; const DOSBoxSetting : TDOSBoxSetting);
+Function DOSBoxDataToDOSBoxSetting(const DOSBoxData : TDOSBoxData; const DOSBoxSetting : TDOSBoxSetting) : String;
+Var DirChanged : Boolean;
 begin
+  DirChanged:=(DOSBoxSetting.DosBoxDir<>DOSBoxData.DosBoxDir);
   DOSBoxSetting.Name:=DOSBoxData.Name;
   DOSBoxSetting.DosBoxDir:=DOSBoxData.DosBoxDir;
   DOSBoxSetting.DosBoxMapperFile:=DOSBoxData.DosBoxMapperFile;
@@ -1102,6 +1213,10 @@ begin
   DOSBoxSetting.CenterDOSBoxWindow:=DOSBoxData.CenterDOSBoxWindow;
   DOSBoxSetting.DisableScreensaver:=DOSBoxData.DisableScreensaver;
   DOSBoxSetting.WaitOnError:=DOSBoxData.WaitOnError;
+  if DirChanged then
+    Result:=DOSBoxData.Name
+  else
+    Result:='';
 end;
 
 Procedure InitDOSBoxData(var DOSBoxData : TDOSBoxData);

@@ -204,7 +204,7 @@ Var I : Integer;
     G : TGame;
     AutoSetupDB : TGameDB;
 begin
-  AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,False);
+  AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,gbtAutoSetupDB,False);
   try
     For I:=0 to ListBox.Items.Count-1 do If not ListBox.Checked[I] then begin
       G:=TGame(ListBox.Items.Objects[I]);

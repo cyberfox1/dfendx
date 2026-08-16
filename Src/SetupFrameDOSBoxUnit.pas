@@ -57,14 +57,11 @@ type
 
 implementation
 
-uses ShellAPI, ShlObj, Math, LanguageSetupUnit, VistaToolsUnit, CommonHelpers, CommonTools,
+uses ShellAPI, ShlObj, Math, Generics.Collections, LanguageSetupUnit, VistaToolsUnit, CommonHelpers, CommonTools,
      SetupDosBoxFormUnit, SetupFrameDOSBoxFormUnit, HelpConsts, IconLoaderUnit, System.UITypes,
      PrgConsts, GameDBToolsHelpers, DOSBoxUnitHelpers;
 
 {$R *.dfm}
-
-const
-  DBInstallVerifyFailMsg = 'No valid DOSBox install detected';
 
 { TSetupFrameDOSBox }
 
@@ -182,13 +179,22 @@ end;
 
 procedure TSetupFrameDOSBox.SaveSetup;
 Var I : Integer;
+    S : String;
+    Names : TDictionary<String,TDOSBoxSetting>;
 begin
   DOSBoxInstallationComboBox.ItemIndex:=-1;
   DOSBoxInstallationComboBoxChange(self);
   While PrgSetup.DOSBoxSettingsCount>length(DOSBoxData) do PrgSetup.DeleteDOSBoxSettings(PrgSetup.DOSBoxSettingsCount-1);
   While PrgSetup.DOSBoxSettingsCount<length(DOSBoxData) do PrgSetup.AddDOSBoxSettings('');
   DOSBoxData[0].DosBoxLanguage:=PDOSBoxLang^;
-  For I:=0 to length(DOSBoxData)-1 do DOSBoxDataToDOSBoxSetting(DOSBoxData[I],PrgSetup.DOSBoxSettings[I]);
+  Names:=TDictionary<String,TDOSBoxSetting>.Create;
+  For I:=0 to length(DOSBoxData)-1 do begin
+    S:=DOSBoxDataToDOSBoxSetting(DOSBoxData[I],PrgSetup.DOSBoxSettings[I]);
+    if Trim(S)<>'' then
+      Names.AddOrSetValue(ExtUpperCase(Trim(S)),PrgSetup.DOSBoxSettings[I]);
+  end;
+  if Names.Count>0 then GameDB.RefreshDosBoxKindsForInstall(Names);
+  Names.Free;
   For I:=0 to PrgSetup.DOSBoxSettingsCount-1 do PrgSetup.DOSBoxSettings[I].Nr:=I;
 end;
 
@@ -215,57 +221,40 @@ end;
 
 procedure TSetupFrameDOSBox.UpdateDBInstallVerifyMsg;
 Var
-  AbsDir, KindName : String;
+  AbsDir, Version : String;
   Kind : TDOSBoxKind;
-  Rec : TSearchRec;
-  HasExe : Boolean;
 begin
-  { Text status only — kind name, no version scrape. }
   AbsDir:=Trim(DosBoxDirEdit.Text);
   if AbsDir='' then begin
-    lbDBInstallVerifyMsg.Caption:=DBInstallVerifyFailMsg;
+    lbDBInstallVerifyMsg.Caption:=LanguageSetup.SetupFormDOSBoxNotDetected;
     Exit;
   end;
-  AbsDir:=IncludeTrailingPathDelimiter(MakeAbsPath(AbsDir,PrgSetup.BaseDir));
-  HasExe:=False;
-  if DirectoryExists(AbsDir) then begin
-    if FindFirst(AbsDir+'dosbox*.exe',faAnyFile,Rec)=0 then
-    try
-      repeat
-        if (Rec.Attr and faDirectory)=0 then begin
-          HasExe:=True;
-          Break;
-        end;
-      until FindNext(Rec)<>0;
-    finally
-      SysUtils.FindClose(Rec);
-    end;
-  end;
-  if not HasExe then begin
-    lbDBInstallVerifyMsg.Caption:=DBInstallVerifyFailMsg;
-    Exit;
-  end;
+  AbsDir:=MakeAbsPath(AbsDir,PrgSetup.BaseDir);
+  AbsDir:=IncludeTrailingPathDelimiter(AbsDir);
 
-  Kind:=DetermineDosBoxKind(AbsDir, PrgSetup.BaseDir);
-  case Kind of
-    dbkStandard: KindName:='DOSBox Classic';
-    dbkX:        KindName:='DOSBox-X';
-    dbkStaging:  KindName:='DOSBox Staging';
-    dbkUnknown:  KindName:='unknown';
+  Kind:=DetermineDosBoxKind(AbsDir, Version);
+  if Kind in [dbkNone, dbkUnknown] then
+    lbDBInstallVerifyMsg.Caption:=LanguageSetup.SetupFormDOSBoxNotDetected
   else
-    KindName:='unknown';
-  end;
-  lbDBInstallVerifyMsg.Caption:=Format('Detected %s',[KindName]);
+    lbDBInstallVerifyMsg.Caption:=Format(LanguageSetup.SetupFormDOSBoxDetected,[DOSBoxKindToDisplay(Kind)]);
 end;
 
 procedure TSetupFrameDOSBox.DosBoxDirEditChange(Sender: TObject);
+Var AbsDir, Version: String;
 begin
   If (PDosBoxDir^<>DosBoxDirEdit.Text) and (DOSBoxInstallationComboBox.ItemIndex=0) then begin
     PDosBoxDir^:=DosBoxDirEdit.Text;
     DosBoxDirChange;
   end;
 
-  WarningButton.Visible:=OldDOSBoxVersion(CheckDOSBoxVersion(DosBoxDirEdit.Text));
+  AbsDir:=Trim(DosBoxDirEdit.Text);
+  Version:='';
+  if AbsDir<>'' then begin
+    AbsDir:=MakeAbsPath(AbsDir,PrgSetup.BaseDir);
+    AbsDir:=IncludeTrailingPathDelimiter(AbsDir);
+    DetermineDosBoxKind(AbsDir, Version);
+  end;
+  WarningButton.Visible:=OldDOSBoxVersion(Version);
   DosBoxDirEdit.Width:=IfThen(WarningButton.Visible,WarningButton.Left-4,WarningButton.Left+WarningButton.Width)-DosBoxDirEdit.Left;
   UpdateDBInstallVerifyMsg;
 end;
@@ -351,8 +340,16 @@ begin
 end;
 
 procedure TSetupFrameDOSBox.WarningButtonClick(Sender: TObject);
+Var AbsDir, Version: String;
 begin
-  DOSBoxOutdatedWarning(DosBoxDirEdit.Text);
+  AbsDir:=Trim(DosBoxDirEdit.Text);
+  Version:='';
+  if AbsDir<>'' then begin
+    AbsDir:=MakeAbsPath(AbsDir,PrgSetup.BaseDir);
+    AbsDir:=IncludeTrailingPathDelimiter(AbsDir);
+    DetermineDosBoxKind(AbsDir, Version);
+  end;
+  DOSBoxOutdatedWarning(Version);
 end;
 
 end.

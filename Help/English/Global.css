@@ -24,3 +24,5 @@ ul.small {margin-top: 1pt; margin-bottom: 3pt;}
 ul.big li {margin-bottom: 10pt;}
 
 tt {font-size: larger;}
+
+object, OBJECT {display: none; visibility: hidden; width: 0; height: 0; overflow: hidden;}

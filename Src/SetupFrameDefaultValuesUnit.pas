@@ -42,7 +42,7 @@ type
 implementation
 
 uses Math, LanguageSetupUnit, VistaToolsUnit, PrgSetupUnit, CommonHelpers, CommonTools, GameDBHelpers,
-     HelpConsts, IconLoaderUnit, TextEditPopupUnit, System.Types;
+     ConfOptDefaults, HelpConsts, IconLoaderUnit, TextEditPopupUnit, System.Types;
 
 {$R *.dfm}
 

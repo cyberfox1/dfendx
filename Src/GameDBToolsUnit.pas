@@ -168,6 +168,8 @@ var
   FKindIconList: TImageList = nil;
   FKindIconIndex: array[TDOSBoxKind] of Integer;
   FKindIconCacheInited: Boolean = False;
+  FScummListIconList: TImageList = nil;
+  FScummListIconIndex: Integer = -1;
 
   { Lazy-loaded embedded assets for list / editor UI. }
   FTooBigThumb: TBitmap = nil;
@@ -217,6 +219,8 @@ begin
   for K := Low(TDOSBoxKind) to High(TDOSBoxKind) do
     FKindIconIndex[K] := -1;
   FKindIconCacheInited := True;
+  FScummListIconList := nil;
+  FScummListIconIndex := -1;
 end;
 
 function DOSBoxKindToResourceName(Kind: TDOSBoxKind): String; forward;
@@ -1162,19 +1166,14 @@ Var I,J,K,Nr,ItemsUsed : Integer;
     UseBackgroundColor : Boolean;
     BackgroundColor : TColor;
     RecentlyStarted : TStringList;
-    T0, TPhase, TAdd : UInt64;
     {$IFDEF SpeedTest}Ca : Cardinal;{$ENDIF}
 begin
   {$IFDEF SpeedTest}Ca:=GetTickCount;{$ENDIF}
-  T0:=GetTickCount64;
-  LogInfo('### Start of AddGamesToList ### group="'+Group+'" sub="'+SubGroup+'" search="'+SearchString+'" GameDB.Count='+IntToStr(GameDB.Count)+' screenshotMode='+BoolToStr(ScreenshotViewMode,True)+' tick='+IntToStr(T0));
 
   S:=Trim(PrgSetup.GamesListViewBackground);
   UseBackgroundColor:=(S<>''); BackgroundColor:=clWhite;
   If UseBackgroundColor then try BackgroundColor:=StringToColor(S); except UseBackgroundColor:=False; end;
 
-  TPhase:=GetTickCount64;
-  LogInfo('AddGamesToList: Preparing ListView (icon cache invalidate + image lists)');
   {Prepare ListView}
   InvalidateDosBoxKindListIconCache;
   AListViewImageList.Clear;
@@ -1212,10 +1211,6 @@ begin
   finally
     AListView.Columns.EndUpdate;
   end;
-  LogInfo('AddGamesToList: Prepare ListView done in '+FloatToStrF(Double(GetTickCount64-TPhase),ffFixed,8,0)+'ms');
-
-  TPhase:=GetTickCount64;
-  LogInfo('AddGamesToList: Selecting/filtering games');
   RecentlyStarted:=nil;
   List:=TList.Create;
   try
@@ -1317,10 +1312,6 @@ begin
       List.Add(Game); {DOSBox default template}
       List.Add(Game); {ScummVM default template}
     end;
-    LogInfo('AddGamesToList: Filter done in '+FloatToStrF(Double(GetTickCount64-TPhase),ffFixed,8,0)+'ms matched='+IntToStr(List.Count)+' of '+IntToStr(GameDB.Count));
-
-    TPhase:=GetTickCount64;
-    LogInfo('AddGamesToList: Sorting games sortBy='+IntToStr(Integer(SortBy))+' reverse='+BoolToStr(ReverseOrder,True));
     St:=TStringList.Create;
     try
       {Sort games}
@@ -1355,13 +1346,7 @@ begin
           List.Sort(SortByStartCount);
           For I:=0 to List.Count-1 do St.AddObject('',TGame(List[I]));
         end;
-        LogInfo('AddGamesToList: Sort done in '+FloatToStrF(Double(GetTickCount64-TPhase),ffFixed,8,0)+'ms sortedCount='+IntToStr(St.Count));
 
-        TAdd:=GetTickCount64;
-        LogInfo('AddGamesToList: Adding games to ListView (start) count='+IntToStr(St.Count)
-          +' existingItems='+IntToStr(AListView.Items.Count)
-          +' imgSmall='+IntToStr(AListViewImageList.Count)
-          +' imgLarge='+IntToStr(AListViewIconImageList.Count));
         {Add games to list}
         ItemsUsed:=0;
         If Trim(PrgSetup.ValueForNotSet)='' then T:=LanguageSetup.NotSet else T:=Trim(PrgSetup.ValueForNotSet);
@@ -1397,26 +1382,14 @@ begin
             If Assigned(F) then F.Enabled:=True;
           end;
         finally
-          TPhase:=GetTickCount64;
           AListView.Items.EndUpdate;
-          LogInfo('AddGamesToList: inner Items.EndUpdate in '+FloatToStrF(Double(GetTickCount64-TPhase),ffFixed,8,0)+'ms');
         end;
-        LogInfo('AddGamesToList: Adding games to ListView done in '+FloatToStrF(Double(GetTickCount64-TAdd),ffFixed,8,0)
-          +'ms itemsUsed='+IntToStr(ItemsUsed)
-          +' imgSmall='+IntToStr(AListViewImageList.Count)
-          +' imgLarge='+IntToStr(AListViewIconImageList.Count));
       finally
         VUserSt.Free;
       end;
 
-      TPhase:=GetTickCount64;
-      J:=0;
-      while ItemsUsed<AListView.Items.Count do begin
+      while ItemsUsed<AListView.Items.Count do
         AListView.Items.Delete(AListView.Items.Count-1);
-        inc(J);
-      end;
-      LogInfo('AddGamesToList: trim surplus items deleted='+IntToStr(J)
-        +' in '+FloatToStrF(Double(GetTickCount64-TPhase),ffFixed,8,0)+'ms');
 
     finally
       St.Free;
@@ -1424,20 +1397,15 @@ begin
   finally
    if RecentlyStarted<>nil then RecentlyStarted.Free;
     List.Free;
-    TPhase:=GetTickCount64;
-    LogInfo('AddGamesToList: Updating column widths');
     AListView.Columns.BeginUpdate;
     try
       For I:=0 to min(length(C),AListView.Columns.Count)-1 do AListView.Columns[I].Width:=C[I];
     finally
       AListView.Columns.EndUpdate;
     end;
-    LogInfo('AddGamesToList: Column widths done in '+FloatToStrF(Double(GetTickCount64-TPhase),ffFixed,8,0)+'ms');
   end;
 
   {$IFDEF SpeedTest}Application.MainForm.Caption:=IntToStr(GetTickCount-Ca);{$ENDIF}
-
-  LogInfo('### End of AddGamesToList ### total='+FloatToStrF(Double(GetTickCount64-T0),ffFixed,8,0)+'ms group="'+Group+'" sub="'+SubGroup+'"');
 end;
 
 Function GamesListSaveColWidthsToString(const AListView : TListView) : String;
@@ -4073,6 +4041,7 @@ begin
     dbkStandard: Result := 'DBKIND_STANDARD';
     dbkX:        Result := 'DBKIND_X';
     dbkStaging:  Result := 'DBKIND_STAGING';
+    dbkPure:     Result := 'DBKIND_PURE';
   else
     Result := 'DBKIND_UNKNOWN';
   end;

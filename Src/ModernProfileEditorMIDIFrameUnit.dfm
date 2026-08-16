@@ -219,6 +219,7 @@ object ModernProfileEditorMIDIFrame: TModernProfileEditorMIDIFrame
       EditLabel.Caption = 'Soundfont path'
       TabOrder = 0
       Text = ''
+      OnChange = FluidSynthPathBoxChange
     end
     object lbFluidSynthGainValue: TLabeledEdit
       Left = 425

@@ -53,11 +53,12 @@ type
     procedure GameRelPathButton(Sender: TObject);
   private
     { Private-Deklarationen }
+    FTempGame : TGame;
     FOnProfileNameChange : TTextEvent;
     FLoadFromTemplate : Boolean;
     IconName : String;
     OldFileName : String;
-    ProfileName,ProfileExe,ProfileSetup,ProfileScummVMGameName,ProfileScummVMPath,ProfileDOSBoxInstallation,ProfileCaptureDir : PString;
+    ProfileName,ProfileExe,ProfileSetup,ProfileScummVMGameName,ProfileScummVMPath,ProfileCaptureDir : PString;
     ScummVM, WindowsMode : Boolean;
     FGameDB : TGameDB;
     procedure LoadIcon;
@@ -89,6 +90,7 @@ uses ShlObj, Math, LanguageSetupUnit, VistaToolsUnit, IconManagerFormUnit,
 constructor TModernProfileEditorBaseFrame.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
   ExtraExeFiles:=TStringList.Create;
   ExtraExeFilesParameters:=TStringList.Create;
 end;
@@ -167,7 +169,6 @@ begin
   ProfileSetup:=InitData.CurrentProfileSetup;
   ProfileScummVMGameName:=InitData.CurrentScummVMGameName;
   ProfileScummVMPath:=InitData.CurrentScummVMPath;
-  ProfileDOSBoxInstallation:=InitData.CurrentDOSBoxInstallation;
   ProfileCaptureDir:=InitData.CurrentCaptureDir;
 
   InfoButton1.Font.Size:=InfoButton1.Font.Size-2;
@@ -339,7 +340,7 @@ end;
 procedure TModernProfileEditorBaseFrame.GameComboBoxChange(Sender: TObject);
 begin
   If GameComboBox.ItemIndex>=0 then
-    FOnProfileNameChange(Sender,ProfileNameEdit.Text,ProfileExe^,ProfileSetup^,ScummVMGamesList.NameFromDescription(GameComboBox.Text),ProfileScummVMPath^,ProfileDOSBoxInstallation^,ProfileCaptureDir^);
+    FOnProfileNameChange(Sender,ProfileNameEdit.Text,ProfileExe^,ProfileSetup^,ScummVMGamesList.NameFromDescription(GameComboBox.Text),ProfileScummVMPath^,ProfileCaptureDir^);
 end;
 
 procedure TModernProfileEditorBaseFrame.GetGame(const Game: TGame);
@@ -414,14 +415,14 @@ end;
 
 procedure TModernProfileEditorBaseFrame.ProfileNameEditChange(Sender: TObject);
 begin
-  FOnProfileNameChange(Sender,ProfileNameEdit.Text,ProfileExe^,ProfileSetup^,ProfileScummVMGameName^,ProfileScummVMPath^,ProfileDOSBoxInstallation^,ProfileCaptureDir^);
+  FOnProfileNameChange(Sender,ProfileNameEdit.Text,ProfileExe^,ProfileSetup^,ProfileScummVMGameName^,ProfileScummVMPath^,ProfileCaptureDir^);
 end;
 
 procedure TModernProfileEditorBaseFrame.GameExeEditChange(Sender: TObject);
 Var S : String;
 begin
   If GameRelPathCheckBox.Checked then S:='DOSBox:' else S:='';
-  FOnProfileNameChange(Sender,ProfileName^,S+GameExeEdit.Text,ProfileSetup^,ProfileScummVMGameName^,ProfileScummVMPath^,ProfileDOSBoxInstallation^,ProfileCaptureDir^);
+  FOnProfileNameChange(Sender,ProfileName^,S+GameExeEdit.Text,ProfileSetup^,ProfileScummVMGameName^,ProfileScummVMPath^,ProfileCaptureDir^);
 
   IgnoreWindowsWarningsCheckBox.Visible:=(not GameRelPathCheckBox.Checked) and (IsWindowsExe(MakeAbsPath(GameExeEdit.Text,PrgSetup.BaseDir)) or IsWindowsExe(MakeAbsPath(SetupExeEdit.Text,PrgSetup.BaseDir)));
   CalcCheckBoxTop;
@@ -436,7 +437,7 @@ procedure TModernProfileEditorBaseFrame.SetupExeEditChange(Sender: TObject);
 Var S : String;
 begin
   If SetupRelPathCheckBox.Checked then S:='DOSBox:' else S:='';
-  FOnProfileNameChange(Sender,ProfileName^,ProfileExe^,S+SetupExeEdit.Text,ProfileScummVMGameName^,ProfileScummVMPath^,ProfileDOSBoxInstallation^,ProfileCaptureDir^);
+  FOnProfileNameChange(Sender,ProfileName^,ProfileExe^,S+SetupExeEdit.Text,ProfileScummVMGameName^,ProfileScummVMPath^,ProfileCaptureDir^);
 
   IgnoreWindowsWarningsCheckBox.Visible:=(not GameRelPathCheckBox.Checked) and (IsWindowsExe(MakeAbsPath(GameExeEdit.Text,PrgSetup.BaseDir)) or IsWindowsExe(MakeAbsPath(SetupExeEdit.Text,PrgSetup.BaseDir)));
   CalcCheckBoxTop;
@@ -462,7 +463,7 @@ begin
 
   If GameRelPathCheckBox.Checked then S:='DOSBox:' else S:='';
   If SetupRelPathCheckBox.Checked then T:='DOSBox:' else T:='';
-  FOnProfileNameChange(Sender,ProfileName^,S+GameExeEdit.Text,T+SetupExeEdit.Text,ProfileScummVMGameName^,ProfileScummVMPath^,ProfileDOSBoxInstallation^,ProfileCaptureDir^);
+  FOnProfileNameChange(Sender,ProfileName^,S+GameExeEdit.Text,T+SetupExeEdit.Text,ProfileScummVMGameName^,ProfileScummVMPath^,ProfileCaptureDir^);
 end;
 
 procedure TModernProfileEditorBaseFrame.GameZipEditChange(Sender: TObject);

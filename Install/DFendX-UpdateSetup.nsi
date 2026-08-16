@@ -160,6 +160,7 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
   File "staging\Bin\AdminLauncher.exe"
   File "staging\Bin\SetInstallerLanguage.exe"
   File "staging\Bin\dfxvalidator.exe"
+  File "staging\Bin\config.com"
   
   SetDetailsPrint listonly
   SetOutPath "$INSTDIR\Lang"

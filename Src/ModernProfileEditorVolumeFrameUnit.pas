@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
-  Dialogs, StdCtrls, Spin, ComCtrls, GameDBUnit, ModernProfileEditorFormUnit;
+  Dialogs, StdCtrls, Spin, ComCtrls, ExtCtrls, GameDBUnit, ModernProfileEditorFormUnit,
+  PrgConsts;
 
 type
   TModernProfileEditorVolumeFrame = class(TFrame, IModernProfileEditorFrame)
@@ -57,13 +58,23 @@ type
     SoundVolumeCDRightEdit: TSpinEdit;
     SoundVolumeCDLeftTrackBar: TTrackBar;
     SoundVolumeCDRightTrackBar: TTrackBar;
+    mixerBoostGroupBox: TPanel;
+    mixerBoostTrackBar: TTrackBar;
+    mixerBoostSpin: TSpinEdit;
+    mixerBoostSpinLabel: TLabel;
+    mixerBoostTitle: TLabel;
     procedure SpinEditChange(Sender: TObject);
     procedure TrackBarChange(Sender: TObject);
   private
-    { Private-Deklarationen }
+    FTempGame : TGame;
     JustChanging : Boolean;
+    procedure SetBoostSpinFromTrack;
+    procedure SetBoostTrackFromSpin;
+    procedure ApplyKindControls;
+    procedure ShowFrame(Sender : TObject);
   public
     { Public-Deklarationen }
+    Constructor Create(AOwner : TComponent); override;
     Procedure InitGUI(var InitData : TModernProfileEditorInitData);
     Procedure SetGame(const Game : TGame; const LoadFromTemplate : Boolean);
     Procedure GetGame(const Game : TGame);
@@ -76,6 +87,27 @@ uses Math, VistaToolsUnit, LanguageSetupUnit, HelpConsts;
 {$R *.dfm}
 
 { TModernProfileEditorVolumeFrame }
+
+constructor TModernProfileEditorVolumeFrame.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
+end;
+
+procedure TModernProfileEditorVolumeFrame.SetBoostSpinFromTrack;
+begin
+  mixerBoostSpin.Value:=Round((mixerBoostTrackBar.Max-mixerBoostTrackBar.Position)*100/40);
+end;
+
+procedure TModernProfileEditorVolumeFrame.SetBoostTrackFromSpin;
+begin
+  If Trim(mixerBoostSpin.Text)='' then begin
+    mixerBoostTrackBar.Position:=mixerBoostTrackBar.Max-40;
+    exit;
+  end;
+  mixerBoostSpin.Value:=Min(500,Max(0,mixerBoostSpin.Value));
+  mixerBoostTrackBar.Position:=mixerBoostTrackBar.Max-Round(mixerBoostSpin.Value*40/100);
+end;
 
 procedure TModernProfileEditorVolumeFrame.InitGUI(var InitData : TModernProfileEditorInitData);
 begin
@@ -93,6 +125,7 @@ begin
   NoFlicker(SoundVolumeFMRightEdit);
   NoFlicker(SoundVolumeCDLeftEdit);
   NoFlicker(SoundVolumeCDRightEdit);
+  NoFlicker(mixerBoostSpin);
 
   SoundVolumeLeftLabel1.Caption:=LanguageSetup.Left;
   SoundVolumeLeftLabel2.Caption:=LanguageSetup.Left;
@@ -109,6 +142,8 @@ begin
   SoundVolumeRightLabel6.Caption:=LanguageSetup.Right;
   SoundVolumeRightLabel7.Caption:=LanguageSetup.Right;
   SoundVolumeMasterLabel.Caption:=LanguageSetup.ProfileEditorSoundMasterVolume;
+  mixerBoostTitle.Caption:=LanguageSetup.ProfileEditorSoundMasterGain;
+  mixerBoostSpinLabel.Caption:=LanguageSetup.ProfileEditorSoundMasterGainPercent;
   SoundVolumeDisneyLabel.Caption:=LanguageSetup.ProfileEditorSoundMiscDisneySoundsSource;
   SoundVolumeSpeakerLabel.Caption:=LanguageSetup.ProfileEditorSoundMiscPCSpeaker;
   SoundVolumeGUSLabel.Caption:=LanguageSetup.ProfileEditorSoundGUS;
@@ -118,10 +153,22 @@ begin
 
   JustChanging:=False;
 
+  InitData.OnShowFrame:=ShowFrame;
   HelpContext:=ID_ProfileEditSoundVolume;
 end;
 
+procedure TModernProfileEditorVolumeFrame.ApplyKindControls;
+begin
+  mixerBoostGroupBox.Visible:=FTempGame.DosBoxKind=dbkPure;
+end;
+
+procedure TModernProfileEditorVolumeFrame.ShowFrame(Sender : TObject);
+begin
+  ApplyKindControls;
+end;
+
 procedure TModernProfileEditorVolumeFrame.SetGame(const Game: TGame; const LoadFromTemplate: Boolean);
+Var I : Integer;
 begin
   SoundVolumeMasterLeftEdit.Value:=Game.MixerVolumeMasterLeft;
   SoundVolumeMasterRightEdit.Value:=Game.MixerVolumeMasterRight;
@@ -138,12 +185,37 @@ begin
   SoundVolumeCDLeftEdit.Value:=Game.MixerVolumeCDLeft;
   SoundVolumeCDRightEdit.Value:=Game.MixerVolumeCDRight;
 
+  FTempGame.PureVolumeBoost:='';
+  ApplyKindControls;
+  JustChanging:=True;
+  try
+    If TryStrToInt(Trim(Game.PureVolumeBoost),I) and (I>=0) and (I<=200) then begin
+      mixerBoostTrackBar.Position:=mixerBoostTrackBar.Max-I;
+      SetBoostSpinFromTrack;
+    end else begin
+      mixerBoostSpin.Text:='';
+      mixerBoostTrackBar.Position:=mixerBoostTrackBar.Max-40;
+    end;
+  finally
+    JustChanging:=False;
+  end;
+
   SpinEditChange(self);
 end;
 
 procedure TModernProfileEditorVolumeFrame.SpinEditChange(Sender: TObject);
 begin
   If JustChanging then exit;
+  If Sender=mixerBoostSpin then begin
+    JustChanging:=True;
+    try
+      SetBoostTrackFromSpin;
+    finally
+      JustChanging:=False;
+    end;
+    FTempGame.PureVolumeBoost:=IntToStr(mixerBoostTrackBar.Position);
+    exit;
+  end;
   JustChanging:=True;
   try
     SoundVolumeMasterLeftEdit.Value:=Min(200,Max(0,SoundVolumeMasterLeftEdit.Value));
@@ -183,6 +255,16 @@ end;
 procedure TModernProfileEditorVolumeFrame.TrackBarChange(Sender: TObject);
 begin
   If JustChanging then exit;
+  If Sender=mixerBoostTrackBar then begin
+    JustChanging:=True;
+    try
+      SetBoostSpinFromTrack;
+    finally
+      JustChanging:=False;
+    end;
+    FTempGame.PureVolumeBoost:=IntToStr(mixerBoostTrackBar.Position);
+    exit;
+  end;
   JustChanging:=True;
   try
     SoundVolumeMasterLeftEdit.Value:=SoundVolumeMasterLeftTrackBar.Max-SoundVolumeMasterLeftTrackBar.Position;
@@ -220,6 +302,12 @@ begin
   Game.MixerVolumeFMRight:=SoundVolumeFMRightEdit.Value;
   Game.MixerVolumeCDLeft:=SoundVolumeCDLeftEdit.Value;
   Game.MixerVolumeCDRight:=SoundVolumeCDRightEdit.Value;
+  If Trim(FTempGame.PureVolumeBoost)<>'' then begin
+    If Trim(mixerBoostSpin.Text)='' then
+      Game.PureVolumeBoost:=''
+    else
+      Game.PureVolumeBoost:=IntToStr(mixerBoostTrackBar.Max-mixerBoostTrackBar.Position);
+  end;
 end;
 
 end.

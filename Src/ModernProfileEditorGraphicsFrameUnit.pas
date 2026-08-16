@@ -48,31 +48,25 @@ type
     rgScreenInactive: TRadioGroup;
     procedure PixelShaderComboBoxChange(Sender: TObject);
     procedure PixelShaderComboBoxKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure PixelShaderComboBoxKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ShaderPresetComboBoxChange(Sender: TObject);
     procedure ShaderPresetComboBoxKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure ShaderPresetComboBoxKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure VSyncComboBoxChange(Sender: TObject);
   private
     { Private-Deklarationen }
-    ProfileDOSBoxInstallation : PString;
+    FGame : TGame;
+    FTempGame : TGame;
     { DOSBox install key last used for shader UI (CustomDOSBoxDir / live pointer). }
     FShaderInstallKey : String;
-    LastPixelShader : String;
-    LastShaderPreset : String;
-    LastVSync : String;
-    LastRender : String;
-    LastVideoCard : String;
     FScaleConfOpt : String;
+    FScalePureConfOpt : String;
+    FShaderPureConfOpt : String;
     FRenderConfOpt : String;
     FRenderStagingConfOpt : String;
     FRenderXConfOpt : String;
     FVSyncStagingConfOpt : String;
     FVSyncStagingOldConfOpt : String;
     FVSyncXConfOpt : String;
-    VSyncComboBoxChanged : Boolean;
-    PixelShaderChanged :  Boolean;
-    ShaderPresetChanged : Boolean;
+    FVSyncPureConfOpt : String;
     FAllPixelShaders : TStringList;
     FAllPresets : TStringList;
     FBackendMaps : TDOSBoxShaderBackendMaps; { owns OpenGL + Direct3D maps }
@@ -86,6 +80,10 @@ type
     Function ActiveShaderMap : TStringList;
     Procedure FreeBackendMaps;
     Procedure ReloadPixelShaderList;
+    Procedure DiscoverAndApplyShaders;
+    Procedure ApplyPureShaders;
+    Procedure SelectComboValue(const Combo: TComboBox; const Value: String);
+    Function GetScaleIndexForValue(const Value: String): Integer;
     Procedure FillShaderListFromActiveMap;
     Procedure ApplyShaderControlsEnabled;
     Procedure ApplyPixelShaderFilter;
@@ -106,6 +104,7 @@ type
     Function NormalizeShaderDisplay(const S : String) : String;
     Function ShaderMapIndexOfDisplay(const Display : String) : Integer;
     Procedure ShowFrame(Sender : TObject);
+    Procedure Invalidate(Sender : TObject);
     Procedure RenderComboBoxChange(Sender : TObject);
   public
     { Public-Deklarationen }
@@ -128,6 +127,7 @@ uses Math, VistaToolsUnit, LanguageSetupUnit, CommonHelpers, CommonTools, PrgSet
 constructor TModernProfileEditorGraphicsFrame.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
   FAllPixelShaders:=TStringList.Create;
   FAllPresets:=TStringList.Create;
   FBackendMaps.OpenGL:=nil;
@@ -162,7 +162,7 @@ end;
 function TModernProfileEditorGraphicsFrame.ActiveShaderMap: TStringList;
 begin
   { Combo text is the conf output value (e.g. opengl, openglnb, direct3d). }
-  if not RenderSupportsShaders then
+  if (not RenderSupportsShaders) and (GetSelectedDosBoxKind<>dbkPure) then
     Result:=nil
   else if SameText(Trim(RenderComboBox.Text),'direct3d') then
     Result:=FBackendMaps.Direct3D
@@ -172,7 +172,7 @@ end;
 
 procedure TModernProfileEditorGraphicsFrame.ApplyShaderControlsEnabled;
 begin
-  if not RenderSupportsShaders then begin
+  if (not RenderSupportsShaders) and (GetSelectedDosBoxKind<>dbkPure) then begin
     PixelShaderComboBox.Enabled:=False;
     ShaderPresetComboBox.Enabled:=False;
   end else begin
@@ -208,6 +208,7 @@ Var St : TStringList;
     S : String;
 begin
   InitData.OnShowFrame:=ShowFrame;
+  InitData.OnInvalidate:=Invalidate;
 
   NoFlicker(WindowResolutionComboBox);
   NoFlicker(FullscreenResolutionComboBox);
@@ -278,7 +279,9 @@ begin
   FVSyncStagingConfOpt:=InitData.GameDB.ConfOpt.VSyncStaging;
   FVSyncStagingOldConfOpt:=InitData.GameDB.ConfOpt.VSyncStagingOld;
   FVSyncXConfOpt:=InitData.GameDB.ConfOpt.VSyncX;
-  St:=ValueToList(FRenderConfOpt,';,'); try RenderComboBox.Items.AddStrings(St); finally St.Free; end;
+  FVSyncPureConfOpt:=InitData.GameDB.ConfOpt.VSyncPure;
+  FScalePureConfOpt:=InitData.GameDB.ConfOpt.ScalePure;
+  FShaderPureConfOpt:=InitData.GameDB.ConfOpt.ShaderPure;
   RenderComboBox.OnChange:=RenderComboBoxChange;
   VideoCardLabel.Caption:=LanguageSetup.GameVideoCard;
   St:=ValueToList(InitData.GameDB.ConfOpt.Video,';,'); try VideoCardComboBox.Items.AddStrings(St); finally St.Free; end;
@@ -310,15 +313,11 @@ begin
   PixelShaderComboBox.Style:=csDropDown;
   PixelShaderComboBox.AutoComplete:=False;
   PixelShaderComboBox.OnKeyDown:=PixelShaderComboBoxKeyDown;
-  PixelShaderComboBox.OnKeyUp:=PixelShaderComboBoxKeyUp;
   ShaderPresetComboBox.Style:=csDropDown;
   ShaderPresetComboBox.AutoComplete:=False;
   ShaderPresetComboBox.OnChange:=ShaderPresetComboBoxChange;
   ShaderPresetComboBox.OnKeyDown:=ShaderPresetComboBoxKeyDown;
-  ShaderPresetComboBox.OnKeyUp:=ShaderPresetComboBoxKeyUp;
   ShaderPresetComboBox.Enabled:=False;
-
-  ProfileDOSBoxInstallation:=InitData.CurrentDOSBoxInstallation;
 
   AddDefaultValueHint(WindowResolutionComboBox);
   AddDefaultValueHint(FullscreenResolutionComboBox);
@@ -334,12 +333,11 @@ end;
 procedure TModernProfileEditorGraphicsFrame.PixelShaderComboBoxChange(Sender: TObject);
 begin
   if FFilteringPixelShaders then Exit;
-  { Blank or exact id from full list => user selection; otherwise filter only. }
+  { Blank or exact list id => selection (do not refilter — that clears the pick).
+    Otherwise treat as type-filter and rebuild dropdown. Empty restores full list. }
   if (Trim(PixelShaderComboBox.Text)='') or (FAllPixelShaders.IndexOf(PixelShaderComboBox.Text)>=0) then begin
-    PixelShaderChanged:=True;
-    { Presets are per-shader; changing shader invalidates the previous preset. }
-    LastShaderPreset:='';
-    ShaderPresetChanged:=True;
+    if Trim(PixelShaderComboBox.Text)='' then
+      ApplyPixelShaderFilter;
     RefreshPresetComboForCurrentShader(False);
   end else
     ApplyPixelShaderFilter;
@@ -365,37 +363,21 @@ end;
 
 procedure TModernProfileEditorGraphicsFrame.PixelShaderComboBoxKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  { Open list only for ASCII filter chars, before the character is applied
-    (matches open-with-mouse then type; avoids mouse hide). Do not open on
-    Backspace/Del/Ctrl+X. }
+  { Open list when typing filter chars. Filtering is OnChange only. }
   if FFilteringPixelShaders then Exit;
   if not PixelShaderIsAsciiFilterKey(Key,Shift) then Exit;
   if not PixelShaderComboBox.DroppedDown then
     PixelShaderComboBox.DroppedDown:=True;
 end;
 
-procedure TModernProfileEditorGraphicsFrame.PixelShaderComboBoxKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-begin
-  if FFilteringPixelShaders then Exit;
-  { Still refilter on delete keys (list already open or closed); just don't open. }
-  if Key in [VK_RETURN, VK_ESCAPE, VK_UP, VK_DOWN, VK_PRIOR, VK_NEXT, VK_TAB] then Exit;
-  if (Trim(PixelShaderComboBox.Text)='') or (FAllPixelShaders.IndexOf(PixelShaderComboBox.Text)>=0) then begin
-    PixelShaderChanged:=True;
-    LastShaderPreset:='';
-    ShaderPresetChanged:=True;
-    RefreshPresetComboForCurrentShader(False);
-    Exit;
-  end;
-  ApplyPixelShaderFilter;
-end;
-
 procedure TModernProfileEditorGraphicsFrame.ShaderPresetComboBoxChange(Sender: TObject);
 begin
   if FFilteringPresets then Exit;
   if not ShaderPresetComboBox.Enabled then Exit;
-  if (Trim(ShaderPresetComboBox.Text)='') or (FAllPresets.IndexOf(ShaderPresetComboBox.Text)>=0) then
-    ShaderPresetChanged:=True
-  else
+  if (Trim(ShaderPresetComboBox.Text)='') or (FAllPresets.IndexOf(ShaderPresetComboBox.Text)>=0) then begin
+    if Trim(ShaderPresetComboBox.Text)='' then
+      ApplyShaderPresetFilter;
+  end else
     ApplyShaderPresetFilter;
 end;
 
@@ -407,36 +389,25 @@ begin
     ShaderPresetComboBox.DroppedDown:=True;
 end;
 
-procedure TModernProfileEditorGraphicsFrame.ShaderPresetComboBoxKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-begin
-  if FFilteringPresets or (not ShaderPresetComboBox.Enabled) then Exit;
-  if Key in [VK_RETURN, VK_ESCAPE, VK_UP, VK_DOWN, VK_PRIOR, VK_NEXT, VK_TAB] then Exit;
-  if (Trim(ShaderPresetComboBox.Text)='') or (FAllPresets.IndexOf(ShaderPresetComboBox.Text)>=0) then begin
-    ShaderPresetChanged:=True;
-    Exit;
-  end;
-  ApplyShaderPresetFilter;
-end;
-
 function TModernProfileEditorGraphicsFrame.GetSelectedDosBoxKind: TDOSBoxKind;
 begin
-  Result:=DetermineDosBoxKind(GetDOSBoxDir, PrgSetup.BaseDir);
+  Result:=FTempGame.DosBoxKind;
 end;
 
 procedure TModernProfileEditorGraphicsFrame.VSyncComboBoxChange(Sender: TObject);
 begin
-  VSyncComboBoxChanged:=True;
 end;
 
 procedure TModernProfileEditorGraphicsFrame.ApplyVSyncControls;
 Var Kind: TDOSBoxKind;
     I: Integer;
-    S, Version, ListSrc: String;
-    ShowV, OldStaging: Boolean;
+    S, ListSrc: String;
+    ShowV: Boolean;
     St: TStringList;
+    OldChange: TNotifyEvent;
 begin
   Kind:=GetSelectedDosBoxKind;
-  ShowV:=Kind in [dbkStaging,dbkX];
+  ShowV:=Kind in [dbkStaging,dbkX,dbkPure];
   VSyncLabel.Visible:=ShowV;
   VSyncComboBox.Visible:=ShowV;
   VSyncComboBox.Enabled:=ShowV;
@@ -445,33 +416,29 @@ begin
     Exit;
   end;
 
-  Version:=CheckDOSBoxVersion(GetDOSBoxDir);
-  OldStaging:=(Kind=dbkStaging) and (
-    (Trim(Version)='') or (CompareDOSBoxVersion(Version,'0.83.0.0')<0));
-
   Case Kind of
     dbkStaging:
-      if OldStaging then ListSrc:=FVSyncStagingOldConfOpt else ListSrc:=FVSyncStagingConfOpt;
+      if FTempGame.IsOldStaging then ListSrc:=FVSyncStagingOldConfOpt else ListSrc:=FVSyncStagingConfOpt;
     dbkX:
       ListSrc:=FVSyncXConfOpt;
+    dbkPure:
+      ListSrc:=FVSyncPureConfOpt;
     else
       ListSrc:='';
   end;
 
-  St:=ValueToList(ListSrc,';,');
-  try
-    VSyncComboBox.Items.BeginUpdate;
-    try
-      VSyncComboBox.Items.Clear;
-      VSyncComboBox.Items.AddStrings(St);
-    finally
-      VSyncComboBox.Items.EndUpdate;
-    end;
-  finally
-    St.Free;
-  end;
+  S:='';
+  if VSyncComboBox.ItemIndex>=0 then
+    S:=Trim(VSyncComboBox.Items[VSyncComboBox.ItemIndex]);
 
-  S:=Trim(LastVSync);
+  OldChange:=VSyncComboBox.OnChange;
+  VSyncComboBox.OnChange:=nil;
+  St:=ValueToList(ListSrc,';,');
+  VSyncComboBox.Items.BeginUpdate;
+  VSyncComboBox.Items.Clear;
+  VSyncComboBox.Items.AddStrings(St);
+  St.Free;
+  VSyncComboBox.Items.EndUpdate;
   VSyncComboBox.ItemIndex:=-1;
   if S<>'' then
     for I:=0 to VSyncComboBox.Items.Count-1 do
@@ -479,9 +446,7 @@ begin
         VSyncComboBox.ItemIndex:=I;
         break;
       end;
-
-  VSyncComboBox.OnChange:=VSyncComboBoxChange;
-  VSyncComboBoxChanged:=False;
+  VSyncComboBox.OnChange:=OldChange;
 end;
 
 procedure EnableRadioGroupItem(const RG: TRadioGroup; const Index: Integer; const AEnabled: Boolean);
@@ -501,9 +466,21 @@ end;
 
 procedure TModernProfileEditorGraphicsFrame.ApplyInactiveControls;
 Var Kind: TDOSBoxKind;
+    ShowCtrl, Active: Boolean;
 begin
   Kind:=GetSelectedDosBoxKind;
-  rgScreenInactive.Visible:=Kind in [dbkStaging,dbkX];
+  { Staging/X: normal. Pure: visible but disabled. Classic/other: hidden. }
+  ShowCtrl:=Kind in [dbkStaging,dbkX,dbkPure];
+  Active:=Kind in [dbkStaging,dbkX];
+  rgScreenInactive.Visible:=ShowCtrl;
+  rgScreenInactive.Enabled:=Active;
+  if not ShowCtrl then Exit;
+  if not Active then begin
+    rgScreenInactive.ItemIndex:=-1;
+    rgScreenInactive.Font.Color:=clGrayText;
+    Exit;
+  end;
+  rgScreenInactive.Font.Color:=clWindowText;
   { X has no mute-on-inactive; only do-nothing / pause via priority. }
   EnableRadioGroupItem(rgScreenInactive,Ord(simMute),Kind<>dbkX);
   If (Kind=dbkX) and (rgScreenInactive.ItemIndex=Ord(simMute)) then
@@ -511,17 +488,43 @@ begin
 end;
 
 procedure TModernProfileEditorGraphicsFrame.ApplyScalerControls;
+Var Kind: TDOSBoxKind;
+    S, ListSrc: String;
+    St: TStringList;
+    I: Integer;
+    OldChange: TNotifyEvent;
 begin
-  If GetSelectedDosBoxKind=dbkStaging then begin
+  Kind:=GetSelectedDosBoxKind;
+  If Kind=dbkStaging then begin
     ScaleComboBox.Items.Clear;
     ScaleComboBox.Items.Add(LanguageSetup.GameScaleNotValidForStaging);
     ScaleComboBox.ItemIndex:=0;
     ScaleComboBox.Enabled:=False;
     ScaleLabel.Enabled:=False;
-  end else begin
-    ScaleComboBox.Enabled:=True;
-    ScaleLabel.Enabled:=True;
+    Exit;
   end;
+  S:='';
+  if ScaleComboBox.ItemIndex>=0 then
+    S:=Trim(ScaleComboBox.Items[ScaleComboBox.ItemIndex]);
+  if Kind=dbkPure then ListSrc:=FScalePureConfOpt else ListSrc:=FScaleConfOpt;
+  OldChange:=ScaleComboBox.OnChange;
+  ScaleComboBox.OnChange:=nil;
+  ScaleComboBox.Items.BeginUpdate;
+  ScaleComboBox.Items.Clear;
+  St:=ValueToList(ListSrc,';,');
+  ScaleComboBox.Items.AddStrings(St);
+  St.Free;
+  ScaleComboBox.Items.EndUpdate;
+  ScaleComboBox.ItemIndex:=-1;
+  if S<>'' then
+    for I:=0 to ScaleComboBox.Items.Count-1 do
+      if SameText(Trim(ScaleComboBox.Items[I]),S) then begin
+        ScaleComboBox.ItemIndex:=I;
+        break;
+      end;
+  ScaleComboBox.OnChange:=OldChange;
+  ScaleComboBox.Enabled:=True;
+  ScaleLabel.Enabled:=True;
 end;
 
 procedure TModernProfileEditorGraphicsFrame.ApplyFrameSkipControls;
@@ -540,6 +543,16 @@ Var St: TStringList;
     OldChange: TNotifyEvent;
 begin
   Kind:=GetSelectedDosBoxKind;
+  if Kind=dbkPure then begin
+    RenderComboBox.Items.Clear;
+    RenderComboBox.ItemIndex:=-1;
+    RenderComboBox.Enabled:=False;
+    RenderLabel.Enabled:=False;
+    Exit;
+  end;
+  RenderComboBox.Enabled:=True;
+  RenderLabel.Enabled:=True;
+
   If Trim(PreferredValue)<>'' then Want:=Trim(PreferredValue)
   else Want:=Trim(RenderComboBox.Text);
 
@@ -647,24 +660,19 @@ begin
 end;
 
 procedure TModernProfileEditorGraphicsFrame.ReloadPixelShaderList;
-Var Dir, Version: String;
+Var Dir: String;
     Kind: TDOSBoxKind;
 begin
   FreeBackendMaps;
   Dir:=GetDOSBoxDir;
   Kind:=GetSelectedDosBoxKind;
-  Version:=CheckDOSBoxVersion(Dir);
-  FBackendMaps:=GetDOSBoxShaders(Dir,Kind,Version);
+  FBackendMaps:=GetDOSBoxShaders(Dir,Kind,FTempGame.IsOldStaging);
   FillShaderListFromActiveMap;
 end;
 
-procedure TModernProfileEditorGraphicsFrame.RenderComboBoxChange(Sender: TObject);
+procedure TModernProfileEditorGraphicsFrame.DiscoverAndApplyShaders;
 begin
-  { Output backend changed → rebuild list from the matching map; drop selection. }
-  LastShaderPreset:='';
-  ShaderPresetChanged:=True;
-  PixelShaderChanged:=True;
-  FillShaderListFromActiveMap;
+  ReloadPixelShaderList;
 
   FFilteringPixelShaders:=True;
   try
@@ -682,14 +690,116 @@ begin
   finally
     FFilteringPixelShaders:=False;
   end;
-  RefreshPresetComboForCurrentShader(False);
+end;
+
+procedure TModernProfileEditorGraphicsFrame.ApplyPureShaders;
+Var St: TStringList;
+begin
+  St:=ValueToList(FShaderPureConfOpt,';,');
+  try
+    FAllPixelShaders.Clear;
+    FAllPixelShaders.AddStrings(St);
+    PixelShaderComboBox.Items.BeginUpdate;
+    try
+      PixelShaderComboBox.Items.Clear;
+      PixelShaderComboBox.Items.AddStrings(FAllPixelShaders);
+    finally
+      PixelShaderComboBox.Items.EndUpdate;
+    end;
+  finally
+    St.Free;
+  end;
+  ApplyShaderControlsEnabled;
+end;
+
+procedure TModernProfileEditorGraphicsFrame.SelectComboValue(const Combo: TComboBox; const Value: String);
+Var I: Integer;
+    S: String;
+begin
+  S:=Trim(Value);
+  Combo.ItemIndex:=-1;
+  Combo.Text:='';
+  if S='' then Exit;
+  for I:=0 to Combo.Items.Count-1 do
+    if SameText(Trim(Combo.Items[I]),S) then begin
+      Combo.ItemIndex:=I;
+      Exit;
+    end;
+end;
+
+function TModernProfileEditorGraphicsFrame.GetScaleIndexForValue(const Value: String): Integer;
+Var I: Integer;
+    S, Needle: String;
+begin
+  Result:=-1;
+  S:=Trim(Value);
+  if S='' then
+    Exit;
+
+  if GetSelectedDosBoxKind in [dbkStandard,dbkX] then begin
+    Needle:='('+S+')';
+    for I:=0 to ScaleComboBox.Items.Count-1 do
+      if Pos(ExtUpperCase(Needle),ExtUpperCase(ScaleComboBox.Items[I]))>0 then begin
+        Result:=I;
+        Exit;
+      end;
+  end else begin
+    for I:=0 to ScaleComboBox.Items.Count-1 do
+      if SameText(Trim(ScaleComboBox.Items[I]),S) then begin
+        Result:=I;
+        Exit;
+      end;
+  end;
+end;
+
+procedure TModernProfileEditorGraphicsFrame.RenderComboBoxChange(Sender: TObject);
+Var S: String;
+    MatchedShader: Boolean;
+begin
+  { Output backend changed → rebuild list from the matching map; try profile match. }
+  FillShaderListFromActiveMap;
+
+  MatchedShader:=False;
+  FFilteringPixelShaders:=True;
+  try
+    PixelShaderComboBox.Items.BeginUpdate;
+    try
+      PixelShaderComboBox.Items.Clear;
+      if RenderSupportsShaders then
+        PixelShaderComboBox.Items.AddStrings(FAllPixelShaders);
+    finally
+      PixelShaderComboBox.Items.EndUpdate;
+    end;
+    PixelShaderComboBox.ItemIndex:=-1;
+    PixelShaderComboBox.Text:='';
+    ApplyShaderControlsEnabled;
+
+    if Assigned(FGame) then begin
+      S:=NormalizeShaderDisplay(FGame.PixelShader);
+      if SameText(S,'none') then S:='';
+      if S<>'' then begin
+        SelectComboValue(PixelShaderComboBox,S);
+        MatchedShader:=PixelShaderComboBox.ItemIndex>=0;
+      end;
+    end;
+  finally
+    FFilteringPixelShaders:=False;
+  end;
+
+  if MatchedShader then begin
+    ShaderPresetComboBox.Text:=Trim(FGame.ShaderPreset);
+    RefreshPresetComboForCurrentShader(True);
+  end else
+    RefreshPresetComboForCurrentShader(False);
 end;
 
 procedure TModernProfileEditorGraphicsFrame.ApplyPixelShaderFilter;
 Var Filter, Item, Keep: String;
-    I: Integer;
+    I, OldSelStart, OldSelLength: Integer;
 begin
   Keep:=PixelShaderComboBox.Text;
+  OldSelStart:=PixelShaderComboBox.SelStart;
+  OldSelLength:=PixelShaderComboBox.SelLength;
   Filter:=Trim(ExtUpperCase(Keep));
   FFilteringPixelShaders:=True;
   try
@@ -704,12 +814,15 @@ begin
     finally
       PixelShaderComboBox.Items.EndUpdate;
     end;
-    { Clear/Text reset puts caret at 0; restore filter text and caret at end.
-      Do not toggle DroppedDown here — that hides the mouse; KeyDown opens the
-      list before the character is applied instead. }
+    { Do not auto-select an item or force caret to EOL — that breaks
+      left/right arrow and mid-line Backspace after refilter. }
+    PixelShaderComboBox.ItemIndex:=-1;
     PixelShaderComboBox.Text:=Keep;
-    PixelShaderComboBox.SelStart:=Length(Keep);
-    PixelShaderComboBox.SelLength:=0;
+    if OldSelStart>Length(Keep) then OldSelStart:=Length(Keep);
+    if OldSelStart+OldSelLength>Length(Keep) then
+      OldSelLength:=Length(Keep)-OldSelStart;
+    PixelShaderComboBox.SelStart:=OldSelStart;
+    PixelShaderComboBox.SelLength:=OldSelLength;
   finally
     FFilteringPixelShaders:=False;
   end;
@@ -717,9 +830,11 @@ end;
 
 procedure TModernProfileEditorGraphicsFrame.ApplyShaderPresetFilter;
 Var Filter, Item, Keep: String;
-    I: Integer;
+    I, OldSelStart, OldSelLength: Integer;
 begin
   Keep:=ShaderPresetComboBox.Text;
+  OldSelStart:=ShaderPresetComboBox.SelStart;
+  OldSelLength:=ShaderPresetComboBox.SelLength;
   Filter:=Trim(ExtUpperCase(Keep));
   FFilteringPresets:=True;
   try
@@ -734,9 +849,13 @@ begin
     finally
       ShaderPresetComboBox.Items.EndUpdate;
     end;
+    ShaderPresetComboBox.ItemIndex:=-1;
     ShaderPresetComboBox.Text:=Keep;
-    ShaderPresetComboBox.SelStart:=Length(Keep);
-    ShaderPresetComboBox.SelLength:=0;
+    if OldSelStart>Length(Keep) then OldSelStart:=Length(Keep);
+    if OldSelStart+OldSelLength>Length(Keep) then
+      OldSelLength:=Length(Keep)-OldSelStart;
+    ShaderPresetComboBox.SelStart:=OldSelStart;
+    ShaderPresetComboBox.SelLength:=OldSelLength;
   finally
     FFilteringPresets:=False;
   end;
@@ -748,6 +867,10 @@ Var Idx, I: Integer;
     Kind: TDOSBoxKind;
     Want: String;
 begin
+  Want:='';
+  if ApplyLastPreset then
+    Want:=Trim(ShaderPresetComboBox.Text);
+
   FAllPresets.Clear;
   FFilteringPresets:=True;
   try
@@ -760,12 +883,19 @@ begin
     ShaderPresetComboBox.ItemIndex:=-1;
     ShaderPresetComboBox.Text:='';
 
-    if not RenderSupportsShaders then begin
+    Kind:=GetSelectedDosBoxKind;
+    if Kind=dbkPure then begin
+      ShaderPresetComboBox.Enabled:=False;
+      ShaderPresetLabel.Enabled:=False;
+      Exit;
+    end;
+    ShaderPresetLabel.Enabled:=True;
+
+    if (not RenderSupportsShaders) and (Kind<>dbkPure) then begin
       ShaderPresetComboBox.Enabled:=False;
       Exit;
     end;
 
-    Kind:=GetSelectedDosBoxKind;
     if Kind<>dbkStaging then begin
       ShaderPresetComboBox.Enabled:=False;
       Exit;
@@ -792,15 +922,12 @@ begin
       ShaderPresetComboBox.Items.EndUpdate;
     end;
 
-    if ApplyLastPreset then begin
-      Want:=Trim(LastShaderPreset);
-      if Want<>'' then
-        for I:=0 to ShaderPresetComboBox.Items.Count-1 do
-          if SameText(ShaderPresetComboBox.Items[I],Want) then begin
-            ShaderPresetComboBox.ItemIndex:=I;
-            break;
-          end;
-    end;
+    if ApplyLastPreset and (Want<>'') then
+      for I:=0 to ShaderPresetComboBox.Items.Count-1 do
+        if SameText(ShaderPresetComboBox.Items[I],Want) then begin
+          ShaderPresetComboBox.ItemIndex:=I;
+          break;
+        end;
   finally
     FFilteringPresets:=False;
   end;
@@ -809,8 +936,8 @@ end;
 procedure TModernProfileEditorGraphicsFrame.SetGame(const Game: TGame; const LoadFromTemplate: Boolean);
 Var I : Integer;
     S,T : String;
-    St : TStringList;
 begin
+  FGame:=Game;
   S:=Trim(ExtUpperCase(Game.WindowResolution));
   WindowResolutionComboBox.ItemIndex:=0;
   For I:=0 to WindowResolutionComboBox.Items.Count-1 do If Trim(ExtUpperCase(WindowResolutionComboBox.Items[I]))=S then begin
@@ -838,6 +965,10 @@ begin
   GlideEmulationPortComboBox.Visible:=PrgSetup.AllowGlideSettings;
   GlideEmulationLFBLabel.Visible:=PrgSetup.AllowGlideSettings;
   GlideEmulationLFBComboBox.Visible:=PrgSetup.AllowGlideSettings;
+  GlideEmulationPortLabel.Enabled:=not (GetSelectedDosBoxKind in [dbkStaging,dbkPure]);
+  GlideEmulationPortComboBox.Enabled:=GlideEmulationPortLabel.Enabled;
+  GlideEmulationLFBLabel.Enabled:=not (GetSelectedDosBoxKind in [dbkStaging,dbkPure]);
+  GlideEmulationLFBComboBox.Enabled:=GlideEmulationLFBLabel.Enabled;
   If PrgSetup.AllowGlideSettings then begin
     S:=Trim(ExtUpperCase(Game.GlideEmulation));
     If (S='0') or (S='FALSE') then S:=LanguageSetup.Off;
@@ -859,20 +990,19 @@ begin
     end;
   end;
 
-  { Store profile values first; finalize render/video before any shader UI. }
-  LastRender:=Trim(Game.Render);
-  LastVideoCard:=Trim(Game.VideoCard);
   FShaderInstallKey:=Trim(Game.CustomDOSBoxDir);
-  LastPixelShader:=NormalizeShaderDisplay(Game.PixelShader);
-  if SameText(LastPixelShader,'none') then LastPixelShader:='';
-  LastShaderPreset:=Trim(Game.ShaderPreset);
-  LastVSync:=Trim(Game.VSync);
 
-  ApplyRenderList(LastRender);
-  ApplyXMachineTypesToVideoList(LastVideoCard);
+  ApplyRenderList(Trim(Game.Render));
+  ApplyXMachineTypesToVideoList(Trim(Game.VideoCard));
 
+  S:=NormalizeShaderDisplay(Game.PixelShader);
+  if SameText(S,'none') then S:='';
   PixelShaderComboBox.Items.Clear;
+  PixelShaderComboBox.ItemIndex:=-1;
+  PixelShaderComboBox.Text:=S;
   ShaderPresetComboBox.Items.Clear;
+  ShaderPresetComboBox.ItemIndex:=-1;
+  ShaderPresetComboBox.Text:=Trim(Game.ShaderPreset);
 
   VGASettingsGroupBox.Visible:=PrgSetup.AllowVGAChipsetSettings;
   If PrgSetup.AllowVGAChipsetSettings then begin
@@ -891,34 +1021,7 @@ begin
     end;
   end;  
 
-  ScaleComboBox.Items.BeginUpdate;
-  try
-    ScaleComboBox.Items.Clear;
-    St:=ValueToList(FScaleConfOpt,';,');
-    try
-      ScaleComboBox.Items.AddStrings(St);
-    finally
-      St.Free;
-    end;
-  finally
-    ScaleComboBox.Items.EndUpdate;
-  end;
-  S:=Trim(ExtUpperCase(Game.Scale));
-  ScaleComboBox.ItemIndex:=0;
-  For I:=0 to ScaleComboBox.Items.Count-1 do begin
-    T:=Trim(ExtUpperCase(ScaleComboBox.Items[I]));
-    If Pos('(',T)=0 then continue;
-    T:=Copy(T,Pos('(',T)+1,MaxInt);
-    If Pos(')',T)=0 then continue;
-    T:=Copy(T,1,Pos(')',T)-1);
-    If Trim(T)=S then begin ScaleComboBox.ItemIndex:=I; break; end;
-  end;
-  ScaleComboBox.Enabled:=True;
-  ScaleLabel.Enabled:=True;
-  ApplyScalerControls;
   FrameSkipEdit.Value:=Game.FrameSkip;
-  ApplyFrameSkipControls;
-  ApplyInactiveControls;
 
   TextModeLinesRadioGroup.Visible:=PrgSetup.AllowTextModeLineChange;
   If PrgSetup.AllowTextModeLineChange then Case Game.TextModeLines of
@@ -927,18 +1030,27 @@ begin
     else TextModeLinesRadioGroup.ItemIndex:=0;
   end;
 
-  PixelShaderChanged:=LoadFromTemplate;
-  ShaderPresetChanged:=LoadFromTemplate;
 end;
 
 function TModernProfileEditorGraphicsFrame.GetDOSBoxDir: String;
 begin
-  result:=ResolveDOSBoxDir(ProfileDOSBoxInstallation^);
+  Result:=FTempGame.GetDBInstallPath;
+end;
+
+procedure TModernProfileEditorGraphicsFrame.Invalidate(Sender : TObject);
+begin
+  rgScreenInactive.ItemIndex:=-1;
+  VSyncComboBox.ItemIndex:=-1;
+  RenderComboBox.ItemIndex:=-1;
+  ScaleComboBox.ItemIndex:=-1;
+  PixelShaderComboBox.ItemIndex:=-1;
+  PixelShaderComboBox.Text:='';
+  ShaderPresetComboBox.ItemIndex:=-1;
+  ShaderPresetComboBox.Text:='';
 end;
 
 procedure TModernProfileEditorGraphicsFrame.ShowFrame(Sender : TObject);
-Var I : Integer;
-    S, WantRender: String;
+Var S, WantRender, WantShader: String;
 begin
   { Always visible (setup AllowPixelShader checkbox is forced on + disabled). }
   PixelShaderLabel.Visible:=True;
@@ -947,67 +1059,67 @@ begin
   ShaderPresetComboBox.Visible:=True;
 
   { Install changed while editor open → drop selection; inventory is install-specific. }
-  if not SameText(Trim(ProfileDOSBoxInstallation^),FShaderInstallKey) then begin
-    LastPixelShader:='';
-    LastShaderPreset:='';
-    FShaderInstallKey:=Trim(ProfileDOSBoxInstallation^);
-  end else if PixelShaderComboBox.Items.Count>0 then
-    LastPixelShader:=PixelShaderComboBox.Text;
+  if not SameText(Trim(FTempGame.CustomDOSBoxDir),FShaderInstallKey) then begin
+    PixelShaderComboBox.ItemIndex:=-1;
+    PixelShaderComboBox.Text:='';
+    ShaderPresetComboBox.ItemIndex:=-1;
+    ShaderPresetComboBox.Text:='';
+    FShaderInstallKey:=Trim(FTempGame.CustomDOSBoxDir);
+  end;
 
   { 1) Finalize render (and other kind UI) before any shader/preset work. }
-  if Trim(RenderComboBox.Text)<>'' then WantRender:=Trim(RenderComboBox.Text)
-  else WantRender:=LastRender;
+  WantRender:=Trim(RenderComboBox.Text);
   ApplyRenderList(WantRender);
-  if Trim(RenderComboBox.Text)<>'' then LastRender:=Trim(RenderComboBox.Text);
+  if GetSelectedDosBoxKind<>dbkPure then begin
+    if (RenderComboBox.ItemIndex<0) or (Trim(RenderComboBox.Text)='') then begin
+      if Assigned(FGame) then
+        ApplyRenderList(Trim(FGame.Render));
+      if (RenderComboBox.ItemIndex<0) or (Trim(RenderComboBox.Text)='') then
+        ApplyRenderList('opengl');
+    end;
+  end;
 
   if Trim(VideoCardComboBox.Text)<>'' then begin
     S:=Trim(VideoCardComboBox.Text);
     If Pos('(',S)>0 then S:=Trim(Copy(S,1,Pos('(',S)-1));
-    LastVideoCard:=S;
-  end;
-  ApplyXMachineTypesToVideoList(LastVideoCard);
+    ApplyXMachineTypesToVideoList(S);
+  end else
+    ApplyXMachineTypesToVideoList('');
   ApplyVSyncControls;
   ApplyInactiveControls;
   ApplyScalerControls;
   ApplyFrameSkipControls;
 
-  { 2) Shader inventory and restore against the finalized render backend. }
-  ReloadPixelShaderList;
-
-  FFilteringPixelShaders:=True;
-  try
-    PixelShaderComboBox.Items.BeginUpdate;
-    try
-      PixelShaderComboBox.Items.Clear;
-      if RenderSupportsShaders then
-        PixelShaderComboBox.Items.AddStrings(FAllPixelShaders);
-    finally
-      PixelShaderComboBox.Items.EndUpdate;
-    end;
-
-    PixelShaderComboBox.ItemIndex:=-1;
-    PixelShaderComboBox.Text:='';
-    if (not RenderSupportsShaders) or (FAllPixelShaders.Count=0) then begin
-      ApplyShaderControlsEnabled;
-    end else begin
-      ApplyShaderControlsEnabled;
-      S:=Trim(ExtUpperCase(LastPixelShader));
-      if S<>'' then
-        For I:=0 to PixelShaderComboBox.Items.Count-1 do
-          If Trim(ExtUpperCase(PixelShaderComboBox.Items[I]))=S then begin
-            PixelShaderComboBox.ItemIndex:=I;
-            break;
-          end;
-    end;
-  finally
-    FFilteringPixelShaders:=False;
-  end;
+  { 2) Shader inventory, then restore live combo text against whatever list was loaded. }
+  WantShader:=Trim(PixelShaderComboBox.Text);
+  if GetSelectedDosBoxKind=dbkPure then
+    ApplyPureShaders
+  else
+    DiscoverAndApplyShaders;
+  SelectComboValue(PixelShaderComboBox,WantShader);
 
   RefreshPresetComboForCurrentShader(True);
 
-  { Invalid conf values show blank for display only — not dirty. }
-  PixelShaderChanged:=False;
-  ShaderPresetChanged:=False;
+  if Assigned(FGame) and (FTempGame.DosBoxKind=FGame.DosBoxKind) then begin
+    if VSyncComboBox.Visible and (VSyncComboBox.ItemIndex<0) then
+      SelectComboValue(VSyncComboBox,FGame.VSync);
+    if rgScreenInactive.Enabled and (rgScreenInactive.ItemIndex<0)
+       and (FGame.OnScreenInactive>=Ord(simDoNothing))
+       and (FGame.OnScreenInactive<=Ord(simPause))
+       and not ((FTempGame.DosBoxKind=dbkX) and (FGame.OnScreenInactive=Ord(simMute))) then
+      rgScreenInactive.ItemIndex:=FGame.OnScreenInactive;
+    if ScaleComboBox.Enabled and (ScaleComboBox.ItemIndex<0) then
+      ScaleComboBox.ItemIndex:=GetScaleIndexForValue(FGame.Scale);
+    { Empty WantShader is a valid restore (user clear / none) — do not refill from profile. }
+    if (WantShader<>'') and (PixelShaderComboBox.ItemIndex<0) then begin
+      S:=NormalizeShaderDisplay(FGame.PixelShader);
+      if SameText(S,'none') then S:='';
+      SelectComboValue(PixelShaderComboBox,S);
+    end;
+    if ShaderPresetComboBox.Enabled and (ShaderPresetComboBox.ItemIndex<0)
+       and (Trim(PixelShaderComboBox.Text)<>'') then
+      SelectComboValue(ShaderPresetComboBox,FGame.ShaderPreset);
+  end;
 end;
 
 procedure TModernProfileEditorGraphicsFrame.GetGame(const Game: TGame);
@@ -1019,15 +1131,9 @@ begin
   Game.StartFullscreen:=StartFullscreenCheckBox.Checked;
   Game.UseDoublebuffering:=DoublebufferingCheckBox.Checked;
   Game.AspectCorrection:=KeepAspectRatioCheckBox.Checked;
-  If VSyncComboBox.Visible and VSyncComboBoxChanged then begin
-    If VSyncComboBox.ItemIndex>=0 then
-      S:=Trim(VSyncComboBox.Items[VSyncComboBox.ItemIndex])
-    else
-      S:='';
-    If S<>LastVSync then
-      Game.VSync:=S;
-  end;
-  If rgScreenInactive.Visible then
+  If VSyncComboBox.Visible and (VSyncComboBox.ItemIndex>=0) then
+    Game.VSync:=Trim(VSyncComboBox.Items[VSyncComboBox.ItemIndex]);
+  If rgScreenInactive.Enabled and (rgScreenInactive.ItemIndex>=0) then
     Game.OnScreenInactive:=rgScreenInactive.ItemIndex;
   If PrgSetup.AllowGlideSettings then begin
     S:=GlideEmulationComboBox.Items[GlideEmulationComboBox.ItemIndex];
@@ -1037,33 +1143,35 @@ begin
     Game.GlidePort:=GlideEmulationPortComboBox.Text;
     Game.GlideLFB:=GlideEmulationLFBComboBox.Items[max(0,GlideEmulationLFBComboBox.ItemIndex)];
   end;
-  Game.Render:=RenderComboBox.Text;
+  If RenderComboBox.ItemIndex>=0 then
+    Game.Render:=RenderComboBox.Text;
   S:=Trim(VideoCardComboBox.Text);
   If Pos('(',S)<>0 then S:=Trim(Copy(S,1,Pos('(',S)-1));
   Game.VideoCard:=S;
 
-  { Install changed since shader UI was last synced → force unset (do not re-apply
-    dirty values from the previous install). DOSBox frame GetGame already ran. }
+  { Install changed since shader UI was last synced → force unset.
+    DOSBox frame GetGame already ran. }
   if not SameText(Trim(Game.CustomDOSBoxDir),FShaderInstallKey) then begin
     Game.PixelShader:='';
     Game.ShaderPreset:='';
   end else begin
-    { Only write when user changed the control. Blank from invalid match is not dirty. }
-    If PixelShaderChanged then begin
-      if Trim(PixelShaderComboBox.Text)='' then
-        Game.PixelShader:=''
-      else if FAllPixelShaders.IndexOf(PixelShaderComboBox.Text)>=0 then
-        Game.PixelShader:=PixelShaderComboBox.Text;
-      { Shader change always clears preset unless user also set a valid new one
-        (ShaderPresetChanged + non-empty combo below). }
-      if not ShaderPresetChanged then
-        Game.ShaderPreset:='';
-    end;
-    If ShaderPresetChanged then begin
-      if Trim(ShaderPresetComboBox.Text)='' then
+    S:=Trim(PixelShaderComboBox.Text);
+    if (S='') or SameText(S,'none') then
+      Game.PixelShader:=''
+    else if FAllPixelShaders.IndexOf(S)>=0 then
+      Game.PixelShader:=S
+    else
+      Game.PixelShader:='';
+
+    { Preset only when a valid non-empty shader was saved. }
+    if Game.PixelShader='' then
+      Game.ShaderPreset:=''
+    else begin
+      S:=Trim(ShaderPresetComboBox.Text);
+      if S='' then
         Game.ShaderPreset:=''
-      else if FAllPresets.IndexOf(ShaderPresetComboBox.Text)>=0 then
-        Game.ShaderPreset:=ShaderPresetComboBox.Text
+      else if FAllPresets.IndexOf(S)>=0 then
+        Game.ShaderPreset:=S
       else
         Game.ShaderPreset:='';
     end;
@@ -1074,12 +1182,17 @@ begin
     try Game.VideoRam:=StrToInt(VideoRamComboBox.Text); except Game.VideoRam:=2048; end;
   end;  
 
-  If ScaleComboBox.Enabled then begin
-    S:=ScaleComboBox.Text;
-    If Pos('(',S)=0 then Game.Scale:='' else begin
-      S:=Copy(S,Pos('(',S)+1,MaxInt);
-      If Pos(')',S)=0 then Game.Scale:=''  else Game.Scale:=Copy(S,1,Pos(')',S)-1);
-    end;
+  If ScaleComboBox.Enabled and (ScaleComboBox.ItemIndex>=0) then begin
+    if GetSelectedDosBoxKind in [dbkStandard,dbkX] then begin
+      S:=ScaleComboBox.Text;
+      if Pos('(',S)=0 then Game.Scale:='' else begin
+        S:=Copy(S,Pos('(',S)+1,MaxInt);
+        if Pos(')',S)=0 then Game.Scale:='' else Game.Scale:=Copy(S,1,Pos(')',S)-1);
+      end;
+    end else if Trim(ScaleComboBox.Text)<>'' then
+      Game.Scale:=Trim(ScaleComboBox.Text)
+    else
+      Game.Scale:='';
   end;
   If FrameSkipEdit.Enabled then
     Game.FrameSkip:=Min(100,Max(0,FrameSkipEdit.Value));

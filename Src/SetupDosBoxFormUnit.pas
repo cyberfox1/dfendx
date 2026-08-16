@@ -264,11 +264,17 @@ begin
 end;
 
 Function KindAtDir(const Dir : String; const Want : TDOSBoxKind) : Boolean;
-Var Base : String;
+Var Version, AbsDir : String;
 begin
-  Base:='';
-  If PrgSetup<>nil then Base:=PrgSetup.BaseDir;
-  Result:=(Trim(Dir)<>'') and (DetermineDosBoxKind(Dir,Base)=Want);
+  Result:=False;
+  if Trim(Dir)='' then Exit;
+  AbsDir:=Dir;
+  if PrgSetup<>nil then begin
+    AbsDir:=MakeAbsPath(Dir,PrgSetup.BaseDir);
+    AbsDir:=IncludeTrailingPathDelimiter(AbsDir);
+  end else
+    AbsDir:=IncludeTrailingPathDelimiter(AbsDir);
+  Result:=(DetermineDosBoxKind(AbsDir,Version)=Want);
 end;
 
 Function LocalAppDataRoot : String;

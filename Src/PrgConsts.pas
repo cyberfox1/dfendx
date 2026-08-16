@@ -2,7 +2,7 @@
 interface
 
 type
-  TDOSBoxKind = (dbkNone, dbkStandard, dbkX, dbkStaging, dbkUnknown);
+  TDOSBoxKind = (dbkNone, dbkStandard, dbkX, dbkStaging, dbkPure, dbkUnknown);
   { Media extension type aliases — reserved for future use }
 
   { Staging [sdl] inactive-window behaviour (profile + UI radio). }
@@ -27,6 +27,9 @@ type
     llCritical = 3
   );
 
+  { Kind of TGameDB / TGameDBH instance (user profiles vs templates vs autosetup). }
+  TGameDBType = (gbtUserDB, gbtAutoSetupDB, gbtTemplateDB);
+
 const
   { INI string values for TLogLevel / PrgSetup.LogLevel. }
   LogLevelOff = 'OFF';
@@ -37,7 +40,15 @@ const
   DosBoxKindStandard = 'standard';
   DosBoxKindX        = 'x';
   DosBoxKindStaging  = 'staging';
+  DosBoxKindPure     = 'pure';
   DosBoxKindUnknown  = 'unknown';
+
+  { User-facing labels (e.g. Format(SetupFormDOSBoxDetected, [...])). }
+  DosBoxKindDisplayStandard = 'DOSBox Classic';
+  DosBoxKindDisplayX        = 'DOSBox-X';
+  DosBoxKindDisplayStaging  = 'DOSBox Staging';
+  DosBoxKindDisplayPure     = 'DOSBox Pure';
+  DosBoxKindDisplayUnknown  = 'Unknown';
 
   { DOSBox Staging shader resource subdirs (under resource parents). }
   DosBoxStagingShadersDirLegacy = 'glshaders'; { empty version or < 0.83.0.0 }

@@ -61,6 +61,7 @@ Function StrToFloatEx(S : String) : Double;
 Function ValueToList(Value : String; const Divider : String = ';') : TStringList;
 Function ListToValue(const St : TStrings; Divider : Char =';') : String;
 Function IsValueInList(const List, Value : String) : Boolean;
+Function IsValidConfOptValue(const List, Value : String) : Boolean;
 Procedure Divide(const Data : String; Var Name, Value : String);
 
 Function StringToStringList(S : String) : TStringList;
@@ -84,6 +85,16 @@ Function ShortName(const LongName : String) : String;
 Function RemoveIllegalFileNameChars(const Name : String) : String;
 
 Function GetFileVersionEx(const AFileName: string) : Cardinal;
+
+type
+  TExeInfoFields = record
+    BinaryProductVersion: string;
+    FileDescription: string;
+    ProductName: string;
+    ProductVersion: string;
+  end;
+
+Function GetExeInfoFields(const ExePath: string): TExeInfoFields;
 Function VersionToInt(Version : String) : Integer;
 Function MainVersionStringToInt(S : String) : Integer;
 
@@ -201,6 +212,30 @@ begin
   try
     For I:=0 to St.Count-1 do
       If Trim(ExtUpperCase(St[I]))=S then begin result:=True; exit; end;
+  finally
+    St.Free;
+  end;
+end;
+
+Function IsValidConfOptValue(const List, Value : String) : Boolean;
+Var St : TStringList;
+    I : Integer;
+    S, Entry, Tok : String;
+begin
+  Result:=False;
+  S:=Trim(Value);
+  if S='' then Exit;
+  St:=ValueToList(List,';,');
+  try
+    for I:=0 to St.Count-1 do begin
+      Entry:=Trim(St[I]);
+      if SameText(Entry,S) then begin Result:=True; Exit; end;
+      if Pos('(',Entry)>0 then begin
+        Tok:=Copy(Entry,Pos('(',Entry)+1,MaxInt);
+        if Pos(')',Tok)>0 then Tok:=Trim(Copy(Tok,1,Pos(')',Tok)-1));
+        if SameText(Tok,S) then begin Result:=True; Exit; end;
+      end;
+    end;
   finally
     St.Free;
   end;
@@ -559,6 +594,87 @@ begin
     finally
       FreeMem(VerBuf);
     end;
+  end;
+end;
+
+function QueryStringFileInfoBlock(Buffer: Pointer; const LangCharset, InfoKey: string): String;
+var
+  Query: string;
+  Value: Pointer;
+  Len: UINT;
+begin
+  Result := '';
+  Query := '\StringFileInfo\' + LangCharset + '\' + InfoKey;
+  if VerQueryValue(Buffer, PChar(Query), Value, Len) and (Value <> nil) and (Len > SizeOf(Char)) then
+    Result := PChar(Value);
+end;
+
+Function GetExeInfoFields(const ExePath: string): TExeInfoFields;
+const
+  FallbackBlocks: array[0..3] of string = (
+    '040904B0', '040904E4', '000004B0', '04090000'
+  );
+var
+  FileName, LangCharset, FD, PN, PV: string;
+  Size, Handle: DWORD;
+  Buffer: Pointer;
+  Len: UINT;
+  Trans: PLongWord;
+  FI: PVSFixedFileInfo;
+  Blocks: TStringList;
+  I: Integer;
+begin
+  Result.BinaryProductVersion := '';
+  Result.FileDescription := '';
+  Result.ProductName := '';
+  Result.ProductVersion := '';
+  if Trim(ExePath) = '' then
+    Exit;
+  FileName := ExePath;
+  UniqueString(FileName);
+  Size := GetFileVersionInfoSize(PChar(FileName), Handle);
+  if Size = 0 then
+    Exit;
+  GetMem(Buffer, Size);
+  try
+    if not GetFileVersionInfo(PChar(FileName), Handle, Size, Buffer) then
+      Exit;
+
+    if VerQueryValue(Buffer, '\', Pointer(FI), Len) and (FI <> nil) and
+       (Len >= SizeOf(TVSFixedFileInfo)) then
+      Result.BinaryProductVersion := Format('%d.%d.%d.%d',
+        [HiWord(FI.dwProductVersionMS), LoWord(FI.dwProductVersionMS),
+         HiWord(FI.dwProductVersionLS), LoWord(FI.dwProductVersionLS)]);
+
+    Blocks := TStringList.Create;
+    try
+      LangCharset := '';
+      if VerQueryValue(Buffer, '\VarFileInfo\Translation', Pointer(Trans), Len) and
+         (Trans <> nil) and (Len >= SizeOf(LongWord)) then
+        LangCharset := IntToHex(LoWord(Trans^), 4) + IntToHex(HiWord(Trans^), 4);
+      if LangCharset <> '' then
+        Blocks.Add(LangCharset);
+      for I := Low(FallbackBlocks) to High(FallbackBlocks) do
+        Blocks.Add(FallbackBlocks[I]);
+
+      for I := 0 to Blocks.Count - 1 do
+      begin
+        FD := QueryStringFileInfoBlock(Buffer, Blocks[I], 'FileDescription');
+        PN := QueryStringFileInfoBlock(Buffer, Blocks[I], 'ProductName');
+        PV := QueryStringFileInfoBlock(Buffer, Blocks[I], 'ProductVersion');
+        if (FD <> '') or (PN <> '') or (PV <> '') then
+        begin
+          Result.FileDescription := FD;
+          Result.ProductName := PN;
+          Result.ProductVersion := PV;
+          Break;
+        end;
+      end;
+    finally
+      Blocks.Free;
+    end;
+  finally
+    FreeMem(Buffer);
   end;
 end;
 

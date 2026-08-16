@@ -15,6 +15,7 @@
 - **DOSBox (standard):** https://www.dosbox.com/ — `dosbox-standard.*`
 - **DOSBox-X:** https://dosbox-x.com/ — `dosbox-x.*`
 - **DOSBox Staging:** https://dosbox-staging.github.io/ — `dosbox-staging.*`
+- **DOSBox Pure:** https://github.com/schellingb/dosbox-pure-unleashed — `dosbox-pure.*`
 
 ## eXoDOS-related UI icon
 

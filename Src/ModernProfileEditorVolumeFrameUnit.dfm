@@ -7,155 +7,155 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
   object SoundVolumeLeftLabel1: TLabel
     Left = 16
     Top = 157
-    Width = 23
-    Height = 13
+    Width = 27
+    Height = 15
     Caption = 'Links'
   end
   object SoundVolumeRightLabel1: TLabel
     Left = 80
     Top = 157
-    Width = 33
-    Height = 13
+    Width = 35
+    Height = 15
     Caption = 'Rechts'
   end
   object SoundVolumeMasterLabel: TLabel
     Left = 16
     Top = 12
-    Width = 33
-    Height = 13
+    Width = 36
+    Height = 15
     Caption = 'Master'
   end
   object SoundVolumeDisneyLabel: TLabel
     Left = 160
     Top = 12
-    Width = 103
-    Height = 13
+    Width = 113
+    Height = 15
     Caption = 'Disney Sound System'
   end
   object SoundVolumeSpeakerLabel: TLabel
     Left = 304
     Top = 12
-    Width = 80
-    Height = 13
+    Width = 84
+    Height = 15
     Caption = 'Internal Speaker'
   end
   object SoundVolumeGUSLabel: TLabel
     Left = 16
     Top = 236
-    Width = 20
-    Height = 13
+    Width = 22
+    Height = 15
     Caption = 'GUS'
   end
   object SoundVolumeSBLabel: TLabel
     Left = 160
     Top = 236
-    Width = 63
-    Height = 13
+    Width = 69
+    Height = 15
     Caption = 'SoundBlaster'
   end
   object SoundVolumeFMLabel: TLabel
     Left = 304
     Top = 236
-    Width = 14
-    Height = 13
+    Width = 17
+    Height = 15
     Caption = 'FM'
   end
   object SoundVolumeLeftLabel2: TLabel
     Left = 160
     Top = 157
-    Width = 23
-    Height = 13
+    Width = 27
+    Height = 15
     Caption = 'Links'
   end
   object SoundVolumeRightLabel2: TLabel
     Left = 224
     Top = 157
-    Width = 33
-    Height = 13
+    Width = 35
+    Height = 15
     Caption = 'Rechts'
   end
   object SoundVolumeLeftLabel3: TLabel
     Left = 304
     Top = 157
-    Width = 23
-    Height = 13
+    Width = 27
+    Height = 15
     Caption = 'Links'
   end
   object SoundVolumeRightLabel3: TLabel
     Left = 368
     Top = 157
-    Width = 33
-    Height = 13
+    Width = 35
+    Height = 15
     Caption = 'Rechts'
   end
   object SoundVolumeLeftLabel4: TLabel
     Left = 16
     Top = 381
-    Width = 23
-    Height = 13
+    Width = 27
+    Height = 15
     Caption = 'Links'
   end
   object SoundVolumeRightLabel4: TLabel
     Left = 80
     Top = 381
-    Width = 33
-    Height = 13
+    Width = 35
+    Height = 15
     Caption = 'Rechts'
   end
   object SoundVolumeLeftLabel5: TLabel
     Left = 160
     Top = 381
-    Width = 23
-    Height = 13
+    Width = 27
+    Height = 15
     Caption = 'Links'
   end
   object SoundVolumeRightLabel5: TLabel
     Left = 224
     Top = 381
-    Width = 33
-    Height = 13
+    Width = 35
+    Height = 15
     Caption = 'Rechts'
   end
   object SoundVolumeLeftLabel6: TLabel
     Left = 304
     Top = 381
-    Width = 23
-    Height = 13
+    Width = 27
+    Height = 15
     Caption = 'Links'
   end
   object SoundVolumeRightLabel6: TLabel
     Left = 368
     Top = 381
-    Width = 33
-    Height = 13
+    Width = 35
+    Height = 15
     Caption = 'Rechts'
   end
   object SoundVolumeCDLabel: TLabel
     Left = 448
     Top = 236
-    Width = 14
-    Height = 13
+    Width = 16
+    Height = 15
     Caption = 'CD'
   end
   object SoundVolumeLeftLabel7: TLabel
     Left = 448
     Top = 381
-    Width = 23
-    Height = 13
+    Width = 27
+    Height = 15
     Caption = 'Links'
   end
   object SoundVolumeRightLabel7: TLabel
     Left = 512
     Top = 381
-    Width = 33
-    Height = 13
+    Width = 35
+    Height = 15
     Caption = 'Rechts'
   end
   object SoundVolumeMasterLeftEdit: TSpinEdit
     Left = 16
     Top = 176
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 1
@@ -166,7 +166,7 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     Left = 80
     Top = 176
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 3
@@ -177,7 +177,7 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     Left = 160
     Top = 176
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 5
@@ -188,7 +188,7 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     Left = 224
     Top = 176
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 7
@@ -199,7 +199,7 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     Left = 304
     Top = 176
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 9
@@ -210,7 +210,7 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     Left = 368
     Top = 176
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 11
@@ -221,7 +221,7 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     Left = 16
     Top = 399
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 13
@@ -232,7 +232,7 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     Left = 80
     Top = 399
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 15
@@ -243,7 +243,7 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     Left = 160
     Top = 400
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 17
@@ -254,7 +254,7 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     Left = 224
     Top = 400
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 19
@@ -265,7 +265,7 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     Left = 304
     Top = 400
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 21
@@ -276,7 +276,7 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     Left = 368
     Top = 400
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 23
@@ -443,7 +443,7 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     Left = 448
     Top = 400
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 24
@@ -454,7 +454,7 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     Left = 512
     Top = 400
     Width = 49
-    Height = 22
+    Height = 24
     MaxValue = 200
     MinValue = 0
     TabOrder = 25
@@ -486,5 +486,51 @@ object ModernProfileEditorVolumeFrame: TModernProfileEditorVolumeFrame
     TabOrder = 27
     TickMarks = tmBoth
     OnChange = TrackBarChange
+  end
+  object mixerBoostGroupBox: TPanel
+    Left = 442
+    Top = 0
+    Width = 119
+    Height = 209
+    BevelOuter = bvNone
+    TabOrder = 28
+    object mixerBoostSpinLabel: TLabel
+      Left = 28
+      Top = 157
+      Width = 40
+      Height = 15
+      Caption = 'Percent'
+    end
+    object mixerBoostTitle: TLabel
+      Left = 19
+      Top = 12
+      Width = 63
+      Height = 15
+      Caption = 'Master Gain'
+    end
+    object mixerBoostTrackBar: TTrackBar
+      Left = 34
+      Top = 31
+      Width = 45
+      Height = 114
+      Max = 200
+      Orientation = trVertical
+      PageSize = 5
+      Frequency = 10
+      TabOrder = 0
+      TickMarks = tmBoth
+      OnChange = TrackBarChange
+    end
+    object mixerBoostSpin: TSpinEdit
+      Left = 30
+      Top = 176
+      Width = 49
+      Height = 24
+      MaxValue = 500
+      MinValue = 0
+      TabOrder = 1
+      Value = 0
+      OnChange = SpinEditChange
+    end
   end
 end

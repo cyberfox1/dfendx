@@ -61,10 +61,19 @@ object ModernProfileEditorDOSBoxFrame: TModernProfileEditorDOSBoxFrame
     Proportional = True
     Stretch = True
   end
+  object lbInstallChangeWarning: TLabel
+    Left = 39
+    Top = 233
+    Width = 589
+    Height = 15
+    Caption = 
+      'Warning: changing an install may cause unsaved changes on other ' +
+      'pages to be lost'
+  end
   object CloseDOSBoxOnExitCheckBox: TCheckBox
     Left = 16
     Top = 80
-    Width = 273
+    Width = 305
     Height = 15
     Anchors = [akLeft, akTop, akRight]
     Caption = 'CloseDOSBoxOnExitCheckBox'
@@ -258,7 +267,7 @@ object ModernProfileEditorDOSBoxFrame: TModernProfileEditorDOSBoxFrame
   object RunAsAdminCheckBox: TCheckBox
     Left = 16
     Top = 105
-    Width = 273
+    Width = 305
     Height = 17
     Anchors = [akLeft, akTop, akRight]
     Caption = 'RunAsAdminCheckBox'

@@ -100,14 +100,14 @@ begin
 
   St.Add(LanguageSetup.StatisticsNumberProfiles+': '+IntToStr(GameDB.Count));
 
-  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,False);
+  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,gbtTemplateDB,False);
   try
     St.Add(LanguageSetup.StatisticsNumberTemplates+': '+IntToStr(TemplateDB.Count));
   finally
     TemplateDB.Free;
   end;
 
-  TemplateDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,False);
+  TemplateDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,gbtAutoSetupDB,False);
   try
     St.Add(LanguageSetup.StatisticsNumberAutoSetupTemplates+': '+IntToStr(TemplateDB.Count));
   finally

@@ -162,7 +162,7 @@ end;
 
 procedure TFirstRunWizardForm.SetDOSBoxWarningLanguage;
 Var I : Integer;
-    DOSBoxVersion,S : String;
+    DOSBoxVersion,S,AbsDir : String;
 begin
   if DOSBoxWarningType=wtNoDir then begin
     DOSBoxWarningButton.Caption:=LanguageSetup.FirstRunWizardDOSBoxDirNoDOSBoxShort;
@@ -170,7 +170,9 @@ begin
   end;
 
   If DOSBoxWarningType=wtOld then begin
-      DOSBoxVersion:=CheckDOSBoxVersion(DosBoxEdit.Text);
+      AbsDir:=MakeAbsPath(DosBoxEdit.Text,PrgSetup.BaseDir);
+      AbsDir:=IncludeTrailingPathDelimiter(AbsDir);
+      DetermineDosBoxKind(AbsDir,DOSBoxVersion);
       DOSBoxWarningButton.Caption:=LanguageSetup.MessageDOSBoxOutdatedShort;
       S:=FloatToStr(MinSupportedDOSBoxVersion);
       For I:=1 to length(S) do If S[I]=',' then S[I]:='.';
@@ -281,20 +283,21 @@ begin
 end;
 
 procedure TFirstRunWizardForm.DOSBoxEditChange(Sender: TObject);
-Var S,T,DOSBoxVersion : String;
+Var S,T,DOSBoxVersion,AbsDir : String;
     Kind : TDOSBoxKind;
 begin
   DOSBoxWarningButton.Visible:=False;
   PortableOKButton.Visible:=False;
 
   { Accept standard (dosbox.exe), DOSBox-X (dosbox-x.exe), and Staging — not only DOSBOX.EXE. }
-  Kind:=DetermineDosBoxKind(DosBoxEdit.Text,PrgSetup.BaseDir);
+  AbsDir:=MakeAbsPath(DosBoxEdit.Text,PrgSetup.BaseDir);
+  AbsDir:=IncludeTrailingPathDelimiter(AbsDir);
+  Kind:=DetermineDosBoxKind(AbsDir,DOSBoxVersion);
   If Kind in [dbkNone,dbkUnknown] then begin
     DOSBoxWarningButton.Visible:=True;
     DOSBoxWarningType:=wtNoDir;
     SetDOSBoxWarningLanguage;
   end else begin
-    DOSBoxVersion:=CheckDOSBoxVersion(DosBoxEdit.Text);
     DOSBoxWarningButton.Visible:=OldDOSBoxVersion(DOSBoxVersion);
     If DOSBoxWarningButton.Visible then begin
       DOSBoxWarningType:=wtOld;

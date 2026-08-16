@@ -12,20 +12,12 @@ function IsDosZipHybridExe(const FileName: String): Boolean;
 
 { Normalize PE ProductVersion e.g. "0, 83, 0, 0" → "0.83.0.0". }
 function NormalizeProductVersionString(const Raw: String): String;
-function GetExeProductVersion(const ExePath: String): String;
-{ ProductVersion of first dosbox*.exe under DOSBoxPath, normalized. }
-function GetDOSBoxVersionFromProductVersion(const DOSBoxPath: String): String;
-{ Prefer PE ProductVersion; fall back to README/manual .txt scrape.
-  Path: DOSBox install directory (caller resolves install index → path). }
-function CheckDOSBoxVersion(const Path: String): String;
 
 { Numeric multi-part compare of normalized (or dotted) versions.
   Missing parts count as 0. Returns -1 if A<B, 0 if equal, 1 if A>B.
   Example: CompareDOSBoxVersion('1.2','0.8.2.3') = 1. }
 function CompareDOSBoxVersion(const VersionA, VersionB: String): Integer;
 
-function FindManual(const Path: String): TStringList;
-function GetVersionFromDOSBoxReadmeFile(const FileName: String): String;
 { Appends integer parts as Pointer-sized integers into Parts (TList of Integer). }
 procedure ParseVersionParts(const Version: String; Parts: TList);
 
@@ -45,10 +37,6 @@ function StagingMapPriority(const Priority: string): string;
   Bare integer / "fixed N" → "N"; "max" → "max".
   "auto" and other unmapped forms → '' (caller keeps classic cycles=). }
 function StagingMapCpuCycles(const Cycles: string): string;
-
-{ Map mididevice only when profile value is default (or empty) → "auto".
-  Any other selection is returned unchanged. }
-function StagingMapMidiDevice(const Device: string): string;
 
 { Profile PC speaker on → "impulse"; off → "none". }
 function StagingMapPCSpeaker(const Enabled: Boolean): string;
@@ -194,173 +182,6 @@ begin
     Result := '';
 end;
 
-function GetExeProductVersion(const ExePath: String): String;
-var
-  Size, Handle: DWORD;
-  Buffer: Pointer;
-  Len: UINT;
-  Value: Pointer;
-  Trans: PLongWord;
-  LangCharset, Query: String;
-  FileName: String;
-begin
-  Result := '';
-  FileName := ExePath;
-  UniqueString(FileName);
-  Size := GetFileVersionInfoSize(PChar(FileName), Handle);
-  if Size = 0 then
-    Exit;
-  GetMem(Buffer, Size);
-  try
-    if not GetFileVersionInfo(PChar(FileName), Handle, Size, Buffer) then
-      Exit;
-    if not VerQueryValue(Buffer, '\VarFileInfo\Translation', Pointer(Trans), Len) then
-      Exit;
-    if (Trans = nil) or (Len < SizeOf(LongWord)) then
-      Exit;
-    LangCharset := IntToHex(LoWord(Trans^), 4) + IntToHex(HiWord(Trans^), 4);
-    Query := '\StringFileInfo\' + LangCharset + '\ProductVersion';
-    if VerQueryValue(Buffer, PChar(Query), Value, Len) and (Value <> nil) then
-      Result := PChar(Value);
-  finally
-    FreeMem(Buffer);
-  end;
-end;
-
-function GetDOSBoxVersionFromProductVersion(const DOSBoxPath: String): String;
-var
-  AbsDir, ExeName: String;
-  SR: TSearchRec;
-  Found: Boolean;
-begin
-  Result := '';
-  AbsDir := IncludeTrailingPathDelimiter(DOSBoxPath);
-  if not DirectoryExists(AbsDir) then
-    Exit;
-
-  Found := False;
-  ExeName := '';
-  if FindFirst(AbsDir + 'dosbox*.exe', faAnyFile, SR) = 0 then
-  try
-    repeat
-      if (SR.Attr and faDirectory) = 0 then begin
-        ExeName := SR.Name;
-        Found := True;
-        Break;
-      end;
-    until FindNext(SR) <> 0;
-  finally
-    SysUtils.FindClose(SR);
-  end;
-  if not Found then
-    Exit;
-
-  Result := NormalizeProductVersionString(GetExeProductVersion(AbsDir + ExeName));
-end;
-
-function FindManual(const Path: String): TStringList;
-var
-  Rec: TSearchRec;
-  I: Integer;
-  S: String;
-begin
-  Result := TStringList.Create;
-  I := FindFirst(Path + '*.txt', faAnyFile, Rec);
-  try
-    while I = 0 do begin
-      S := Trim(ExtUpperCase(Rec.Name));
-      if (S = 'README.TXT') or ((Pos('MANUAL', S) > 0) and (Pos('DOSBOX', S) > 0)) then
-        Result.AddObject(Rec.Name, TObject(DateTimeToFileDate(Rec.TimeStamp)));
-      I := FindNext(Rec);
-    end;
-  finally
-    SysUtils.FindClose(Rec);
-  end;
-end;
-
-function GetVersionFromDOSBoxReadmeFile(const FileName: String): String;
-var
-  S: String;
-  St: TStringList;
-  I: Integer;
-  B: Boolean;
-begin
-  Result := '';
-  S := '';
-  St := TStringList.Create;
-  try
-    try
-      St.LoadFromFile(FileName);
-    except
-      Exit;
-    end;
-    for I := 0 to St.Count - 1 do
-      if Trim(St[I]) <> '' then begin
-        S := St[I];
-        Break;
-      end;
-  finally
-    St.Free;
-  end;
-
-  B := True;
-  for I := 1 to Length(S) do
-    if ((S[I] >= '0') and (S[I] <= '9')) or (S[I] = '.') then begin
-      if S[I] = '.' then begin
-        if B then
-          B := False
-        else
-          Continue;
-      end;
-      Result := Result + S[I];
-    end;
-
-  B := False;
-  for I := 1 to Length(Result) do
-    if (Result[I] >= '0') and (Result[I] <= '9') then begin
-      B := True;
-      Break;
-    end;
-  if not B then
-    Result := '';
-end;
-
-function CheckDOSBoxVersion(const Path: String): String;
-var
-  DOSBoxPath: String;
-  I, J, Date: Integer;
-  FileNames: TStringList;
-begin
-  Result := '';
-  if Trim(Path) = '' then
-    Exit;
-
-  DOSBoxPath := IncludeTrailingPathDelimiter(ExpandFileName(Path));
-
-  Result := GetDOSBoxVersionFromProductVersion(DOSBoxPath);
-  if Result <> '' then
-    Exit;
-
-  FileNames := FindManual(DOSBoxPath);
-  try
-    while FileNames.Count > 0 do begin
-      Date := Integer(FileNames.Objects[0]);
-      J := 0;
-      for I := 1 to FileNames.Count - 1 do
-        if Integer(FileNames.Objects[I]) > Date then begin
-          Date := Integer(FileNames.Objects[I]);
-          J := I;
-        end;
-      Result := GetVersionFromDOSBoxReadmeFile(DOSBoxPath + FileNames[J]);
-      if Result <> '' then
-        Exit;
-      FileNames.Delete(J);
-    end;
-  finally
-    FileNames.Free;
-  end;
-end;
-
 procedure ParseVersionParts(const Version: String; Parts: TList);
 var
   S, Part: String;
@@ -487,17 +308,6 @@ begin
     if TryStrToInt(Rest, N) then
       Result := IntToStr(N);
   end;
-end;
-
-function StagingMapMidiDevice(const Device: string): string;
-var
-  S: string;
-begin
-  S := Trim(Device);
-  if (S = '') or (ExtUpperCase(S) = 'DEFAULT') then
-    Result := 'auto'
-  else
-    Result := S;
 end;
 
 function StagingMapPCSpeaker(const Enabled: Boolean): string;

@@ -20,15 +20,22 @@ var MinimizedAtDOSBoxStart : Boolean = False;
 
 implementation
 
-uses Winapi.Windows, SysUtils, ShellAPI, Forms, Dialogs, ShlObj, Math,
+uses Winapi.Windows, SysUtils, ShellAPI, Forms, Dialogs, ShlObj, Math, System.IOUtils,
      CommonHelpers, CommonTools, PrgSetupUnit, PrgConsts, LanguageSetupUnit, GameDBToolsUnit,
      GameDBToolsHelpers, GameDBHelpers, ZipManagerUnit, ScreensaverControlUnit, FullscreenInfoFormUnit,
      DOSBoxCountUnit, DOSBoxShortNameUnit, RunPrgManagerUnit,
      SelectCDDriveToMountFormUnit, SelectCDDriveToMountByDataFormUnit, System.UITypes,
      FileNameConvertor, DOSBoxTempUnit, WindowsFileWarningFormUnit, MIDITools,
      HistoryUnit, DOSBoxUnitHelpers, DosBoxHelpers, BassMedia, ExoDOSHelpers,
-     DOSBoxShadersHelpers, LoggingUnit;
-                                                                  
+     DOSBoxShadersHelpers, LoggingUnit, DosBoxConfUnit;
+
+Procedure AppendCustomSettingsToConf(const Dest: TStrings; const Custom: String); forward;
+Procedure AppendPureCustomSettingsToCfg(const Cfg: TStrings; const Custom: String); forward;
+Function ParsePureCustomSettingLine(const Line: String; out Key, Val: String): Boolean; forward;
+Procedure GeneratePureMidiCfg(const Game: TGame; const Cfg: TStrings; const WorkDir: String); forward;
+Procedure GeneratePureGraphicsCfg(const Game: TGame; const Cfg: TStrings); forward;
+
+
 var SpeedTestSt : TStringList = nil;
     LastSpeedTestStep : String = '';
     LastSpeedTestStep2 : String = '';
@@ -123,6 +130,7 @@ var
   Found: Boolean;
 begin
   LogInfo('DOSBox conf path: '+ConfPath);
+  if (Game<>nil) and (Game.DosBoxKind=dbkPure) then exit;
   if Game<>nil then
     LogInfo('Profile shaders: PixelShader="'+Game.PixelShader+
       '" ShaderPreset="'+Game.ShaderPreset+
@@ -858,11 +866,8 @@ begin
   result:=True;
 
   DOSBoxNr:=GetDOSBoxNr(Game);
-  If DOSBoxNr>=0 then
-    S:=CheckDOSBoxVersion(PrgSetup.DOSBoxSettings[DOSBoxNr].DosBoxDir)
-  else
-    S:=CheckDOSBoxVersion(ResolveDOSBoxDir(Game.CustomDOSBoxDir));
   If DOSBoxNr<0 then DOSBoxNr:=0; { settings still from primary install when path is bare }
+  S:=PrgSetup.DOSBoxSettings[DOSBoxNr].DosBoxVersion;
   S:=ShortDOSBoxVersion(S);
   If S=''
     then DOSBoxVersion:=MinSupportedDOSBoxVersion
@@ -887,54 +892,9 @@ begin
   { Keyboard layout }
 
   SpeedTestInfo('Adding keyboard settings to [autoexec] section of DOSBox conf file');
-
-  T:=Trim(ExtUpperCase(Game.KeyboardLayout));
-  If (T='') or (T='DEFAULT') then begin
-    T:=Trim(ExtUpperCase(PrgSetup.DOSBoxSettings[DOSBoxNr].KeyboardLayout));
-    If (T='') or (T='DEFAULT') then
-      If Game.DosBoxKind in [dbkStaging,dbkX] then T:='auto' else T:=LanguageSetup.GameKeyboardLayoutDefault;
-  end;
-  If Pos('(',T)>0 then begin
-    S:=Copy(T,Pos('(',T)+1,MaxInt);
-    If Pos(')',S)>0 then begin S:=Trim(Copy(S,1,Pos(')',S)-1)); If S<>'' then T:=S; end;
-  end;
-
-  S:=Trim(ExtUpperCase(Game.Codepage));
-  If (S='') or (S='DEFAULT') then begin
-    S:=Trim(ExtUpperCase(PrgSetup.DOSBoxSettings[DOSBoxNr].Codepage));
-    If (S='') or (S='DEFAULT') then S:=LanguageSetup.GameKeyboardCodepageDefault;
-  end;
-  If Pos('(',S)>0 then begin
-    S:=Copy(S,1,Pos('(',S)-1);
-  end;
-
-  If ExtUpperCase(T)='NONE' then T:='none'; {DOSBox keyb accepts GR and gr but not NONE}
-
-  If (ExtUpperCase(T)='AUTO') and not (Game.DosBoxKind in [dbkStaging,dbkX]) then begin
-    T:=Trim(ExtUpperCase(PrgSetup.DOSBoxSettings[DOSBoxNr].KeyboardLayout));
-    If (T='') or (T='DEFAULT') then T:=LanguageSetup.GameKeyboardLayoutDefault;
-    If Pos('(',T)>0 then begin
-      U:=Copy(T,Pos('(',T)+1,MaxInt);
-      If Pos(')',U)>0 then begin U:=Trim(Copy(U,1,Pos(')',U)-1)); If U<>'' then T:=U; end;
-    end;
-  end;
-
-  { Staging/X: layout/country only via [dos]; never autoexec keyb (default or explicit). }
-  If not (Game.DosBoxKind in [dbkStaging,dbkX]) then
-    If ExtUpperCase(T)<>'AUTO' then
-      St.Add('keyb '+T+' '+S{+' > nul'}); {no "> nul" to display possible error message if layout and codepage do not match}
-
-  { Reported DOS version: Staging/X use [dos] ver= in BuildConfFile; classic keeps autoexec. }
-
+  GenerateAutoExecKeyboardConf(Game,St,DOSBoxNr);
   SpeedTestInfo('Adding reported DOS version settings to [autoexec] section of DOSBox conf file');
-
-  If not (Game.DosBoxKind in [dbkStaging,dbkX]) then begin
-    S:=Trim(ExtUpperCase(Game.ReportedDOSVersion));
-    If (S<>'') and (S<>'DEFAULT') and (S<>'AUTO') then begin
-      If Pos('.',S)<>0 then begin T:=Trim(Copy(S,Pos('.',S)+1,MaxInt)); S:=Trim(Copy(S,1,Pos('.',S)-1)); end else begin T:=''; end;
-      St.Add('ver set '+S+' '+T);
-    end;
-  end;
+  GenerateAutoExecDOSVerConf(Game,St);
 
   { Text mode lines }
 
@@ -957,7 +917,9 @@ begin
 
   SpeedTestInfo('Adding mount commands to [autoexec] section of DOSBox conf file');
 
-  FreeDriveLetters:='---DEFGHIJKLMNOPQRSTUVWXY-';
+  { A–C and Z already reserved. Also skip letters commonly pre-mounted by forks
+    (e.g. Staging resources/drives/y) so free-letter mounts do not collide. }
+  FreeDriveLetters:='---DEFGHIJKLMNOPQRSTUVWX--';
   SpecialMountedCDDrives:=''; {CD drives mounted by ASK, NUMBER, LABEL, FOLDER or FILE -> for AutoMountCDs to avoid double mounting}
   if not Game.AutoexecOverrideMount then begin
     For I:=0 to 9 do begin
@@ -970,23 +932,42 @@ begin
     end;
     If Game.AutoMountCDs then AutoMountCDs(St,Game,DOSBoxVersion,FreeDriveLetters,SpecialMountedCDDrives,BuildForArchivePackage);
   end;
+  U:='';
+  If GameExeIsUnderExoDOS(MakeAbsPath(Game.GameExe,PrgSetup.BaseDir),PrgSetup.ExoDOSDir) then begin
+    S:=IncludeTrailingPathDelimiter(PrgDir)+BinFolder;
+    If DirectoryExists(S) then begin
+      For I:=Length(FreeDriveLetters) downto 1 do
+        If FreeDriveLetters[I]<>'-' then begin
+          U:=FreeDriveLetters[I];
+          FreeDriveLetters[I]:='-';
+          break;
+        end;
+      If U<>'' then
+        St.Add('mount '+U+' "'+UnmapDrive(ShortName(IncludeTrailingPathDelimiter(S)),ptMount)+'"');
+    end;
+  end;
 
   { Mixer }
 
   SpeedTestInfo('Adding mixer settings to [autoexec] section of DOSBox conf file');
 
   SetVolume('MASTER',Game.MixerVolumeMasterLeft,Game.MixerVolumeMasterRight);
-  SetVolume('DISNEY',Game.MixerVolumeDisneyLeft,Game.MixerVolumeDisneyRight);
-  SetVolume('SPKR',Game.MixerVolumeSpeakerLeft,Game.MixerVolumeSpeakerRight);
-  SetVolume('GUS',Game.MixerVolumeGUSLeft,Game.MixerVolumeGUSRight);
-  SetVolume('SB',Game.MixerVolumeSBLeft,Game.MixerVolumeSBRight);
-  SetVolume('FM',Game.MixerVolumeFMLeft,Game.MixerVolumeFMRight);
-  SetVolume('CDAUDIO',Game.MixerVolumeCDLeft,Game.MixerVolumeCDRight);
-  { Staging: MT-32 level via mixer channel (no [mt32] gain key). }
-  If (Game.DosBoxKind=dbkStaging) and SameText(Trim(Game.MIDIDevice),'mt32') then begin
-    If TryStrToInt(Trim(Game.MIDIDeviceGainValue),I) then begin
-      If I<0 then I:=0 else If I>1000 then I:=1000;
-      St.Add('mixer MT32 '+IntToStr(I)+' /NOSHOW');
+  if Game.DosBoxKind<>dbkPure then begin
+    SetVolume('DISNEY',Game.MixerVolumeDisneyLeft,Game.MixerVolumeDisneyRight);
+    If Game.IsNewStaging then begin
+      SetVolume('PCSPEAKER',Game.MixerVolumeSpeakerLeft,Game.MixerVolumeSpeakerRight);
+      SetVolume('OPL',Game.MixerVolumeFMLeft,Game.MixerVolumeFMRight);
+    end else begin
+      SetVolume('SPKR',Game.MixerVolumeSpeakerLeft,Game.MixerVolumeSpeakerRight);
+      SetVolume('FM',Game.MixerVolumeFMLeft,Game.MixerVolumeFMRight);
+    end;
+    SetVolume('GUS',Game.MixerVolumeGUSLeft,Game.MixerVolumeGUSRight);
+    SetVolume('SB',Game.MixerVolumeSBLeft,Game.MixerVolumeSBRight);
+    SetVolume('CDAUDIO',Game.MixerVolumeCDLeft,Game.MixerVolumeCDRight);
+    { Staging: MT-32 level via mixer channel (no [mt32] gain key). }
+    If Game.IsStaging and Game.MIDIDeviceIs('mt32') then begin
+      If Game.GetValidMidiGain(I) then
+        St.Add('mixer MT32 '+IntToStr(I)+' /NOSHOW');
     end;
   end;
 
@@ -1020,6 +1001,8 @@ begin
     If MouseCommands<>'' then St.Add(UsePath+'ctmouse '+MouseCommands);
     If UnMount<>'' then St.Add(UnMount);
   end;
+  If U<>'' then
+    St.Add('SET PATH='+U+':\;Z:\');
 
   { User defined Autoexec }
 
@@ -1090,30 +1073,18 @@ begin
   end;
 end;
 
-Function ProfileShaderSelected(const Game : TGame) : Boolean;
-Var S : String;
-begin
-  { Conf gen only: profile string present and not "none". No filesystem checks. }
-  If not PrgSetup.AllowPixelShader then begin result:=False; exit; end;
-  S:=Trim(Game.PixelShader);
-  result:=(S<>'') and (ExtUpperCase(S)<>'NONE');
-end;
-
 Function BuildConfFile(const Game : TGame; const RunSetup : Boolean; const WarnIfNotReachable : Boolean; const RunExtraFile : Integer; const DeleteOnExit : TStringList; const BuildForArchivePackage : Boolean) : TStringList;
 Var St : TStringList;
-    S,T,OutputVal,ShaderVal,DOSBoxVersionStr,CapturePath : String;
+    S,T,DOSBoxVersionStr,CapturePath,MidiDev : String;
     DOSBoxNr : Integer;
     DOSBoxVersion : Double;
     I : Integer;
-    ShaderActive, IsStaging, IsOldStaging, IsNewStaging : Boolean;
+    IsStaging, IsOldStaging, IsNewStaging, IsPure : Boolean;
 begin
   SpeedTestInfo('Check DOSBox version');
   DOSBoxNr:=GetDOSBoxNr(Game);
-  If DOSBoxNr>=0 then
-    S:=CheckDOSBoxVersion(PrgSetup.DOSBoxSettings[DOSBoxNr].DosBoxDir)
-  else
-    S:=CheckDOSBoxVersion(ResolveDOSBoxDir(Game.CustomDOSBoxDir));
   If DOSBoxNr<0 then DOSBoxNr:=0; { settings still from primary install when path is bare }
+  S:=PrgSetup.DOSBoxSettings[DOSBoxNr].DosBoxVersion;
   DOSBoxVersionStr:=S;
   S:=ShortDOSBoxVersion(S);
   If S=''
@@ -1124,106 +1095,12 @@ begin
   SpeedTestInfo('Build [sdl] section of DOSBox conf file');
   result:=TStringList.Create;
 
-  OutputVal:=Trim(Game.Render);
-  If OutputVal='' then OutputVal:='opengl';
-  ShaderActive:=ProfileShaderSelected(Game);
-  ShaderVal:=Trim(Game.PixelShader);
-  IsStaging:=Game.DosBoxKind=dbkStaging;
-  { Staging install empty version or <0.83 (see TDOSBoxSetting.IsOldStaging). }
-  IsOldStaging:=IsStaging and PrgSetup.DOSBoxSettings[DOSBoxNr].IsOldStaging;
-  IsNewStaging:=IsStaging and not IsOldStaging;
+  IsStaging:=Game.IsStaging;
+  IsPure:=Game.IsPure;
+  IsOldStaging:=Game.IsOldStaging;
+  IsNewStaging:=Game.IsNewStaging;
 
-  result.Add('[sdl]');
-  result.Add('fullscreen='+BoolToStr(Game.StartFullscreen));
-  { Staging (any): fulldouble/usescancodes never valid. }
-  If not IsStaging then
-    result.Add('fulldouble='+BoolToStr(Game.UseDoublebuffering));
-  { Staging 0.83+: fullresolution removed → fullscreen_mode; windowresolution
-    deprecated → window_size. Old Staging / non-Staging keep classic keys. }
-  If IsNewStaging then begin
-    S:=Trim(ExtLowerCase(Game.FullscreenResolution));
-    If (S='forced-borderless') or (S='forced_borderless') then
-      result.Add('fullscreen_mode=forced-borderless')
-    else
-      { desktop/original/0x0/WxH: no 0.83 resolution-mode equivalent. }
-      result.Add('fullscreen_mode=standard');
-    S:=Trim(Game.WindowResolution);
-    If (S='') or SameText(S,'original') then
-      result.Add('window_size=default')
-    else
-      result.Add('window_size='+S);
-  end else begin
-    result.Add('fullresolution='+Game.FullscreenResolution);
-    result.Add('windowresolution='+Game.WindowResolution);
-  end;
-  { Staging: window_position; X: windowposition. Trial placement keys. }
-  If IsStaging then
-    result.Add('window_position=auto')
-  else If Game.DosBoxKind=dbkX then
-    result.Add('windowposition=centered');
-  result.Add('output='+OutputVal);
-  { Staging: autolock is invalid; mapped to [mouse] mouse_capture below. }
-  If not IsStaging then
-    result.Add('autolock='+BoolToStr(Game.AutoLockMouse));
-  { Staging: sensitivity moved to [mouse] mouse_sensitivity. }
-  If not IsStaging then
-    result.Add('sensitivity='+IntToStr(Game.MouseSensitivity));
-  { Staging (any): usescancodes invalid. }
-  If not IsStaging then
-    result.Add('usescancodes='+BoolToStr(Game.UseScanCodes));
-  { waitonerror/priority: still valid on old Staging; removed only on 0.83+. }
-  If not IsNewStaging then begin
-    result.Add('waitonerror='+BoolToStr(PrgSetup.DOSBoxSettings[DOSBoxNr].WaitOnError));
-    { Staging old: priority is space-separated active/inactive (not comma).
-      X: inactive half from OnScreenInactive — pause or normal (no mute). }
-    If IsStaging then
-      result.Add('priority='+StagingMapPriority(Game.Priority))
-    else If Game.DosBoxKind=dbkX then begin
-      S:=Trim(Game.Priority);
-      I:=Pos(',',S);
-      If I>0 then S:=Trim(Copy(S,1,I-1)) else If S='' then S:='higher';
-      If S='' then S:='higher';
-      If Game.OnScreenInactive=Ord(simPause) then
-        result.Add('priority='+S+',pause')
-      else
-        result.Add('priority='+S+',normal');
-    end else
-      result.Add('priority='+Game.Priority);
-  end;
-  S:=Trim(Game.CustomKeyMappingFile);
-  If (S='') or (ExtUpperCase(S)='DEFAULT') then S:=PrgSetup.DOSBoxSettings[DOSBoxNr].DosBoxMapperFile;
-  T:=UnmapDrive(MakeAbsPath(S,PrgDataDir),ptMapper);
-  if BuildForArchivePackage then T:=MakeRelPath(T,PrgDataDir);
-  result.Add('mapperfile='+T);
-  { Staging: [sdl] vsync=auto|on|adaptive|off|yield (not fulldouble).
-    Empty profile value → omit key (emulator default). }
-  If IsStaging then begin
-    S:=Trim(Game.VSync);
-    If S<>'' then result.Add('vsync='+S);
-    Case Game.OnScreenInactive of
-      Ord(simMute): begin
-        result.Add('mute_when_inactive=true');
-        result.Add('pause_when_inactive=false');
-      end;
-      Ord(simPause): begin
-        result.Add('mute_when_inactive=false');
-        result.Add('pause_when_inactive=true');
-      end;
-      else begin
-        result.Add('mute_when_inactive=false');
-        result.Add('pause_when_inactive=false');
-      end;
-    end;
-  end;
-  { Standard DOSBox (and unknown): pixelshader under [sdl], with .fx suffix.
-    Staging/X shaders go under [render] below. No selection → no key. }
-  If ShaderActive and not (Game.DosBoxKind in [dbkX,dbkStaging]) then begin
-    SpeedTestInfo('Write profile pixel shader under [sdl] (standard)');
-    S:=ShaderVal;
-    If ExtUpperCase(ExtractFileExt(S))<>'.FX' then S:=S+'.fx';
-    result.Add('# Shader file extension (.fx) written explicitly for standard DOSBox');
-    result.Add('pixelshader='+S);
-  end;
+  GenerateSDLConf(Game,result,DOSBoxNr,BuildForArchivePackage);
 
   If IsStaging then begin
     result.Add('');
@@ -1236,167 +1113,18 @@ begin
   end;
 
   SpeedTestInfo('Build [dosbox] section of DOSBox conf file');
-  result.Add('');
-  result.Add('[dosbox]');
-  S:=Trim(ExtUpperCase(Game.CustomDOSBoxLanguage));
-  If S<>'ENGLISH' then begin
-    If (S='') or (S='DEFAULT') then S:='' else begin
-      T:=ResolveDOSBoxDir(Game.CustomDOSBoxDir);
-      If (T<>'') and FileExists(T+S) then S:=T+S else begin
-        If not FileExists(S) then S:='';
-      end;
-    end;
-    If S='' then S:=PrgSetup.DOSBoxSettings[DOSBoxNr].DosBoxLanguage;
-
-    T:=ExtractFileName(S);
-    If FileExists(PrgDataDir+LanguageSubDir+'\'+T) then S:=PrgDataDir+LanguageSubDir+'\'+T;
-    {Check if language file is on network share (which DOSBox can't handle)}
-    If Copy(S,1,2)='\\' then begin
-      if Assigned(DeleteOnExit) then begin
-        CopyFile(PChar(S),PChar(TempDir+ExtractFileName(S)),False);
-        DeleteOnExit.Add(TempDir+ExtractFileName(S));
-      end;
-      S:=TempDir+ExtractFileName(S);
-      T:=UnmapDrive(S,ptDOSBox);
-      if BuildForArchivePackage then begin
-        T:=MakeRelPath(T,PrgDataDir);
-        if BuildForArchivePackage and (Copy(T,2,1)=':') then T:=ExtractFileName(T); {Completly remove path if its not possible to make the path realtive.}
-      end;
-      result.Add('language='+T);
-    end else begin
-      T:=UnmapDrive(S,ptDOSBox);
-      if BuildForArchivePackage then begin
-        T:=MakeRelPath(T,PrgDataDir);
-        if BuildForArchivePackage and (Copy(T,2,1)=':') then T:=ExtractFileName(T); {Completly remove path if its not possible to make the path realtive.}
-      end;  
-      If FileExists(S) then result.Add('language='+T);
-    end;
-  end;
-  S:=Game.VideoCard; T:=Trim(ExtUpperCase((S)));
-  { X synthetic VideoCard tokens. }
-  If (Game.DosBoxKind=dbkX) and ((T='DOSV') or (T='DOS/V')) then
-    S:='svga_s3'
-  else If (Game.DosBoxKind=dbkX) and (T='PC98') then
-    S:='pc98'
-  else If DOSBoxVersion>0.72 then begin
-    If T='VGA' then S:='svga_s3';
-  end else begin
-    If (T='VGAONLY') or (T='SVGA_S3') or (T='SVGA_ET3000') or (T='SVGA_ET4000') or (T='SVGA_PARADISE') or (T='VESA_NOLFB') or (T='VESA_OLDVBE') then S:='vga';
-  end;
-  result.Add('machine='+S);
-  CapturePath:=UnmapDrive(MakeAbsPath(Game.CaptureFolder,PrgSetup.BaseDir),ptScreenshot);
-  if BuildForArchivePackage then CapturePath:=MakeRelPath(CapturePath,PrgDataDir);
-  { Staging: captures moved to [capture] capture_dir. }
-  If not IsStaging then
-    result.Add('captures='+CapturePath);
-  result.Add('memsize='+IntToStr(Game.Memory));
-  { Video RAM (Game.VideoRam is KB → MB). Kind-gated homes:
-      standard/Staging → [dosbox] vmemsize=
-      X               → [video] vmemsize= (written later; not under [dosbox]) }
-  If PrgSetup.AllowVGAChipsetSettings and (Game.DosBoxKind<>dbkX) then begin
-    I:=Game.VideoRam;
-    if (I mod 1024)<>0 then I:=(I div 1024)+1 else I:=I div 1024;
-    result.Add('vmemsize='+IntToStr(I));
-  end;
+  GenerateCoreDOSBoxConf(Game,result,DOSBoxNr,DOSBoxVersion,BuildForArchivePackage,DeleteOnExit);
 
   If IsStaging then begin
+    CapturePath:=UnmapDrive(MakeAbsPath(Game.CaptureFolder,PrgSetup.BaseDir),ptScreenshot);
+    if BuildForArchivePackage then CapturePath:=MakeRelPath(CapturePath,PrgDataDir);
     result.Add('');
     result.Add('[capture]');
     result.Add('capture_dir='+CapturePath);
   end;
 
-  result.Add('');
-  result.Add('[render]');
-  { Staging: frameskip/scaler deprecated — omit (old and new). }
-  If not IsStaging then begin
-    result.Add('frameskip='+IntToStr(Game.FrameSkip));
-    result.Add('scaler='+Game.Scale);
-  end;
-  result.Add('aspect='+BoolToStr(Game.AspectCorrection));
-  { Staging / DOSBox-X only under [render]. Standard already written under [sdl]. }
-  If ShaderActive and (Game.DosBoxKind in [dbkX,dbkStaging]) then begin
-    SpeedTestInfo('Write profile pixel shader under [render]');
-    Case Game.DosBoxKind of
-      dbkStaging: begin
-        { Value: legacy = name only; modern = name or name:preset.
-          glshader always (valid old+new). shader only on new Staging (unknown on 0.82). }
-        S:=FormatStagingShaderConfValue(ShaderVal,Trim(Game.ShaderPreset),
-          not StagingIsLegacyGlShaders(DOSBoxVersionStr));
-        If S<>'' then begin
-          If IsNewStaging then
-            result.Add('shader='+S);
-          result.Add('glshader='+S);
-        end;
-      end;
-      dbkX: begin
-        { DOSBox-X (src/dosbox.cpp, render.cpp, output_direct3d.cpp):
-            [render] glshader  = GLSL for OpenGL outputs (LoadGLShader)
-            [render] pixelshader = multi "type [force]" for Direct3D (.fx)
-          Write the active key from Game.Render (output=); clear the other so a
-          primary conf value cannot override (same class of issue as Staging). }
-        S:=Trim(ShaderVal);
-        S:=StringReplace(S,'\','/',[rfReplaceAll]);
-        If ExtUpperCase(OutputVal)='DIRECT3D' then begin
-          { Append "forced" so X skips PIXEL_SHADER_WARN (direct3d.cpp LoadPixelShader). }
-          result.Add('pixelshader='+S+' forced');
-          result.Add('glshader=none');
-        end else begin
-          { opengl, openglnb, and any other non-D3D output use glshader }
-          result.Add('glshader='+S);
-          result.Add('pixelshader=none');
-        end;
-      end;
-    end;
-  end;
-
-  { DOSBox-X: [vsync] vsyncmode=off|on|force|host (separate section).
-    Empty profile value → omit section (emulator default). }
-  If Game.DosBoxKind=dbkX then begin
-    S:=Trim(Game.VSync);
-    If S<>'' then begin
-      result.Add('');
-      result.Add('[vsync]');
-      result.Add('vsyncmode='+S);
-    end;
-  end;
-
-  { DOSBox-X: VRAM under [video] (not [dosbox]/[vga]). }
-  If PrgSetup.AllowVGAChipsetSettings and (Game.DosBoxKind=dbkX) then begin
-    I:=Game.VideoRam;
-    if (I mod 1024)<>0 then I:=(I div 1024)+1 else I:=I div 1024;
-    result.Add('');
-    result.Add('[video]');
-    result.Add('vmemsize='+IntToStr(I));
-  end;
-
-  { DOSBox-X: PC98 / DOS/V synthetic machine defaults. }
-  If Game.DosBoxKind=dbkX then begin
-    T:=Trim(ExtUpperCase(Game.VideoCard));
-    If T='PC98' then begin
-      result.Add('');
-      result.Add('[pc98]');
-      result.Add('pc-98 fm board=auto');
-      result.Add('pc-98 enable 256-color=true');
-      result.Add('pc-98 enable 16-color=true');
-      result.Add('pc-98 enable grcg=true');
-      result.Add('pc-98 enable egc=true');
-      result.Add('pc-98 bus mouse=true');
-      result.Add('pc-98 force ibm keyboard layout=auto');
-      result.Add('pc-98 force JIS keyboard layout=false');
-      result.Add('pc-98 try font rom=true');
-    end else If (T='DOSV') or (T='DOS/V') then begin
-      result.Add('');
-      result.Add('[dosv]');
-      result.Add('dosv=jp');
-      result.Add('getsysfont=true');
-      result.Add('showdbcsnodosv=auto');
-      result.Add('fepcontrol=both');
-      result.Add('vtext1=svga');
-      result.Add('vtext2=xga');
-      result.Add('use20pixelfont=false');
-      result.Add('j3100=off');
-    end;
-  end;
+  GenerateGraphicsConf(Game,result);
+  GenerateSpecialMachineConf(Game,result);
 
   SpeedTestInfo('Build [vga, glide, cpi, midi, sblaster, gus and speaker] sections of DOSBox conf file');
 
@@ -1408,62 +1136,10 @@ begin
     result.Add('videoram='+IntToStr(Game.VideoRam));
   end;
 
-  If PrgSetup.AllowGlideSettings then begin
-    { Profile fields unchanged (GlideEmulation / Port / LFB). Conf is kind-gated:
-        standard → [glide] glide/grport/lfb (classic)
-        X       → [voodoo] glide + lfb (no grport)
-        Staging → [voodoo] voodoo= (same keys on 0.82 and 0.83; no glide/lfb/grport) }
-    S:=Trim(ExtUpperCase(Game.GlideEmulation));
-    If (S='TRUE') or (S='1') then S:='true' else begin
-      If (S='FALSE') or (S='0') then S:='false' else S:=Trim(ExtLowerCase(Game.GlideEmulation));
-    end;
-    Case Game.DosBoxKind of
-      dbkX: begin
-        result.Add('');
-        result.Add('[voodoo]');
-        result.Add('glide='+S);
-        If S<>'false' then
-          result.Add('lfb='+Game.GlideLFB);
-      end;
-      dbkStaging: begin
-        result.Add('');
-        result.Add('[voodoo]');
-        { Staging emulates the card; Glide-on profile → voodoo=true. }
-        If S='false' then
-          result.Add('voodoo=false')
-        else
-          result.Add('voodoo=true');
-      end;
-      else begin
-        result.Add('');
-        result.Add('[glide]');
-        result.Add('glide='+S);
-        If S<>'false' then begin
-          result.Add('grport='+Game.GlidePort);
-          result.Add('lfb='+Game.GlideLFB);
-        end;
-      end;
-    end;
-  end;
+  If PrgSetup.AllowGlideSettings then
+    GenerateGlideConf(Game,result);
 
-  result.Add('');
-  result.Add('[cpu]');
-  result.Add('core='+Game.Core);
-  If Trim(Game.CPUType)<>'' then result.Add('cputype='+Game.CPUType);
-
-  If IsStaging then begin
-    S:=Trim(Game.Cycles);
-    If SameText(S,'auto') or (S='') then
-      result.Add('# cycles=auto')
-    else
-      result.Add('cpu_cycles='+S);
-  end else If DOSBoxVersion>0.72 then begin
-    If TryStrToInt(Game.Cycles,I) then result.Add('cycles=fixed '+Game.Cycles) else result.Add('cycles='+Game.Cycles);
-  end else begin
-    result.Add('cycles='+Game.Cycles);
-  end;
-  result.Add('cycleup='+IntToStr(Game.CyclesUp));
-  result.Add('cycledown='+IntToStr(Game.CyclesDown));
+  GenerateCPUConf(Game,result,DOSBoxVersion);
 
   result.Add('');
   result.Add('[mixer]');
@@ -1472,246 +1148,12 @@ begin
   result.Add('blocksize='+IntToStr(Game.MixerBlocksize));
   result.Add('prebuffer='+IntToStr(Game.MixerPrebuffer));
 
-  result.Add('');
-  result.Add('[midi]');
-  result.Add('mpu401='+Game.MIDIType);
-  If DOSBoxVersion>0.72 then begin
-    { Staging: mididevice "default" is invalid → "auto" only when profile is default. }
-    If IsStaging
-      then result.Add('mididevice='+StagingMapMidiDevice(Game.MIDIDevice))
-      else result.Add('mididevice='+Game.MIDIDevice);
-    result.Add('midiconfig='+MakeDOSBoxMIDIString(Game.MIDIConfig));
-    { DOSBox-X: path/gain only when mididevice=fluidsynth. }
-    If (Game.DosBoxKind=dbkX) and SameText(Trim(Game.MIDIDevice),'fluidsynth') then begin
-      S:=Trim(Game.FluidSoundFont);
-      If S<>'' then begin
-        S:=MakeAbsPath(S,PrgSetup.BaseDir);
-        S:=StringReplace(S,'\','/',[rfReplaceAll]);
-        result.Add('fluid.soundfont='+S);
-      end;
-      If TryStrToInt(Trim(Game.MIDIDeviceGainValue),I) then begin
-        If I<1 then I:=1 else If I>800 then I:=800;
-        result.Add('fluid.gain='+FloatToStrF(I/100.0,ffGeneral,15,4));
-      end;
-    end;
-    { DOSBox-X: MT-32 under [midi] when mididevice=mt32. }
-    If (Game.DosBoxKind=dbkX) and SameText(Trim(Game.MIDIDevice),'mt32') then begin
-      S:=Trim(Game.MIDIMT32RomDir);
-      If S<>'' then begin
-        S:=MakeAbsPath(S,PrgSetup.BaseDir);
-        S:=StringReplace(S,'\','/',[rfReplaceAll]);
-        result.Add('mt32.romdir='+S);
-      end;
-      S:=Trim(Game.MIDIMT32Model);
-      If S='' then S:='auto';
-      result.Add('mt32.model='+S);
-      S:=Trim(Game.MIDIMT32Mode);
-      If S='' then S:='auto';
-      result.Add('mt32.reverb.mode='+S);
-      S:=Trim(Game.MIDIMT32Time);
-      If S='' then S:='5';
-      result.Add('mt32.reverb.time='+S);
-      S:=Trim(Game.MIDIMT32Level);
-      If S='' then S:='3';
-      result.Add('mt32.reverb.level='+S);
-      If TryStrToInt(Trim(Game.MIDIDeviceGainValue),I) then begin
-        If I<0 then I:=0 else If I>1000 then I:=1000;
-        result.Add('mt32.output.gain='+IntToStr(I));
-      end;
-    end;
-  end else begin
-    result.Add('device='+Game.MIDIDevice);
-    result.Add('config='+MakeDOSBoxMIDIString(Game.MIDIConfig));
-    If ExtUpperCase(Game.MIDIDevice)='MT32' then begin
-      result.Add('mt32reverb.mode='+Game.MIDIMT32Mode);
-      result.Add('mt32reverb.time='+Game.MIDIMT32Time);
-      result.Add('mt32reverb.level='+Game.MIDIMT32Level);
-    end;
-  end;
-
-  { Staging: [fluidsynth] when mididevice=fluidsynth.
-      IsOldStaging: soundfont=path [percent]
-      Staging 0.83+: soundfont=path + optional soundfont_volume=percent }
-  If IsStaging and SameText(Trim(Game.MIDIDevice),'fluidsynth') then begin
-    S:=Trim(Game.FluidSoundFont);
-    If S<>'' then begin
-      S:=MakeAbsPath(S,PrgSetup.BaseDir);
-      S:=StringReplace(S,'\','/',[rfReplaceAll]);
-      result.Add('');
-      result.Add('[fluidsynth]');
-      If IsOldStaging then begin
-        If TryStrToInt(Trim(Game.MIDIDeviceGainValue),I) then begin
-          If I<1 then I:=1 else If I>800 then I:=800;
-          result.Add('soundfont='+S+' '+IntToStr(I));
-        end else
-          result.Add('soundfont='+S);
-      end else begin
-        result.Add('soundfont='+S);
-        If TryStrToInt(Trim(Game.MIDIDeviceGainValue),I) then begin
-          If I<1 then I:=1 else If I>800 then I:=800;
-          result.Add('soundfont_volume='+IntToStr(I));
-        end;
-      end;
-    end;
-  end;
-
-  { Staging: [mt32] when mididevice=mt32 (old and new: model + optional romdir). }
-  If IsStaging and SameText(Trim(Game.MIDIDevice),'mt32') then begin
-    result.Add('');
-    result.Add('[mt32]');
-    S:=Trim(Game.MIDIMT32Model);
-    If S='' then S:='auto';
-    result.Add('model='+S);
-    S:=Trim(Game.MIDIMT32RomDir);
-    If S<>'' then begin
-      S:=MakeAbsPath(S,PrgSetup.BaseDir);
-      S:=StringReplace(S,'\','/',[rfReplaceAll]);
-      result.Add('romdir='+S);
-    end;
-  end;
-
-  result.Add('');
-  result.Add('[sblaster]');
-  result.Add('sbtype='+Game.SBType);
-  result.Add('sbbase='+Game.SBBase);
-  result.Add('irq='+IntToStr(Game.SBIRQ));
-  result.Add('dma='+IntToStr(Game.SBDMA));
-  result.Add('hdma='+IntToStr(Game.SBHDMA));
-  If DOSBoxVersion>0.72
-    then result.Add('sbmixer='+BoolToStr(Game.SBMixer))
-    else result.Add('mixer='+BoolToStr(Game.SBMixer));
-  result.Add('oplmode='+Game.SBOplMode);
-  { Staging: oplrate/oplemu deprecated — omit (old and new). }
-  If not IsStaging then begin
-    result.Add('oplrate='+IntToStr(Game.SBOplRate));
-    If DOSBoxVersion>0.72 then result.Add('oplemu='+Game.SBOplEmu);
-  end;
-
-  result.Add('');
-  result.Add('[gus]');
-  result.Add('gus='+BoolToStr(Game.GUS));
-  { Staging: gusrate invalid — omit (old and new). }
-  If not IsStaging then
-    result.Add('gusrate='+IntToStr(Game.GUSRate));
-  result.Add('gusbase='+Game.GUSBase);
-  If DOSBoxVersion>0.72 then begin
-    result.Add('gusirq='+IntToStr(Game.GUSIRQ));
-    result.Add('gusdma='+IntToStr(Game.GUSDMA));
-  end else begin
-    result.Add('irq1='+IntToStr(Game.GUSIRQ));
-    result.Add('irq2='+IntToStr(Game.GUSIRQ));
-    result.Add('dma1='+IntToStr(Game.GUSDMA));
-    result.Add('dma2='+IntToStr(Game.GUSDMA));
-  end;
-  result.Add('ultradir='+Game.GUSUltraDir);
-
-  result.Add('');
-  result.Add('[speaker]');
-  { Staging: pcspeaker is impulse/discrete/none (not true/false). }
-  If IsStaging
-    then result.Add('pcspeaker='+StagingMapPCSpeaker(Game.SpeakerPC))
-    else result.Add('pcspeaker='+BoolToStr(Game.SpeakerPC));
-  { Staging: pcrate/tandyrate invalid — omit (old and new). }
-  If not IsStaging then
-    result.Add('pcrate='+IntToStr(Game.SpeakerRate));
-  result.Add('tandy='+Game.SpeakerTandy);
-  If not IsStaging then
-    result.Add('tandyrate='+IntToStr(Game.SpeakerTandyRate));
-  { Staging: disney moved to lpt_dac; only emit when Disney is enabled in profile. }
-  If IsStaging then begin
-    If Game.SpeakerDisney then
-      result.Add('lpt_dac=disney');
-  end else
-    result.Add('disney='+BoolToStr(Game.SpeakerDisney));
-
-  { Innova / Innovation SSI-2001. Profile fields unchanged (Innova / Rate / Base / Quality).
-    Conf is kind-gated:
-      standard/X → classic [innova] innova/samplerate/sidbase/quality
-      Staging old (<0.83) → [innovation] sidmodel/sidclock/sidport + 6581/8580filter %
-      Staging new (0.83+) → [innovation] innovation/innovation_sid_filter/innovation_filter
-                   (InnovaRate has no Staging home → omit; port only on old Staging) }
-  if PrgSetup.AllowInnova then begin
-    If IsStaging then begin
-      result.Add('');
-      result.Add('[innovation]');
-      { Quality 0..3 → best-effort SID filter strength % (not classic reSID quality). }
-      Case Game.InnovaQuality of
-        0: I:=0;
-        1: I:=33;
-        2: I:=50;
-        3: I:=100;
-        else I:=50;
-      end;
-      If IsOldStaging then begin
-        If Game.Innova then begin
-          result.Add('sidmodel=auto');
-          result.Add('sidclock=default');
-          result.Add('sidport='+Game.InnovaBase);
-          result.Add('6581filter='+IntToStr(I));
-          result.Add('8580filter='+IntToStr(I));
-          result.Add('innovation_filter=off');
-        end else
-          result.Add('sidmodel=none');
-      end else begin
-        { 0.83+: innovation bool, innovation_sid_filter % (replaces 6581filter), filter off. }
-        result.Add('innovation='+BoolToStr(Game.Innova));
-        If Game.Innova then begin
-          result.Add('innovation_sid_filter='+IntToStr(I));
-          result.Add('innovation_filter=off');
-        end;
-      end;
-    end else begin
-      result.Add('');
-      result.Add('[innova]');
-      result.Add('innova='+BoolToStr(Game.Innova));
-      result.Add('samplerate='+IntToStr(Game.InnovaRate));
-      result.Add('sidbase='+Game.InnovaBase);
-      result.Add('quality='+IntToStr(Game.InnovaQuality));
-    end;
-  end;
+  GenerateMidiConf(Game,result,DOSBoxVersion,Game.IsStaging,Game.IsOldStaging);
+  GenerateSoundDeviceConf(Game,result,DOSBoxVersion);
+  GenerateInnovaConf(Game,result,Game.IsStaging,Game.IsOldStaging);
 
   SpeedTestInfo('Build [dos] section of DOSBox conf file');
-  result.Add('');
-  result.Add('[dos]');
-  result.Add('xms='+BoolToStr(Game.XMS));
-  result.Add('ems='+BoolToStr(Game.EMS));
-  result.Add('umb='+BoolToStr(Game.UMB));
-
-  T:=Trim(ExtUpperCase(Game.KeyboardLayout));
-  If (T='') or (T='DEFAULT') then begin
-    T:=Trim(ExtUpperCase(PrgSetup.DOSBoxSettings[DOSBoxNr].KeyboardLayout));
-    If (T='') or (T='DEFAULT') then
-      If IsStaging or (Game.DosBoxKind=dbkX) then T:='auto' else T:=LanguageSetup.GameKeyboardLayoutDefault;
-  end;
-  If Pos('(',T)>0 then begin
-    S:=Copy(T,Pos('(',T)+1,MaxInt);
-    If Pos(')',S)>0 then begin S:=Trim(Copy(S,1,Pos(')',S)-1)); If S<>'' then T:=S; end;
-  end;
-  If ExtUpperCase(T)='NONE' then T:='none'; {DOSBox keyb accepts GR and gr but not NONE}
-  { Staging 0.83+: keyboardlayout renamed to keyboard_layout.
-    Staging/X: always country with layout (auto or explicit); no autoexec keyb. }
-  If IsNewStaging then
-    result.Add('keyboard_layout='+T)
-  else
-    result.Add('keyboardlayout='+T); {classic: also via keyb in autoexec if keyb fails on codepage}
-  If IsStaging then
-    result.Add('country=auto')
-  else If Game.DosBoxKind=dbkX then
-    result.Add('country=');
-
-  { Staging/X: modern [dos] ver= (same key both forks; 0.82 and 0.83 Staging).
-    Standard keeps autoexec "ver set". Empty/default/auto → omit. }
-  If Game.DosBoxKind in [dbkStaging,dbkX] then begin
-    S:=Trim(Game.ReportedDOSVersion);
-    If (S<>'') and not SameText(S,'default') and not SameText(S,'auto') then
-      result.Add('ver='+S);
-  end;
-
-  {keyboardlayout can't handle layout+codepage -> moved to autoexec as keyb command
-  S:=Trim(ExtUpperCase(Game.Codepage));
-  If (S='') or (S='DEFAULT') then S:=LanguageSetup.GameKeyboardCodepageDefault;
-  result.Add('keyboardlayout='+T+' '+S);}
-
+  GenerateMSDOSConf(Game,result,DOSBoxNr);
   SpeedTestInfo('Build [joystick, serial, ipx, printer] section of DOSBox conf file');
 
   result.Add('');
@@ -1722,48 +1164,8 @@ begin
   result.Add('swap34='+BoolToStr(Game.JoystickSwap34));
   result.Add('buttonwrap='+BoolToStr(Game.JoystickButtonwrap));
 
-  If PrgSetup.AllowNe2000 then begin
-    { Profile fields unchanged (NE2000 / Base / IRQ / MAC / RealInterface). Conf is kind-gated:
-        standard → [ne2000] ne2000/nicbase/nicirq/macaddr/realnic (classic)
-        Staging → [ethernet] ne2000/nicbase/nicirq/macaddr (slirp only; no realnic)
-        X       → [ne2000] ne2000/nicbase/nicirq/macaddr;
-                  if RealInterface set → backend=pcap + [ethernet, pcap] realnic=
-                  (empty RealInterface → omit backend; X defaults to auto/slirp) }
-    Case Game.DosBoxKind of
-      dbkStaging: begin
-        result.Add('');
-        result.Add('[ethernet]');
-        result.Add('ne2000='+BoolToStr(Game.NE2000));
-        result.Add('nicbase='+Game.NE2000Base);
-        result.Add('nicirq='+IntToStr(Game.NE2000IRQ));
-        result.Add('macaddr='+Game.NE2000MACAddress);
-      end;
-      dbkX: begin
-        result.Add('');
-        result.Add('[ne2000]');
-        result.Add('ne2000='+BoolToStr(Game.NE2000));
-        result.Add('nicbase='+Game.NE2000Base);
-        result.Add('nicirq='+IntToStr(Game.NE2000IRQ));
-        result.Add('macaddr='+Game.NE2000MACAddress);
-        S:=Trim(Game.NE2000RealInterface);
-        If S<>'' then begin
-          result.Add('backend=pcap');
-          result.Add('');
-          result.Add('[ethernet, pcap]');
-          result.Add('realnic='+S);
-        end;
-      end;
-      else begin
-        result.Add('');
-        result.Add('[ne2000]');
-        result.Add('ne2000='+BoolToStr(Game.NE2000));
-        result.Add('nicbase='+Game.NE2000Base);
-        result.Add('nicirq='+IntToStr(Game.NE2000IRQ));
-        result.Add('macaddr='+Game.NE2000MACAddress);
-        result.Add('realnic='+Game.NE2000RealInterface);
-      end;
-    end;
-  end;
+  If PrgSetup.AllowNe2000 then
+    GenerateNetworkConf(Game,result);
 
   result.Add('');
   result.Add('[serial]');
@@ -1800,19 +1202,8 @@ begin
 
   SpeedTestInfo('Add custom settings to DOSBox conf file');
 
-  St:=StringToStringList(Game.CustomSettings);
-  try
-    if result<>nil then result.AddStrings(St);
-  finally
-    St.Free;
-  end;
-
-  St:=StringToStringList(PrgSetup.DOSBoxSettings[DOSBoxNr].CustomSettings);
-  try
-    if result<>nil then result.AddStrings(St);
-  finally
-    St.Free;
-  end;
+  AppendCustomSettingsToConf(result,PrgSetup.DOSBoxSettings[DOSBoxNr].CustomSettings);
+  AppendCustomSettingsToConf(result,Game.CustomSettings);
 end;
 
 Procedure FindAlternativeDOSBoxFile(var PrgFile : String);
@@ -1868,16 +1259,68 @@ begin
   result:='-CONF "'+ConfFile+'"'+Add;
 end;
 
+Function CreateDOSBoxProcess(const PrgFile, Params, Cwd : String; EnvBlock : Pointer; CreationFlags : DWORD; out ProcessId : DWORD) : THandle;
+Var StartupInfo : TStartupInfo;
+    ProcessInformation : TProcessInformation;
+    WorkDir : String;
+begin
+  result:=INVALID_HANDLE_VALUE;
+  ProcessId:=0;
+  WorkDir:=Cwd;
+  if WorkDir='' then
+    WorkDir:=ExtractFilePath(PrgFile);
+
+  SpeedTestInfo('Starting DOSBox');
+  SpeedTestInfoOnly('Command: "'+PrgFile+'" '+Params);
+  LogInfo('DOSBox CreateProcess: "'+PrgFile+'" '+Params);
+  LogInfo('DOSBox cwd: '+WorkDir);
+
+  FillChar(StartupInfo,SizeOf(StartupInfo),0);
+  StartupInfo.cb:=SizeOf(TStartupInfo);
+
+  if not CreateProcess(
+    PChar(PrgFile),
+    PChar('"'+PrgFile+'" '+Params),
+    nil,
+    nil,
+    False,
+    CreationFlags,
+    EnvBlock,
+    PChar(WorkDir),
+    StartupInfo,
+    ProcessInformation
+  ) then begin
+    LogInfo('DOSBox CreateProcess FAILED: "'+PrgFile+'" '+Params);
+    Application.Restore;
+    If Assigned(Application.MainForm) then begin
+      Application.MainForm.Visible:=True;
+      Application.MainForm.Enabled:=True;
+    end;
+    MessageDlg(Format(LanguageSetup.MessageCouldNotStartProgram,[PrgFile]),mtError,[mbOK],0);
+    exit;
+  end;
+
+  SpeedTestInfo('DOSBox started');
+  If ProcessInformation.hProcess<>INVALID_HANDLE_VALUE then begin
+    SpeedTestInfoOnly('DOSBox successfully started');
+    LogInfo('DOSBox CreateProcess OK handle='+IntToStr(ProcessInformation.hProcess));
+  end;
+
+  result:=ProcessInformation.hProcess;
+  ProcessId:=ProcessInformation.dwProcessId;
+  CloseHandle(ProcessInformation.hThread);
+  DOSBoxCounter.Add(result);
+end;
+
 Function RunDosBox(const DOSBoxPath : String; const DOSBoxNr : Integer; const ConfFile : String; const FullScreen : Boolean; const ShowConsole : Integer; const asAdmin : Boolean; const DosBoxCommandLine : String ='') : THandle;
 Var PrgFile, Params, Env, S : String;
-    StartupInfo : TStartupInfo;
-    ProcessInformation : TProcessInformation;
     Size : Integer;
     EnvSrc : PChar;
     EnvBlock : Pointer;
     Q : Array of Char;
     Waited : Boolean;
     CreationFlags : DWORD;
+    ProcessId : DWORD;
 begin
   SpeedTestInfo('Building DOSBox command line');
   Params:=GetDOSBoxCommandLine(DOSBoxNr,ConfFile,ShowConsole,DosBoxCommandLine);
@@ -1911,7 +1354,6 @@ begin
 
   SpeedTestInfoOnly('DOSBox program file: '+PrgFile);
   LogInfo('DOSBox exe: '+PrgFile);
-  LogInfo('DOSBox cwd: '+ExtractFilePath(PrgFile));
   LogInfo('DOSBox full command: "'+PrgFile+'" '+Params);
 
   If FullScreen then ShowFullscreenInfoDialog(Application.MainForm);
@@ -1969,49 +1411,8 @@ begin
     CreationFlags:=CREATE_UNICODE_ENVIRONMENT;
   end;
 
-  SpeedTestInfo('Starting DOSBox');
-  SpeedTestInfoOnly('Command: "'+PrgFile+'" '+Params);
-  LogInfo('DOSBox CreateProcess: "'+PrgFile+'" '+Params);
-  with StartupInfo do begin
-    cb:=SizeOf(TStartupInfo);
-    lpReserved:=nil;
-    lpDesktop:=nil;
-    lpTitle:=nil;
-    dwFlags:=0;
-    cbReserved2:=0;
-    lpReserved2:=nil;
-  end;
-
-  if not CreateProcess(
-    PChar(PrgFile),
-    PChar('"'+PrgFile+'" '+Params),
-    nil,
-    nil,
-    False,
-    CreationFlags,
-    EnvBlock,
-    PChar(ExtractFilePath(PrgFile)),
-    StartupInfo,
-    ProcessInformation
-  ) then begin
-    LogInfo('DOSBox CreateProcess FAILED: "'+PrgFile+'" '+Params);
-    Application.Restore;
-    If Assigned(Application.MainForm) then begin
-      Application.MainForm.Visible:=True;
-      Application.MainForm.Enabled:=True;
-    end;
-    MessageDlg(Format(LanguageSetup.MessageCouldNotStartProgram,[PrgFile]),mtError,[mbOK],0);
-    result:=INVALID_HANDLE_VALUE;
-    exit;
-  end;
-  SpeedTestInfo('DOSBox started');
-  If ProcessInformation.hProcess<>INVALID_HANDLE_VALUE then begin
-    SpeedTestInfoOnly('DOSBox successfully started');
-    LogInfo('DOSBox CreateProcess OK handle='+IntToStr(ProcessInformation.hProcess));
-  end;
-
-  result:=ProcessInformation.hProcess;
-  CloseHandle(ProcessInformation.hThread);
+  result:=CreateDOSBoxProcess(PrgFile,Params,ExtractFilePath(PrgFile),EnvBlock,CreationFlags,ProcessId);
+  if result=INVALID_HANDLE_VALUE then exit;
 
   {ShellExecute(Application.MainForm.Handle,'open',PChar(IncludeTrailingPathDelimiter(PrgSetup.DosBoxDir)+DosBoxFileName),PChar('-CONF "'+ConfFile+'"'+Add),PChar(IncludeTrailingPathDelimiter((ExtractFilePath(ConfFile)))),SW_SHOW);}
 
@@ -2021,7 +1422,7 @@ begin
      not (PrgSetup.DOSBoxSettings[DOSBoxNr].DosBoxKind in [dbkX,dbkStaging]) then begin
     SpeedTestInfo('Center DOSBox window');
     Sleep(1000); Waited:=True;
-    CenterWindowFromProcessID(ProcessInformation.dwProcessId);
+    CenterWindowFromProcessID(ProcessId);
   end else begin
     Waited:=False;
   end;
@@ -2030,13 +1431,340 @@ begin
     If not Waited then Sleep(1000);
     {MinimizedAtDOSBoxStart:=True; -> RunGameInt}
   end;
+end;
 
-  DOSBoxCounter.Add(result);
+Procedure ScheduleDeletePureWorkDir(const ProcessHandle : THandle; const Dir : String);
+Var h : THandle;
+    D : String;
+begin
+  D:=Dir;
+  if (D='') or (ProcessHandle=0) or (ProcessHandle=INVALID_HANDLE_VALUE) then Exit;
+  if not DuplicateHandle(GetCurrentProcess,ProcessHandle,GetCurrentProcess,@h,0,False,DUPLICATE_SAME_ACCESS) then
+    Exit;
+  TThread.CreateAnonymousThread(
+    procedure
+    begin
+      try
+        WaitForSingleObject(h,INFINITE);
+      finally
+        CloseHandle(h);
+      end;
+      try
+        if TDirectory.Exists(D) then
+          TDirectory.Delete(D,True);
+      except
+      end;
+    end).Start;
+end;
+
+Function PureNearestVolumeStep(const Target : String) : String;
+const
+  Steps: array[0..41] of Double = (
+    0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5,
+    0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0,
+    1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0,
+    2.25, 2.5, 2.75, 3.0, 3.25, 3.5, 3.75, 4.0, 4.25, 4.5, 4.75, 5.0);
+  StepStr: array[0..41] of String = (
+    '0.05','0.1','0.15','0.2','0.25','0.3','0.35','0.4','0.45','0.5',
+    '0.55','0.6','0.65','0.7','0.75','0.8','0.85','0.9','0.95','1.0',
+    '1.1','1.2','1.3','1.4','1.5','1.6','1.7','1.8','1.9','2.0',
+    '2.25','2.5','2.75','3.0','3.25','3.5','3.75','4.0','4.25','4.5','4.75','5.0');
+Var
+  V, BestDiff, Diff : Double;
+  I, Best : Integer;
+begin
+  Result:='';
+  if not TryStrToFloat(Trim(Target),V) then Exit;
+  if (V<0) or (V>5.0) then Exit;
+  Best:=0;
+  BestDiff:=Abs(Steps[0]-V);
+  for I:=1 to High(Steps) do begin
+    Diff:=Abs(Steps[I]-V);
+    if Diff<BestDiff then begin
+      BestDiff:=Diff;
+      Best:=I;
+    end;
+  end;
+  Result:=StepStr[Best];
+end;
+
+Function PureMidiVolumeOption(const GainPct : Integer) : String;
+Var G : Integer;
+begin
+  G:=GainPct;
+  If G<0 then G:=0 else If G>500 then G:=500;
+  { UI 0..500 maps to Pure volume 0..5.0 (snapped). }
+  Result:=PureNearestVolumeStep(FloatToStr(G/100.0));
+end;
+
+Function JsonString(const S : String) : String;
+begin
+  Result:=StringReplace(S,'\','\\',[rfReplaceAll]);
+  Result:=StringReplace(Result,'"','\"',[rfReplaceAll]);
+end;
+
+Function ParsePureCustomSettingLine(const Line: String; out Key, Val: String): Boolean;
+Var S: String;
+    P: Integer;
+begin
+  Result:=False;
+  Key:='';
+  Val:='';
+  S:=Trim(Line);
+  If S='' then exit;
+  If (S[1]='#') or (S[1]=';') then exit;
+  P:=Pos('=',S);
+  If P<=1 then exit;
+  Key:=Trim(Copy(S,1,P-1));
+  Val:=Trim(Copy(S,P+1,MaxInt));
+  Result:=(Length(Key)>=12) and SameText(Copy(Key,1,12),'dosbox_pure_');
+end;
+
+Procedure AppendCustomSettingsToConf(const Dest: TStrings; const Custom: String);
+Var St: TStringList;
+    I: Integer;
+    Key, Val: String;
+begin
+  If (Dest=nil) or (Trim(Custom)='') then exit;
+  St:=StringToStringList(Custom);
+  try
+    for I:=0 to St.Count-1 do
+      if not ParsePureCustomSettingLine(St[I],Key,Val) then
+        Dest.Add(St[I]);
+  finally
+    St.Free;
+  end;
+end;
+
+Procedure AppendPureCustomSettingsToCfg(const Cfg: TStrings; const Custom: String);
+Var St: TStringList;
+    I, J, Idx: Integer;
+    Key, Val, Line, Prefix: String;
+begin
+  If (Cfg=nil) or (Trim(Custom)='') then exit;
+  St:=StringToStringList(Custom);
+  try
+    for I:=0 to St.Count-1 do
+      if ParsePureCustomSettingLine(St[I],Key,Val) then begin
+        Line:='"'+JsonString(Key)+'" : "'+JsonString(Val)+'"';
+        Prefix:='"'+Key+'"';
+        Idx:=-1;
+        for J:=0 to Cfg.Count-1 do
+          if SameText(Copy(Trim(Cfg[J]),1,Length(Prefix)),Prefix) then begin
+            Idx:=J;
+            break;
+          end;
+        if Idx>=0 then
+          Cfg[Idx]:=Line
+        else
+          Cfg.Add(Line);
+      end;
+  finally
+    St.Free;
+  end;
+end;
+
+Procedure GeneratePureMidiCfg(const Game: TGame; const Cfg: TStrings; const WorkDir: String);
+Var S, RomDir, SoundFontSrc, SoundFontName, WorkDirSlash, VolOpt: String;
+    GainPct: Integer;
+begin
+  if Game.MIDIDeviceIs('mt32') then begin
+    S:=Trim(Game.MIDIMT32Model);
+    RomDir:=Trim(Game.MIDIMT32RomDir);
+    if (S<>'') and (RomDir<>'') then begin
+      RomDir:=StringReplace(ExcludeTrailingPathDelimiter(MakeAbsPath(RomDir,PrgSetup.BaseDir)),'\','/',[rfReplaceAll]);
+      Cfg.Add('"path_system" : "'+JsonString(RomDir)+'"');
+      Cfg.Add('"dosbox_pure_midi" : "'+JsonString(S+'_CONTROL.ROM')+'"');
+    end;
+  end else if Game.MIDIDeviceIs('soundfont') then begin
+    SoundFontSrc:=Trim(Game.FluidSoundFont);
+    if SoundFontSrc<>'' then begin
+      SoundFontSrc:=MakeAbsPath(SoundFontSrc,PrgSetup.BaseDir);
+      if FileExists(SoundFontSrc) then begin
+        SoundFontName:=ExtractFileName(SoundFontSrc);
+        if CopyFile(PChar(SoundFontSrc),PChar(WorkDir+SoundFontName),False) then begin
+          WorkDirSlash:=StringReplace(ExcludeTrailingPathDelimiter(WorkDir),'\','/',[rfReplaceAll]);
+          Cfg.Add('"path_system" : "'+JsonString(WorkDirSlash)+'"');
+          Cfg.Add('"dosbox_pure_midi" : "'+JsonString(SoundFontName)+'"');
+        end;
+      end;
+    end;
+  end else if Game.MIDIDeviceIs('port') then
+    Cfg.Add('"dosbox_pure_midi" : "system"');
+  if (Game.MIDIDeviceIs('mt32') or Game.MIDIDeviceIs('soundfont'))
+     and Game.GetValidMidiGain(GainPct) then begin
+    VolOpt:=PureMidiVolumeOption(GainPct);
+    Cfg.Add('"dosbox_pure_volume_midi" : "'+JsonString(VolOpt)+'"');
+  end;
+end;
+
+Procedure GeneratePureGraphicsCfg(const Game: TGame; const Cfg: TStrings);
+Var S: String;
+    ScreenW, ScreenH, I: Integer;
+begin
+  {
+    Pure vsync: "Force 60fps" → true, otherwise false. Pure will pick a default if
+    the value is invalid or empty.
+  }
+  if SameText(Trim(Game.VSync),'Force 60fps') then
+    Cfg.Add('"dosbox_pure_force60fps" : "true"');
+  if Game.StartFullscreen then
+    Cfg.Add('"screen_fullscreen" : "true"');
+  if Game.AspectCorrection then
+    Cfg.Add('"dosbox_pure_aspect_correction" : "true"')
+  else
+    Cfg.Add('"dosbox_pure_aspect_correction" : "false"');
+
+  {
+    Pure screen resolution: use profile window resolution if valid, otherwise
+    let Pure pick a default. Pure will pick a default if the width or height is
+    zero or invalid.
+  }  
+  ScreenW:=0;
+  ScreenH:=0;
+  S:=Trim(Game.WindowResolution);
+  I:=Pos('x',ExtLowerCase(S));
+  if I>1 then begin
+    TryStrToInt(Copy(S,1,I-1),ScreenW);
+    TryStrToInt(Copy(S,I+1,MaxInt),ScreenH);
+  end;
+  if (ScreenW>0) and (ScreenH>0) then begin
+    Cfg.Add('"screen_width" : "'+IntToStr(ScreenW)+'"');
+    Cfg.Add('"screen_height" : "'+IntToStr(ScreenH)+'"');
+  end;
+
+  {
+    Pure Voodoo settings: 8mb (default) or off. Pure will pick a default if the
+    value is invalid or empty.
+  }
+  if Game.isGlideEnabled then begin
+    Cfg.Add('"dosbox_pure_voodoo" : "8mb"');
+    Cfg.Add('"dosbox_pure_voodoo_perf" : "auto"');
+  end else
+    Cfg.Add('"dosbox_pure_voodoo" : "off"');
+  S:=Trim(Game.Scale);
+  
+  {
+    Pure interface scaling/shader
+  }
+  if IsValidConfOptValue(Game.GameDB.ConfOpt.ScalePure,S) then
+    Cfg.Add('"interface_scaling" : "'+JsonString(S)+'"');
+  S:=Trim(Game.PixelShader);
+  if IsValidConfOptValue(Game.GameDB.ConfOpt.ShaderPure,S) then
+    Cfg.Add('"interface_crtfilter" : "'+JsonString(S)+'"');
+end;
+
+Procedure WritePureWorkDirFiles(const Game : TGame; const ConfLines : TStrings; out WorkDir, ConfPath : String);
+Var CfgPath, Body, DataDir, PureSavesDir, VolOpt : String;
+    Cfg : TStringList;
+    I : Integer;
+begin
+  WorkDir:=IncludeTrailingPathDelimiter(TPath.GetTempPath)+
+    'DFendX-Pure-'+IntToStr(GetTickCount64)+PathDelim;
+  ConfPath:=WorkDir+DosBoxConfFileName;
+  CfgPath:=WorkDir+'DOSBoxPure.cfg';
+  ForceDirectories(WorkDir);
+  ConfLines.SaveToFile(ConfPath);
+  Cfg:=TStringList.Create;
+  try
+    {
+      Pure saves dir: use the profile data dir if it exists, otherwise use the
+      Pure work dir. The Pure work dir is deleted after DOSBox exits, so we
+      cannot store saves there.
+    }
+    DataDir:=Game.ResolveDataDir;
+    if (DataDir<>'') and DirectoryExists(DataDir) then begin
+      PureSavesDir:=IncludeTrailingPathDelimiter(DataDir)+'.pure';
+      ForceDirectories(PureSavesDir);
+      PureSavesDir:=StringReplace(ExcludeTrailingPathDelimiter(PureSavesDir),'\','/',[rfReplaceAll]);
+      Cfg.Add('"path_saves" : "'+JsonString(PureSavesDir)+'"');
+    end;
+    GeneratePureMidiCfg(Game,Cfg,WorkDir);
+    GeneratePureGraphicsCfg(Game,Cfg);
+    if Game.GUS then
+      Cfg.Add('"dosbox_pure_gus" : "true"')
+    else
+      Cfg.Add('"dosbox_pure_gus" : "false"');
+
+    {
+      Pure volume boost: 0..200 (UI) maps to 0.0..5.0 (Pure) in steps of 0.05.
+      UI 100 = Pure 2.5 (default). UI 200 = Pure 5.0 (max). UI 0 = Pure 0.0 (mute).
+      Pure volume boost is applied to all channels: SB, AdLib, Speaker, CD-ROM, Other.
+    }
+    if TryStrToInt(Trim(Game.PureVolumeBoost),I) then begin
+      if I<0 then I:=0 else if I>200 then I:=200;
+      VolOpt:=PureNearestVolumeStep(FloatToStr(I/40.0));
+      if VolOpt<>'' then begin
+        Cfg.Add('"dosbox_pure_volume_sb" : "'+JsonString(VolOpt)+'"');
+        Cfg.Add('"dosbox_pure_volume_adlib" : "'+JsonString(VolOpt)+'"');
+        Cfg.Add('"dosbox_pure_volume_speaker" : "'+JsonString(VolOpt)+'"');
+        Cfg.Add('"dosbox_pure_volume_cdrom" : "'+JsonString(VolOpt)+'"');
+        Cfg.Add('"dosbox_pure_volume_other" : "'+JsonString(VolOpt)+'"');
+      end;
+    end;
+
+    {
+      Pure custom settings: append to cfg, overriding any existing keys.
+      Settings from the DOSBox installation are applied first, then profile settings.
+    }
+    I:=GetDOSBoxNr(Game);
+    if I<0 then I:=0;
+    AppendPureCustomSettingsToCfg(Cfg,PrgSetup.DOSBoxSettings[I].CustomSettings);
+    AppendPureCustomSettingsToCfg(Cfg,Game.CustomSettings);
+    LogInfo('Writing Pure cfg: '+CfgPath);
+    Body:='{'+#13#10;
+    for I:=0 to Cfg.Count-1 do begin
+      LogInfo('  Pure cfg: '+Cfg[I]);
+      if I<Cfg.Count-1 then
+        Body:=Body+#9+Cfg[I]+','+#13#10
+      else
+        Body:=Body+#9+Cfg[I]+#13#10;
+    end;
+    Body:=Body+'}';
+    Cfg.Clear;
+    Cfg.Text:=Body;
+    Cfg.SaveToFile(CfgPath);
+  finally
+    Cfg.Free;
+  end;
+end;
+
+Function InvokeDOSBoxPure(const InstallDir, ConfPath, WorkDir : String; const FullScreen : Boolean; const ExtraCmd : String) : THandle;
+Var PrgFile, Params : String;
+    ProcessId : DWORD;
+begin
+  result:=INVALID_HANDLE_VALUE;
+  PrgFile:=IncludeTrailingPathDelimiter(MakeAbsPath(InstallDir,PrgSetup.BaseDir))+DosBoxFileName;
+  if not FileExists(PrgFile) then
+    FindAlternativeDOSBoxFile(PrgFile);
+  if not FileExists(PrgFile) then begin
+    LogInfo('DOSBox Pure exe not found under: '+InstallDir);
+    Application.Restore;
+    if Assigned(Application.MainForm) then begin
+      Application.MainForm.Visible:=True;
+      Application.MainForm.Enabled:=True;
+    end;
+    MessageDlg(Format(LanguageSetup.MessageCouldNotFindDosBox,[PrgFile]),mtError,[mbOK],0);
+    Exit;
+  end;
+  PrgFile:=UnmapDrive(PrgFile,ptDOSBox);
+
+  Params:='"'+ConfPath+'"';
+  if Trim(ExtraCmd)<>'' then
+    Params:=Params+' '+Trim(ExtraCmd);
+
+  if FullScreen then
+    ShowFullscreenInfoDialog(Application.MainForm);
+
+  LogInfo('DOSBox Pure conf (content): '+ConfPath);
+  result:=CreateDOSBoxProcess(PrgFile,Params,IncludeTrailingPathDelimiter(WorkDir),nil,0,ProcessId);
+  if result<>INVALID_HANDLE_VALUE then
+    ScheduleDeletePureWorkDir(result,WorkDir);
 end;
 
 Function RunGameInt(const Game : TGame; const RunSetup : Boolean; const DosBoxCommandLine : String; const DeleteOnExit : TStringList; const RunExtraFile : Integer = -1) : THandle;
 Var St,St2 : TStringList;
-    T : String;
+    T, ConfPath, PureWorkDir : String;
     ZipRecNr : Integer;
     Error : Boolean;
     DOSBoxNr : Integer;
@@ -2048,6 +1776,8 @@ begin
   AlreadyMinimized:=False;
   DOSBoxStartedOk:=False;
   RunAsAdmin:=False;
+  PureWorkDir:='';
+  ConfPath:='';
 
   SpeedTestInfo('Starting profile '+Game.SetupFile,True);
   SpeedTestInfo('File checksum test');
@@ -2074,13 +1804,18 @@ begin
     try
       try
         SpeedTestInfo('Storing conf file');
-        SpeedTestInfoOnly('Conf filename:'+TempDir+DosBoxConfFileName);
-        St.SaveToFile(TempDir+DosBoxConfFileName);
-        LogConfShaderAndPath(St,TempDir+DosBoxConfFileName,Game);
+        if Game.DosBoxKind=dbkPure then
+          WritePureWorkDirFiles(Game,St,PureWorkDir,ConfPath)
+        else begin
+          ConfPath:=TempDir+DosBoxConfFileName;
+          St.SaveToFile(ConfPath);
+        end;
+        SpeedTestInfoOnly('Conf filename:'+ConfPath);
+        LogConfShaderAndPath(St,ConfPath,Game);
         SpeedTestInfoOnly('Logged conf path + shader lines to DFendX-Log.txt');
       except
         Application.Restore;
-        MessageDlg(Format(LanguageSetup.MessageCouldNotSaveFile,[TempDir+DosBoxConfFileName]),mtError,[mbOK],0);
+        MessageDlg(Format(LanguageSetup.MessageCouldNotSaveFile,[ConfPath]),mtError,[mbOK],0);
         exit;
       end;
       If Game.CacheName<>TempDOSBoxName then begin
@@ -2089,7 +1824,7 @@ begin
         History.Add(Game.CacheName);
       end;
 
-      T:=ResolveDOSBoxDir(Game.CustomDOSBoxDir);
+      T:=Game.GetDBInstallPath;
 
       SpeedTestInfo('Process zipped drives');
       ZipRecNr:=ZipManager.AddGame(Game,Error);
@@ -2110,7 +1845,10 @@ begin
         if ZipRecNr<0 then RunAsAdmin:=True else MessageDlg(LanguageSetup.ProfileMountingZipAdminError,mtError,[mbOK],0);
       end;
 
-      result:=RunDosBox(T,DOSBoxNr,TempDir+DosBoxConfFileName,Game.StartFullscreen,Game.ShowConsoleWindow,RunAsAdmin,DosBoxCommandLine);
+      if Game.DosBoxKind=dbkPure then
+        result:=InvokeDOSBoxPure(T,ConfPath,PureWorkDir,Game.StartFullscreen,DosBoxCommandLine)
+      else
+        result:=RunDosBox(T,DOSBoxNr,ConfPath,Game.StartFullscreen,Game.ShowConsoleWindow,RunAsAdmin,DosBoxCommandLine);
       { asAdmin uses ShellExecute and intentionally returns INVALID_HANDLE_VALUE }
       DOSBoxStartedOk:=(result<>INVALID_HANDLE_VALUE) or RunAsAdmin;
 

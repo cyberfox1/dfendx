@@ -3,7 +3,7 @@ interface
 
 {DEFINE SpeedTest}
 
-uses Classes, CommonComponents, PrgConsts;
+uses Classes, Generics.Collections, CommonComponents, PrgConsts, PrgSetupUnit, ConfOptDefaults;
 
 Type TConfOptH=class(TBasePrgSetup)
   public
@@ -68,9 +68,13 @@ Type TConfOptH=class(TBasePrgSetup)
     property VSyncStaging : String index 55 read GetString write SetString;
     property VSyncStagingOld : String index 56 read GetString write SetString;
     property VSyncX : String index 57 read GetString write SetString;
+    property VSyncPure : String index 63 read GetString write SetString;
+    property ScalePure : String index 64 read GetString write SetString;
+    property ShaderPure : String index 65 read GetString write SetString;
     property MIDIDeviceStaging : String index 58 read GetString write SetString;
     property MIDIDeviceStagingOld : String index 59 read GetString write SetString;
     property MIDIDeviceX : String index 60 read GetString write SetString;
+    property MIDIDevicePure : String index 66 read GetString write SetString;
     { MT-32 model conf values: Staging [mt32] model / DOSBox-X mt32.model }
     property MT32ModelStaging : String index 61 read GetString write SetString;
     property MT32ModelX : String index 62 read GetString write SetString;
@@ -227,6 +231,7 @@ const NR_Name=1;
       NR_MixerVolumeFMRight=316;
       NR_MixerVolumeCDLeft=317;
       NR_MixerVolumeCDRight=318;
+      NR_PureVolumeBoost=319;
 
       NR_SBType=331;
       NR_SBBase=332;
@@ -353,9 +358,8 @@ const ScummVMSettings : Array[0..32] of Integer =(
 Type TGameDBH=class;
 
      TGameH=class(TBasePrgSetup)
-  private
-    FDosBoxKind : TDOSBoxKind;
   protected
+    FDosBoxKind : TDOSBoxKind;
     FGameDB : TGameDBH;
     Procedure InitData;
     Function GetExtraPrgFile(I : Integer) : String;
@@ -379,7 +383,7 @@ Type TGameDBH=class;
     CacheLanguage, CacheLanguageUpper : String;
     CacheUserInfo : String;
 
-    procedure SetDosBoxKind(const CustomValue: String);
+    procedure SetDosBoxKind(const PreviousCustomDOSBoxDir, NewCustomDOSBoxDir: String); virtual;
     procedure SetString(const Index: Integer; const Value: String); reintroduce;
 
     Constructor Create(const ASetupFile : String); overload;
@@ -394,6 +398,8 @@ Type TGameDBH=class;
     Procedure RenameINI(const NewFile : String); override;
     Procedure AssignFrom(const ABasePrgSetup : TBasePrgSetup); reintroduce;
     Procedure AssignFromButKeepScummVMSettings(const AGame : TGameH);
+    function MIDIDeviceIs(const Device: String): Boolean;
+    function isGlideEnabled: Boolean;
 
     property GameDB : TGameDBH read FGameDB write FGameDB;
 
@@ -497,6 +503,8 @@ Type TGameDBH=class;
     property FluidSoundFont : String index NR_FluidSoundFont read GetString write SetString;
     { Staging/X FluidSynth gain percent as string "1".."800". Empty = unset / omit. }
     property MIDIDeviceGainValue : String index NR_MIDIDeviceGainValue read GetString write SetString;
+    { Pure only: empty = omit dosbox_pure_volume_* (except midi). Snapped Pure step string e.g. "1.0". }
+    property PureVolumeBoost : String index NR_PureVolumeBoost read GetString write SetString;
     { Legacy profile flags; prefer OnScreenInactive. Kept for reading old confs. }
     property MuteWhenInactive : Boolean index NR_MuteWhenInactive read GetBoolean write SetBoolean;
     property PauseWhenInactive : Boolean index NR_PauseWhenInactive read GetBoolean write SetBoolean;
@@ -661,7 +669,8 @@ end;
   protected
     FDir : String;
     FTimeStampCheck : Boolean;
-    FGameList : TList;
+    FDBType : TGameDBType;
+    FGameList : Classes.TList;
     FOnChanged : TNotifyEvent;
     FConfOpt : TConfOptH;
     FCreateConfFilesOnSave : Boolean;
@@ -684,7 +693,7 @@ end;
     Function GetLoadBinCacheOffset(const FileName : String; const DOSFileDate : Integer) : Boolean;
     Function CheckGameBinaryVersionID(const CacheVersionID : Integer) : Boolean;
   public
-    Constructor Create(const ADir : String; const ATimeStampCheck : Boolean = True);
+    Constructor Create(const ADir : String; const ADBType : TGameDBType; const ATimeStampCheck : Boolean = True);
     Destructor Destroy; override;
     Procedure Clear;
     Function Add(const AGame : TGameH; const AName : String) : Integer; overload;
@@ -701,117 +710,21 @@ end;
     Function GetWWWNameList(WithDefaultProfile : Boolean =True; const HideWindowsProfiles : Boolean = False) : TStringList;
     Function GetKeyValueList(const Key : String; WithDefaultProfile : Boolean =True) : TStringList;
     Function GetUserKeys : TStringList;
-    Function GetSortedGamesList : TList;
+    Function GetSortedGamesList : Classes.TList;
     Procedure StoreAllValues;
     Procedure LoadCache;
+    Procedure RefreshDosBoxKindsForInstall(const InstallNames: TDictionary<String,TDOSBoxSetting>);
+    Procedure RefreshDosBoxKinds;
     Function ProfFileName(const AName : String; const CheckExistingFiles : Boolean) : String;
     property Count : Integer read GetCount;
     property Game[I : Integer] : TGameH read GetGame; default;
     property ConfOpt : TConfOptH read FConfOpt;
     property OnChanged : TNotifyEvent read FOnChanged write FOnChanged;
     property CreateConfFilesOnSave : Boolean read FCreateConfFilesOnSave write FCreateConfFilesOnSave;
+    property DBType : TGameDBType read FDBType;
 end;
 
 Var DefaultValueReaderGame : TGameH = nil;
-
-Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x480,720x480,800x600,1024x768,1152x864,1280x720,1280x768,1280x960,1280x1024,1366x760,1366x768,1600x1200,1680x1050,1920x1080,1920x1200,0x0';
-      DefaultValuesResolutionWindow='original,320x200,320x240,640x432,640x480,720x480,800x600,1024x768,1152x864,1280x720,1280x768,1280x960,1280x1024,1366x760,1366x768,1600x1200,1920x1080,1920x1200';
-      DefaultValuesJoysticks='none,auto,2axis,4axis,4axis_2,fcs,ch';
-      DefaultValuesScale='No Scaling (none),Nearest neighbor upscaling with factor 2 (normal2x),Nearest neighbor upscaling with factor 3 (normal3x),'+
-                         'Advanced upscaling with factor 2 (advmame2x),Advanced upscaling with factor 3 (advmame3x),'+
-                         'high quality with factor 2 (hq2x), high quality with factor 3 (hq3x),2xsai (2xsai), super2xsai (super2xsai), supereagle (supereagle),'+
-                         'Advanced interpoling with factor 2 (advinterp2x),Advanced interpoling with factor 3 (advinterp3x),'+
-                         'Advanced upscaling with sharpening with factor 2 (tv2x),Advanced upscaling with sharpening with factor 3 (tv3x),Simulates the phopsphors on a dot trio CRT with factor 2 (rgb2x),Simulates the phopsphors on a dot trio CRT with factor 3 (rgb3x),'+
-                         'Nearest neighbor with black lines with factor 2 (scan2x),Nearest neighbor with black lines with factor 3 (scan3x)';
-      DefaultValueRender='surface,overlay,opengl,openglnb,ddraw,direct3d';
-      DefaultValueRenderStaging='opengl,texture,texturenb';
-      DefaultValueRenderX='default,surface,ttf,opengl,openglnb,openglhq,openglpp,direct3d,direct3d11';
-      DefaultValueVSyncStaging='off,on,fullscreen-only';
-      DefaultValueVSyncStagingOld='auto,on,adaptive,off,yield';
-      DefaultValueVSyncX='off,on,force,host';
-      DefaultValueCycles='auto,max,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,6000,7000,8000,9000,10000,11000,12000,12000,13000,14000,15000,16000,17000,18000,19000,20000';
-      DefaultValuesVideo='hercules (Hercules Graphics Card),cga (Color Graphics Adapter),tandy (Tandy),pcjr (IBM PCjr),ega (Enhanced Graphics Adapter),'+
-                         'vgaonly (Video Graphics Array), svga_s3 (VESA 2.0 compatible S3 SuperVGA card), svga_et3000 (Tseng ET3000 SuperVGA card),'+
-                         'svga_et4000 (Tseng ET4000 SuperVGA card),svga_paradise (Paradise PVGA1A SuperVGA card),vesa_nolfb (VESA 2.0 compatible S3 SuperVGA card),'+
-                         'vesa_oldvbe (VESA 1.2 compatible S3 SuperVGA card),'+
-                         'PC98,DOS/V,olivetti (Olivetti M24 / AT&T 6300),pc3270 (IBM 3270 PC)';
-      DefaultValuesMemory='1,2,4,8,16,32,63';
-      DefaultValuesFrameSkip='0,1,2,3,4,5,6,7,8,9,10';
-      DefaultValuesCore='auto,normal,dynamic,simple';
-      DefaultValuesSBlaster='none,sb1,sb2,sbpro1,sbpro2,sb16,gb';
-      DefaultValuesOPLModes='auto,cms,opl2,dualopl2,opl3,none';
-      DefaultValuesKeyboardLayout='default,none,Albania (SQ),Albania (SQ448),Argentina (LA),Armenia (HY),Australia (US),Austria (DE),Austria (DE453),Azerbaijan (AZ),'+
-                                  'Belarus (BY),Belgium (BE),Bosnia & Herzegovina (BA),Brazil (BR),Brazil (BR274),Bulgaria (BG),Bulgaria (BG241),'+
-                                  'Canada (CA),Canada (CA445),Canada (CF501),Chile (LA),Colombia (LA),Croatia (HR),Czech Republic (CZ),Czech Republic (CZ243),'+
-                                  'Denmark (DK),Ecuador (LA),Estonia (EE),Faeroe Islands (FO),Finland (FI),France (FR),France (FR120),Georgia (KA),Germany (DE),Germany (DE453),'+
-                                  'Greece (GK),Greece (GK220),Greece (GK459),Hungary (HU),Hungary (HU208),Iceland (IS),Iceland (IS161),Ireland (UK),Ireland (UK168),'+
-                                  'Italy (IT),Italy (IT142),Kazakhstan (KK),Kyrgyzstan (KY),Latin-American-Spanish (LA),Latvia (LV),Latvia (LV455),'+
-                                  'Lithuania (LT),Lithuania (LT210),Lithuania (LT211),Lithuania (LT221),Lithuania (LT456),Macedonia (MK),Malta (MT),Malta (MT47),Mexico (LA),'+
-                                  'Mongolia (MN),Netherlands (NL),New Zealand (US),Norway (NO),Philippines (PH),Poland (PL),Poland (PL214),Portugal (PO),Romania (RO),Romania (RO446),'+
-                                  'Russia (RU),Russia (RU443),Serbia & Montenegro (SR),Serbia & Montenegro (SR450),Slovakia (SK),Slovenia (SI),South Africa (US),Spain (ES),'+
-                                  'Sweden (SV),Switzerland - French (SF),Switzerland - German (SD),Turkmenistan (TM),Turkey (TR),Turkey (TR440),Ukraine (UA),Ukraine (UA465),'+
-                                  'United Kingdom (UK),United Kingdom (UK168),US (US),US International (UX),US Dvorak (DV),US Left-Hand Dvorak (LH),US Right-Hand Dvorak (RH),'+
-                                  'Uzbekistan (UZ),Venezuela (LA),Yugoslavia (YU)';
-      DefaultValuesCodepage='default,113 (Yugoslavian),437 (United States),667 (Polish),668 (Polish),737 (Greek-2),770 (Baltic),771 (Lithuanian and Russian KBL),'+
-                            '772 (Lithuanian and Russian),773 (Latin-7 Baltic - old standard),774 (Lithuanian),775 (Latin-7 Baltic),777 (Accented Lithuanian),'+
-                            '778 (Accented Lithuanian),790 (Polish Mazovia),808 (Cyrillic-2 with Euro),848 (Cyrillic Ukrainian with Euro),849 (Cyrillic Belarusian with Euro),'+
-                            '850 (Latin-1),851 (Greek),852 (Latin-2 Eastern European),853 (Latin-3 Southern European),855 (Cyrillic-1),857 (Latin-5 Turkish),'+
-                            '858 (Latin-1 with Euro),859 (Latin-9; 858 plus full french and estonian),860 (Portugal),861 (Icelandic),863 (Canadian French),'+
-                            '865 (Nordic),866 (Cyrillic-2 Russian),867 (Czech Kamenicky),869 (Greek),872 (Cyrillic-1 with Euro),899 (Armenian),991 (Polish Mazovia with Zloty sign),'+
-                            '1116 (Estonian),1117 (Latvian),1125 (Cyrillic Ukrainian),1131 (Cyrillic Belarusian),57781 (Hungarian),58152 (Cyrillic Kazakh with Euro),'+
-                            '58210 (Cyrillic Azeri Cyrillic),59234 (Cyrillic Tatar),59829 (Georgian),60258 (Cyrillic Azeri Latin),60853 (Georgian with capital letters),'+
-                            '61282 (Latvian and Russian "RusLat"),62306 (Cyrillic Uzbek)';
-      DefaultValuesReportedDOSVersion='default,6.22,6.2,6.0,5.0,4.0,3.3';
-      DefaultValuesMIDIDevice='default,alsa,oss,win32,coreaudio,mt32,none';
-      DefaultValuesMIDIDeviceStaging='port,fluidsynth,mt32,none';
-      DefaultValuesMIDIDeviceStagingOld='auto,win32,fluidsynth,mt32,none';
-      DefaultValuesMIDIDeviceX='default,win32,fluidsynth,mt32,synth,timidity,none';
-      { Staging [mt32] model Set_values (staging + 83rc). }
-      DefaultValuesMT32ModelStaging=
-        'auto,cm32l,cm32l_102,cm32l_100,cm32ln_100,mt32,mt32_old,mt32_107,mt32_106,'+
-        'mt32_105,mt32_104,mt32_bluer,mt32_new,mt32_207,mt32_206,mt32_204,mt32_203';
-      { DOSBox-X mt32.model Set_values. }
-      DefaultValuesMT32ModelX='auto,cm32l,mt32';
-      DefaultValuesBlocksize='512,1024,2048,3072,4096,8192';
-      DefaultValuesCyclesDown='20,50,100,500,1000,2000,5000,10000';
-      DefaultValuesCyclesUp='20,50,100,500,1000,2000,5000,10000';
-      DefaultValuesDMA='0,1,3,5,6,7';
-      DefaultValuesDMA1='0,1,3,5,6,7';
-      DefaultValuesGUSBase='220,240,260,280,2a0,2c0,2e0,300';
-      DefaultValuesGUSRate='8000,11025,22050,32000,44100,48000,49716';
-      DefaultValuesHDMA='0,1,3,5,6,7';
-      DefaultValuesIRQ='3,5,7,10,11';
-      DefaultValuesIRQ1='3,5,7,10,11';
-      DefaultValuesMPU401='none,intelligent,uart';
-      DefaultValuesOPLRate='8000,11025,22050,32000,44100,48000,49716';
-      DefaultValuesPCRate='8000,11025,22050,32000,44100,48000,49716';
-      DefaultValuesRate='8000,11025,22050,32000,44100,48000,49716';
-      DefaultValuesSBBase='220,240,260,280,2a0,2c0,2e0,300';
-      DefaultValuesMouseSensitivity='10,20,30,40,50,60,70,80,90,100,125,150,175,200,250,300,350,400,450,500,550,600,700,800,900,1000';
-      DefaultValuesTandyRate='8000,11025,16000,22050,32000,44100,48000,49716';
-      DefaultValuesScummVMFilter='No filtering. no scaling. Fastest (1x),No filtering. factor 2x. default for non 640x480 games (2x),No filtering. factor 3x (3x),2xSAI filter. factor 2x (2xsai),Enhanced 2xSAI filtering. factor 2x (super2xsai),'+
-                                 'Less blurry than 2xSAI but slower. Factor 2x (supereagle),Doesn''t rely on blurring like 2xSAI. fast. Factor 2x (advmame2x),Doesn''t rely on blurring like 2xSAI. fast. Factor 3x (advmame3x),Very nice high quality filter but slow. Factor 2x (hq2x),'+
-                                 'Very nice high quality filter but slow. Factor 3x (hq3x),Interlace filter. Tries to emulate a TV. Factor 2x (tv2x),Dot matrix effect. Factor 2x (dotmatrix)';
-      DefaultValuesScummVMMusicDriver='No music (null),Automatic (auto),Adlib emulation (adlib),FluidSynth MIDI emulation (fluidsynth),MT-32 emulation (mt32),PCjr emulation (only usable in SCUMM games) (pcjr),PC Speaker emulation (pcspk),'+
-                                      'FM-TOWNS YM2612 emulation (only usable in SCUMM FM-TOWNS games) (towns),Windows MIDI (windows)';
-      DefaultValuesVGAChipsets='s3,et4000,et4000new,et3000,pvga1a,none';
-      DefaultValuesVGAVideoRAM='512,1024,2048,4096,8192';
-      DefaultValuesScummVMRenderMode='default,CGA,EGA,Hercules green (hercGreen),Hercules amber (hercAmber),Amiga';
-      DefaultValuesScummVMPlatform='auto,2gs,3do,acorn,amiga,atari,c64,fmtowns,mac,nes,pc,pce,segacd,windows';
-      DefaultValuesScummVMLanguages='maniac:en-de-fr-it-es,zak:en-de-fr-it-es,dig_jp-zh-kr,comi:en-de-fr-it-pt-es-jp-zh-kr,sky:gb-en-de-fr-it-pt-es-se,sword1:en-de-fr-it-es-pt-cz,simon1:en-de-fr-it-es-hb-pl-ru,simon2:en-de-fr-it-es-hb-pl-ru';
-      DefaultValuesCPUType='auto,386,386_slow,486_slow,pentium_slow,386_prefetch';
-      DefaultValuesOplEmu='default,compat,fast,old';
-      DefaultValuesGlideEmulation='false,true,emu';
-      DefaultValuesGlideEmulationPort='400,500,600';
-      DefaultValuesGlideEmulationLFB='full,read,write,none';
-      DefaultValuesInnovaEmulationSampleRate='44100,48000,32000,22050,16000,11025,8000,49716';
-      DefaultValuesInnovaEmulationBaseAddress='240,220,260,280,2a0,2c0,2e0,300';
-      DefaultValuesInnovaEmulationQuality='0,1,2,3';
-      DefaultValuesNE2000EmulationBaseAddress='300,400,500';
-      DefaultValuesNE2000EmulationInterrupt='3,5,7,10,11';
-      DefaultValuesMT32ReverbMode='0,1,2,3,auto';
-      DefaultValuesMT32ReverbTime='0,1,2,3,4,5,6,7';
-      DefaultValuesMT32ReverbLevel='0,1,2,3,4,5,6,7';
 
 { DOSBox install resolve (PrgSetup-coupled) }
 
@@ -831,9 +744,9 @@ function ResolveDOSBoxKindPreviewPath(Kind: TDOSBoxKind): String;
 
 implementation
 
-uses Windows, SysUtils, Math, CommonHelpers, CommonTools,
-     PrgSetupUnit, LanguageSetupUnit, LoggingUnit,
-     GameDBToolsHelpers;
+uses Windows, Math, CommonHelpers, CommonTools,
+     LanguageSetupUnit, LoggingUnit,
+     GameDBToolsHelpers, SysUtils;
 
 
 { TConfOptH }
@@ -906,6 +819,10 @@ begin
   AddStringRec(60,'MIDIDeviceX','value',DefaultValuesMIDIDeviceX);
   AddStringRec(61,'MT32ModelStaging','value',DefaultValuesMT32ModelStaging);
   AddStringRec(62,'MT32ModelX','value',DefaultValuesMT32ModelX);
+  AddStringRec(63,'vsyncPure','value',DefaultValueVSyncPure);
+  AddStringRec(64,'scalePure','value',DefaultValueScalePure);
+  AddStringRec(65,'shaderPure','value',DefaultValueShaderPure);
+  AddStringRec(66,'MIDIDevicePure','value',DefaultValuesMIDIDevicePure);
 
   CacheAllStrings;
 end;
@@ -1072,6 +989,7 @@ begin
   AddStringRec(NR_VSync,'render','vsync','');
   AddStringRec(NR_FluidSoundFont,'midi','FluidSoundFont','');
   AddStringRec(NR_MIDIDeviceGainValue,'midi','MIDIDeviceGainValue','');
+  AddStringRec(NR_PureVolumeBoost,'mixer','PureVolumeBoost','');
   AddBooleanRec(NR_MuteWhenInactive,'sdl','MuteWhenInactive',False);
   AddBooleanRec(NR_PauseWhenInactive,'sdl','PauseWhenInactive',False);
   AddIntegerRec(NR_OnScreenInactive,'sdl','OnScreenInactive',Ord(simDoNothing));
@@ -1361,9 +1279,12 @@ begin
 end;
 
 Procedure TGameH.ReloadINI;
+Var PreviousCustomDOSBoxDir: String;
 begin
+  PreviousCustomDOSBoxDir:=GetString(NR_CustomDOSBoxDir);
   inherited ReloadINI;
   LoadCache;
+  SetDosBoxKind(PreviousCustomDOSBoxDir,GetString(NR_CustomDOSBoxDir));
 end;
 
 Procedure TGameH.RenameINI(const NewFile : String);
@@ -1398,17 +1319,21 @@ begin
 end;
 
 Procedure TGameH.AssignFrom(const ABasePrgSetup : TBasePrgSetup);
+Var PreviousCustomDOSBoxDir: String;
 begin
+  PreviousCustomDOSBoxDir:=GetString(NR_CustomDOSBoxDir);
   inherited AssignFrom(ABasePrgSetup);
   { AssignFromPartially fills rec caches only — recompute kind without SetString
     (SetString(CustomDOSBoxDir) would clear PixelShader/ShaderPreset). }
-  SetDosBoxKind(GetString(NR_CustomDOSBoxDir));
+  SetDosBoxKind(PreviousCustomDOSBoxDir,GetString(NR_CustomDOSBoxDir));
 end;
 
 Procedure TGameH.AssignFromButKeepScummVMSettings(const AGame : TGameH);
+Var PreviousCustomDOSBoxDir: String;
 begin
+  PreviousCustomDOSBoxDir:=GetString(NR_CustomDOSBoxDir);
   AssignFromPartially(AGame,ScummVMSettings);
-  SetDosBoxKind(GetString(NR_CustomDOSBoxDir));
+  SetDosBoxKind(PreviousCustomDOSBoxDir,GetString(NR_CustomDOSBoxDir));
 end;
 
 procedure TGameH.SetString(const Index: Integer; const Value: String);
@@ -1417,8 +1342,8 @@ var
 begin
   if Index = NR_CustomDOSBoxDir then begin
     Old := GetString(Index);
+    SetDosBoxKind(Old, Value);
     inherited SetString(Index, Value);
-    SetDosBoxKind(Value);
     { Shader / preset ids are scoped to one DOSBox install; changing the
       install invalidates them. Same value (incl. constructor re-set) keeps. }
     if not SameText(Trim(Old), Trim(Value)) then begin
@@ -1429,56 +1354,46 @@ begin
     inherited SetString(Index, Value);
 end;
 
-procedure TGameH.SetDosBoxKind(const CustomValue: String);
-var
-  S: String;
-  k: TDOSBoxKind;
-  Idx: Integer;
+procedure TGameH.SetDosBoxKind(const PreviousCustomDOSBoxDir, NewCustomDOSBoxDir: String);
 begin
-  S := Trim(CustomValue);
-  { Empty = no install chosen yet (dbkNone). Do not map to install 0 for kind. }
-  if S = '' then
-  begin
-    FDosBoxKind := dbkNone;
-    Exit;
-  end;
-
-  { "default" / named install / bare path — same index rules as ResolveDOSBoxInstallIndex. }
-  Idx := ResolveDOSBoxInstallIndex(S);
-  if Idx >= 0 then
-  begin
-    if Idx < PrgSetup.DOSBoxSettingsCount then
-    begin
-      k := PrgSetup.DOSBoxSettings[Idx].DosBoxKind;
-      if (k = dbkNone) or (k = dbkUnknown) then
-        k := DetermineDosBoxKind(PrgSetup.DOSBoxSettings[Idx].DosBoxDir, PrgSetup.BaseDir);
-    end
-    else
-      k := dbkUnknown;
-  end
+  if Trim(NewCustomDOSBoxDir) = '' then
+    FDosBoxKind := dbkNone
   else
-    k := DetermineDosBoxKind(S, PrgSetup.BaseDir);
+    FDosBoxKind := dbkUnknown;
+end;
 
-  FDosBoxKind := k;
+function TGameH.MIDIDeviceIs(const Device: String): Boolean;
+Var D: String;
+begin
+  D:=Trim(MIDIDevice);
+  if SameText(D,'fluidsynth') then
+    D:='soundfont';
+  Result:=SameText(D,Trim(Device));
+end;
+
+function TGameH.isGlideEnabled: Boolean;
+begin
+  Result:=SameText(Trim(GlideEmulation),'true') or SameText(Trim(GlideEmulation),'emu');
 end;
 
 { TGameDBH }
 
-constructor TGameDBH.Create(const ADir : String; const ATimeStampCheck : Boolean);
+constructor TGameDBH.Create(const ADir : String; const ADBType : TGameDBType; const ATimeStampCheck : Boolean);
 begin
   inherited Create;
   FCreateConfFilesOnSave:=False;
-  FGameList:=TList.Create;
+  FGameList:=Classes.TList.Create;
   FConfOpt:=TConfOptH.Create;
   If ATimeStampCheck then FConfOpt.CacheAllStrings;
   FDir:=IncludeTrailingPathDelimiter(ADir);
+  FDBType:=ADBType;
   FTimeStampCheck:=ATimeStampCheck;
 end;
 
 destructor TGameDBH.Destroy;
 begin
   If PrgSetup.BinaryCache then begin
-    If FGameList.Count>20 then StoreBinCache else DeleteFile(FDir+CacheFile);
+    If FGameList.Count>20 then StoreBinCache else SysUtils.DeleteFile(FDir+CacheFile);
   end;
   Clear;
   FGameList.Free;
@@ -1506,7 +1421,7 @@ begin
       I:=FindNext(Rec);
     end;
   finally
-    FindClose(Rec);
+    SysUtils.FindClose(Rec);
   end;
 end;
 
@@ -1522,7 +1437,7 @@ begin
         I:=FindNext(Rec);
       end;
     finally
-      FindClose(Rec);
+      SysUtils.FindClose(Rec);
     end;
   end;
 
@@ -1533,7 +1448,7 @@ begin
       I:=FindNext(Rec);
     end;
   finally
-    FindClose(Rec);
+    SysUtils.FindClose(Rec);
   end;
 end;
 
@@ -1603,7 +1518,7 @@ begin
   If (I<0) or (I>=FGameList.Count) then result:=nil else result:=TGameH(FGameList[I]);
 end;
 
-function TGameDBH.GetSortedGamesList: TList;
+function TGameDBH.GetSortedGamesList: Classes.TList;
 Var St : TStringList;
     I : Integer;
 begin
@@ -1612,7 +1527,7 @@ begin
     For I:=0 to FGameList.Count-1 do St.AddObject(TGameH(FGameList[I]).Name,TGameH(FGameList[I]));
     St.Sort;
 
-    result:=TList.Create;
+    result:=Classes.TList.Create;
     For I:=0 to St.Count-1 do result.Add(St.Objects[I]);
   finally
     St.Free;
@@ -1876,6 +1791,32 @@ begin
   For I:=0 to FGameList.Count-1 do TGameH(FGameList[I]).LoadCache;
 end;
 
+procedure TGameDBH.RefreshDosBoxKindsForInstall(const InstallNames: TDictionary<String,TDOSBoxSetting>);
+Var I : Integer;
+    G : TGameH;
+    S : String;
+    Install : TDOSBoxSetting;
+begin
+  if (InstallNames=nil) or (InstallNames.Count=0) then Exit;
+  For I:=0 to FGameList.Count-1 do begin
+    G:=TGameH(FGameList[I]);
+    S:=Trim(G.CustomDOSBoxDir);
+    if S='' then Continue;
+    if not InstallNames.TryGetValue(ExtUpperCase(S),Install) then Continue;
+    G.FDosBoxKind:=Install.DosBoxKind;
+  end;
+end;
+
+procedure TGameDBH.RefreshDosBoxKinds;
+Var I : Integer;
+    G : TGameH;
+begin
+  For I:=0 to FGameList.Count-1 do begin
+    G:=TGameH(FGameList[I]);
+    G.SetDosBoxKind(G.CustomDOSBoxDir,G.CustomDOSBoxDir);
+  end;
+end;
+
 Procedure TGameDBH.StoreBinCache;
 Var St,StFinal : TMemoryStream;
     Index : Array['A'..'Z'] of TStringList;
@@ -1960,20 +1901,14 @@ begin
   BinLoadCacheIndexRest:=TStringList.Create;
   BinLoadCacheOffset:=0;
 
-  If not FileExists(FDir+CacheFile) then begin
-    LogInfo('InitLoadBinCache: no cache at '+FDir+CacheFile);
-    exit;
-  end;
-  try BinLoadCache.LoadFromFile(FDir+CacheFile); except
-    LogInfo('InitLoadBinCache: failed to load '+FDir+CacheFile);
-    exit;
-  end;
+  If not FileExists(FDir+CacheFile) then exit;
+  try BinLoadCache.LoadFromFile(FDir+CacheFile); except exit; end;
 
   try
     SetLength(S,length(CacheVersionString));
     BinLoadCache.ReadBuffer(S[1],length(S)*SizeOf(Char));
     If S<>CacheVersionString then begin
-      LogInfo('InitLoadBinCache: version mismatch '+FDir+CacheFile);
+      BurnLoadBinCache;
       exit;
     end;
 
@@ -1981,15 +1916,12 @@ begin
 
     BinLoadCache.ReadBuffer(I,SizeOf(Integer));
     If not CheckGameBinaryVersionID(I) then begin
-      LogInfo('InitLoadBinCache: BinaryVersionID mismatch '+FDir+CacheFile);
+      BurnLoadBinCache;
       exit;
     end;
 
   except
-    on E: Exception do begin
-      LogInfo('InitLoadBinCache: header read failed '+FDir+CacheFile+' '+E.ClassName+': '+E.Message);
-      exit;
-    end;
+    exit;
   end;
 
   try
@@ -2010,14 +1942,10 @@ begin
       BinLoadCacheIndexRest.AddObject(String(A),TObject(K));
     end;
   except
-    on E: Exception do begin
-      LogInfo('InitLoadBinCache: index read failed '+FDir+CacheFile+' '+E.ClassName+': '+E.Message);
-      BurnLoadBinCache;
-    end;
+    BurnLoadBinCache;
   end;
 
   BinLoadCacheOffset:=BinLoadCache.Position;
-  LogInfo('InitLoadBinCache: loaded index from '+FDir+CacheFile);
 end;
 
 Function TGameDBH.CheckGameBinaryVersionID(const CacheVersionID : Integer) : Boolean;
@@ -2042,7 +1970,7 @@ end;
 Procedure TGameDBH.BurnLoadBinCache;
 Var C : Char;
 begin
-  If FileExists(FDir+CacheFile) then DeleteFile(FDir+CacheFile);
+  If FileExists(FDir+CacheFile) then SysUtils.DeleteFile(FDir+CacheFile);
   For C:='A' to 'Z' do BinLoadCacheIndex[C].Clear;
   BinLoadCacheIndexRest.Clear;
 end;

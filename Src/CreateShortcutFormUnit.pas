@@ -173,7 +173,7 @@ begin
       end;
       If Trim(PrgSetup.LinuxShellScriptPreamble)<>'' then St.Add(PrgSetup.LinuxShellScriptPreamble);
 
-      S:=ResolveDOSBoxDir(Game.CustomDOSBoxDir);
+      S:=Game.GetDBInstallPath;
       St.Add(UnmapDrive(S+DosBoxFileName,ptDOSBox)+' -conf "'+UnmapDrive(ConfFile,ptDOSBox)+'"');
       try
         St.SaveToFile(SaveDialog.FileName);

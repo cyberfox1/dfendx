@@ -55,11 +55,13 @@ if not exist "%STBIN%\bassflac.dll" (
 )
 copy /y "%STBIN%\bassflac.dll" "%DEST%" >nul
 if errorlevel 1 exit /b 1
-call "%~dp0EnsureSqlite3Dll.bat"
-if errorlevel 1 exit /b 1
 if not exist "%STBIN%\sqlite3.dll" (
-  echo ERROR: missing %STBIN%\sqlite3.dll
-  exit /b 1
+  if not exist "..\Bin\sqlite3.dll" (
+    echo ERROR: missing %STBIN%\sqlite3.dll and ..\Bin\sqlite3.dll
+    exit /b 1
+  )
+  copy /y "..\Bin\sqlite3.dll" "%STBIN%\sqlite3.dll" >nul
+  if errorlevel 1 exit /b 1
 )
 copy /y "%STBIN%\sqlite3.dll" "%DEST%" >nul
 if errorlevel 1 exit /b 1
@@ -93,6 +95,7 @@ call :CopyBin "LicenseBASS.txt" || exit /b 1
 call :CopyBin "AdminLauncher.exe" || exit /b 1
 call :CopyBin "SetInstallerLanguage.exe" || exit /b 1
 call :CopyBin "dfxvalidator.exe" || exit /b 1
+call :CopyBin "config.com" || exit /b 1
 
 REM Working-copy language tree (same as Setup File "..\Lang\*.ini" / "*.chm").
 dir /b "..\Lang\*.ini" >nul 2>&1

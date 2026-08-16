@@ -551,7 +551,7 @@ Var AutoSetupDB : TGameDB;
 begin
   PackageCreationForm:=TPackageCreationForm.Create(AOwner);
   try
-    AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,False);
+    AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,gbtAutoSetupDB,False);
     try
       PackageCreationForm.GameDB:=AGameDB;
       PackageCreationForm.AutoSetupDB:=AutoSetupDB;

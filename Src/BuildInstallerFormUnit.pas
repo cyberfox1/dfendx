@@ -173,8 +173,8 @@ begin
   SaveDialog.Title:=LanguageSetup.BuildInstallerDestFileTitle;
   SaveDialog.Filter:=LanguageSetup.BuildInstallerDestFileFilter;
 
-  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,False);
-  AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,False);
+  TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,gbtTemplateDB,False);
+  AutoSetupDB:=TGameDB.Create(PrgDataDir+AutoSetupSubDir,gbtAutoSetupDB,False);
 end;
 
 procedure TBuildInstallerForm.FormDestroy(Sender: TObject);

@@ -27,9 +27,12 @@ type
     procedure ListNICButtonClick(Sender: TObject);
   private
     { Private-Deklarationen }
-    ProfileDOSBoxInstallation : PString;
+    FTempGame : TGame;
+    procedure ApplyKindControls;
+    procedure ShowFrame(Sender : TObject);
   public
     { Public-Deklarationen }
+    Constructor Create(AOwner : TComponent); override;
     Procedure InitGUI(var InitData : TModernProfileEditorInitData);
     Procedure SetGame(const Game : TGame; const LoadFromTemplate : Boolean);
     Procedure GetGame(const Game : TGame);
@@ -38,11 +41,17 @@ type
 implementation
 
 uses Math, VistaToolsUnit, LanguageSetupUnit, CommonHelpers, HelpConsts,
-     PrgSetupUnit, DOSBoxUnit, DOSBoxTempUnit, MainUnit;
+     PrgSetupUnit, PrgConsts, DOSBoxUnit, DOSBoxTempUnit, MainUnit;
 
 {$R *.dfm}
 
 { TModernProfileEditorNetworkFrame }
+
+constructor TModernProfileEditorNetworkFrame.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
+end;
 
 procedure TModernProfileEditorNetworkFrame.InitGUI(var InitData : TModernProfileEditorInitData);
 Var St : TStringList;
@@ -94,9 +103,18 @@ begin
     St.Free;
   end;
 
-  ProfileDOSBoxInstallation:=InitData.CurrentDOSBoxInstallation;
-
+  InitData.OnShowFrame:=ShowFrame;
   HelpContext:=ID_ProfileEditNetwork;
+end;
+
+procedure TModernProfileEditorNetworkFrame.ApplyKindControls;
+begin
+  ListNICButton.Enabled:=PrgSetup.AllowNe2000 and (FTempGame.DosBoxKind in [dbkStandard,dbkX]);
+end;
+
+procedure TModernProfileEditorNetworkFrame.ShowFrame(Sender : TObject);
+begin
+  ApplyKindControls;
 end;
 
 procedure TModernProfileEditorNetworkFrame.SetGame(const Game: TGame; const LoadFromTemplate: Boolean);
@@ -126,6 +144,7 @@ begin
   end;
   NE2000MACAddressEdit.Text:=Game.NE2000MACAddress;
   NE2000RealNICEdit.Text:=Game.NE2000RealInterface;
+  ApplyKindControls;
 end;
 
 procedure TModernProfileEditorNetworkFrame.ActivateCheckBoxClick(Sender: TObject);
@@ -171,7 +190,7 @@ begin
     TempGame.Game.NE2000MACAddress:='AC:DE:48:88:99:AA';
     TempGame.Game.NE2000RealInterface:='list';
     TempGame.Game.ShowConsoleWindow:=2;
-    TempGame.Game.CustomDOSBoxDir:=ProfileDOSBoxInstallation^;
+    TempGame.Game.CustomDOSBoxDir:=FTempGame.CustomDOSBoxDir;
     RunCommand(TempGame.Game,DFendReloadedMainForm.DeleteOnExit,'',True);
   finally
     TempGame.Free;

@@ -35,9 +35,9 @@ begin
     St.Add('  <Emulator>');
     St.Add('    <Type>DOSBox</Type>');
     St.Add('    <Version>0.72</Version>');
-    S:=ResolveDOSBoxDir(G.CustomDOSBoxDir);
+    S:=G.GetDBInstallPath;
     St.Add('    <Path>'+S+'DOSBox.exe</Path>');
-    If ResolveDOSBoxInstallIndex(G.CustomDOSBoxDir)<0
+    If G.GetDBInstall=nil
       then St.Add('    <Name>DOSBox 0.72 (Custom build)</Name>')
       else St.Add('    <Name>DOSBox 0.72</Name>');
     St.Add('    <Configuration>');
