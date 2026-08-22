@@ -1,5 +1,14 @@
 DFendX Changelog
 
+Version 2.3.0 (08/22/2026)
+==========================
+- Full Glide support for DOSBox-X, Staging and Pure Unleashed.
+- Automatic Save State directory for DOSBox-X.
+- 7za.exe added as a pre-configured packer.
+- Build environment upgraded to RAD 13 (Delphi 13 Florence).
+- [Removed] The old 7zip DLL interface and ZipMaster.
+
+
 Version 2.2.0 (08/16/2026)
 ==========================
 - (Initial) Support for DOSBox Pure Unleashed.

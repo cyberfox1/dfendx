@@ -247,7 +247,6 @@ Type TPrgSetup=class(TBasePrgSetup)
     property RemapDOSBoxFolder : Boolean index 28 read GetBoolean write SetBoolean;
     property UseCheckSumsForProfiles : Boolean index 29 read GetBoolean write SetBoolean;
     property AllowVGAChipsetSettings : Boolean index 30 read GetBoolean write SetBoolean;
-    property AllowGlideSettings : Boolean index 31 read GetBoolean write SetBoolean;
     property AllowPrinterSettings : Boolean index 32 read GetBoolean write SetBoolean;
     property AllowNe2000 : Boolean index 33 read GetBoolean write SetBoolean;
     property AllowInnova : Boolean index 34 read GetBoolean write SetBoolean;
@@ -864,7 +863,6 @@ begin
   AddBooleanRec(28,'WineSupport','RemapDOSBoxFolder',False);
   AddBooleanRec(29,'ProgramSets','UseCheckSumsForProfiles',True);
   AddBooleanRec(30,'ProgramSets','AllowVGAChipsetSettings',False);
-  AddBooleanRec(31,'ProgramSets','AllowGlideSettings',False);
   AddBooleanRec(32,'ProgramSets','AllowPrinterSettings',False);
   AddBooleanRec(33,'ProgramSets','AllowNe2000',False);
   AddBooleanRec(34,'ProgramSets','AllowInnova',False);

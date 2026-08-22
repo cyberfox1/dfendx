@@ -10,6 +10,7 @@ Procedure GenerateInnovaConf(const Game: TGame; const Dest: TStrings; const IsSt
 Procedure GenerateSDLConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer; const BuildForArchivePackage: Boolean);
 Procedure GenerateCoreDOSBoxConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer; const DOSBoxVersion: Double; const BuildForArchivePackage: Boolean; const DeleteOnExit: TStringList);
 Procedure GenerateGlideConf(const Game: TGame; const Dest: TStrings);
+Procedure GeneratePureGlideCfg(const Game: TGame; const Cfg: TStrings);
 Procedure GenerateNetworkConf(const Game: TGame; const Dest: TStrings);
 Procedure GenerateMSDOSConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer);
 Procedure GenerateSpecialMachineConf(const Game: TGame; const Dest: TStrings);
@@ -489,48 +490,140 @@ begin
   end;
 end;
 
-Procedure GenerateGlideConf(const Game: TGame; const Dest: TStrings);
+Function NormalizeGlideEmulation(const Game: TGame): String;
 Var S: String;
 begin
-  { Profile fields unchanged (GlideEmulation / Port / LFB). Conf is kind-gated:
-      standard → [glide] glide/grport/lfb (classic)
-      X       → [voodoo] glide + lfb (no grport; X has grport commented out)
-      Staging → [voodoo] voodoo=true/false (card enable only)
-      Pure    → nothing in conf (core options in DOSBoxPure.cfg) }
   S:=Trim(ExtUpperCase(Game.GlideEmulation));
-  If (S='TRUE') or (S='1') then S:='true' else begin
-    If (S='FALSE') or (S='0') then S:='false' else S:=Trim(ExtLowerCase(Game.GlideEmulation));
-  end;
+  If (S='TRUE') or (S='1') or (S='ON') then Result:='true'
+  else If (S='FALSE') or (S='0') or (S='OFF') or (S='') or (S='-1') then Result:='false'
+  else Result:=Trim(ExtLowerCase(Game.GlideEmulation));
+end;
+
+Function IsGlideOn(const Game: TGame): Boolean;
+begin
+  { Same for all kinds: Activate and emulation is true or emu. }
+  Result:=Game.isGlideEnabled;
+end;
+
+Function GlideMemIs4(const Mem: String): Boolean;
+begin
+  Result:=(Trim(Mem)='4');
+end;
+
+Function GlideStagingMemSize(const Mem: String): String;
+Var M: String;
+begin
+  M:=Trim(Mem);
+  If M='12' then Result:='12' else Result:='4';
+end;
+
+Function GlidePureVoodooMem(const Mem: String): String;
+Var M: String;
+begin
+  M:=Trim(Mem);
+  If M='4' then Result:='4mb'
+  else If M='12' then Result:='12mb'
+  else Result:='8mb';
+end;
+
+Function GlideBoolFromProfile(const Value, DefaultTrue: String): String;
+Var S: String;
+begin
+  S:=Trim(ExtLowerCase(Value));
+  If (S='') or (S='-1') then S:=Trim(ExtLowerCase(DefaultTrue));
+  If (S='false') or (S='0') or (S='off') then Result:='false' else Result:='true';
+end;
+
+Procedure GenerateGlideConf(const Game: TGame; const Dest: TStrings);
+Var S, Mem, LFB, Card, Threads, Bilin: String;
+    On: Boolean;
+begin
+  S:=NormalizeGlideEmulation(Game);
+  On:=IsGlideOn(Game);
+  Mem:=Trim(Game.GlideVoodooMem);
+  If Mem='-1' then Mem:='';
+  LFB:=Trim(Game.GlideLFB);
+  If LFB='-1' then LFB:='';
+  Card:=Trim(Game.GlideVoodooCard);
+  If (Card='') or (Card='-1') then Card:='auto';
+  Threads:=Trim(Game.GlideVoodooThreads);
+  If (Threads='') or (Threads='-1') then Threads:='auto';
+  Bilin:=GlideBoolFromProfile(Game.GlideBilinear,'true');
+
   Case Game.DosBoxKind of
     dbkX: begin
       Dest.Add('');
       Dest.Add('[voodoo]');
-      Dest.Add('glide='+S);
-      If S<>'false' then
-        Dest.Add('lfb='+Game.GlideLFB);
+      If LFB='' then LFB:='full';
+      If not On then begin
+        Dest.Add('glide=false');
+        Dest.Add('voodoo_card=false');
+      end else If S='emu' then begin
+        Dest.Add('glide=false');
+        Dest.Add('voodoo_card='+Card);
+        If GlideMemIs4(Mem) then
+          Dest.Add('voodoo_maxmem=false')
+        else
+          Dest.Add('voodoo_maxmem=true');
+      end else begin
+        Dest.Add('glide=true');
+        Dest.Add('voodoo_card='+Card);
+        Dest.Add('lfb='+LFB);
+        If GlideMemIs4(Mem) then
+          Dest.Add('voodoo_maxmem=false')
+        else
+          Dest.Add('voodoo_maxmem=true');
+      end;
     end;
     dbkStaging: begin
       Dest.Add('');
       Dest.Add('[voodoo]');
-      { Staging emulates the card; Glide-on profile → voodoo=true. }
-      If S='false' then
+      If not On then
         Dest.Add('voodoo=false')
-      else
+      else begin
         Dest.Add('voodoo=true');
+        If Game.IsNewStaging then begin
+          Dest.Add('voodoo_memsize='+GlideStagingMemSize(Mem));
+          Dest.Add('voodoo_threads='+Threads);
+          Dest.Add('voodoo_bilinear_filtering='+Bilin);
+        end;
+      end;
     end;
     dbkPure: begin
-      { Pure Voodoo is dosbox_pure_voodoo / _perf in WritePureWorkDirFiles. }
     end;
     else begin
+      { Classic / unknown — ./orig when on: glide=S + grport + lfb; when off: glide=false only }
       Dest.Add('');
       Dest.Add('[glide]');
-      Dest.Add('glide='+S);
-      If S<>'false' then begin
+      If not On then
+        Dest.Add('glide=false')
+      else begin
+        Dest.Add('glide='+S);
         Dest.Add('grport='+Game.GlidePort);
         Dest.Add('lfb='+Game.GlideLFB);
       end;
     end;
   end;
+end;
+
+Procedure GeneratePureGlideCfg(const Game: TGame; const Cfg: TStrings);
+Var Mem, Perf, Scale, Gamma: String;
+begin
+  If not IsGlideOn(Game) then begin
+    Cfg.Add('"dosbox_pure_voodoo" : "off"');
+    exit;
+  end;
+  Mem:=GlidePureVoodooMem(Game.GlideVoodooMem);
+  Cfg.Add('"dosbox_pure_voodoo" : "'+Mem+'"');
+  Perf:=Trim(Game.GlidePurePerf);
+  If (Perf='') or (Perf='-1') then Perf:='auto';
+  Cfg.Add('"dosbox_pure_voodoo_perf" : "'+Perf+'"');
+  Scale:=Trim(Game.GlideVoodooScale);
+  If (Scale<>'') and (Scale<>'-1') then
+    Cfg.Add('"dosbox_pure_voodoo_scale" : "'+Scale+'"');
+  Gamma:=Trim(Game.GlideVoodooGamma);
+  If (Gamma<>'') and (Gamma<>'-1') then
+    Cfg.Add('"dosbox_pure_voodoo_gamma" : "'+Gamma+'"');
 end;
 
 Procedure GenerateNetworkConf(const Game: TGame; const Dest: TStrings);

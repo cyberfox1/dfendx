@@ -463,22 +463,19 @@ begin
   AddSetting(5007,LanguageSetup.GameVideoCard,ValueToList(GameDB.ConfOpt.Video,';,'),False,-1,True);
   AddSetting(5008,LanguageSetup.GameScale,ValueToList(GameDB.ConfOpt.Scale,';,'),False,-1,True);
   AddSpinSetting(5009,LanguageSetup.GameFrameskip,0,10,ValueWidth);
-  If PrgSetup.AllowGlideSettings then begin
-
-    St:=ValueToList(GameDB.ConfOpt.GlideEmulation,';,');
-    try
-      For I:=0 to St.Count-1 do begin
-        S:=Trim(ExtUpperCase(St[I]));
-        if S='FALSE' then St[I]:=LanguageSetup.Off;
-        if S='TRUE' then St[I]:=LanguageSetup.On;
-      end;
-      AddSetting(5101,LanguageSetup.GameGlideEmulation,St,False,ValueWidth,False);
-    finally
-      St.Free;
+  St:=ValueToList(GameDB.ConfOpt.GlideEmulation,';,');
+  try
+    For I:=0 to St.Count-1 do begin
+      S:=Trim(ExtUpperCase(St[I]));
+      if S='FALSE' then St[I]:=LanguageSetup.Off;
+      if S='TRUE' then St[I]:=LanguageSetup.On;
     end;
-    AddSetting(5102,LanguageSetup.GameGlideEmulationPort,ValueToList(GameDB.ConfOpt.GlideEmulationPort,';,'),True,ValueWidth,True);
-    AddSetting(5103,LanguageSetup.GameGlideEmulationLFB,ValueToList(GameDB.ConfOpt.GlideEmulationLFB,';,'),False,ValueWidth,True);
+    AddSetting(5101,LanguageSetup.GameGlideEmulation,St,False,ValueWidth,False);
+  finally
+    St.Free;
   end;
+  AddSetting(5102,LanguageSetup.GameGlideEmulationPort,ValueToList(GameDB.ConfOpt.GlideEmulationPort,';,'),True,ValueWidth,True);
+  AddSetting(5103,LanguageSetup.GameGlideEmulationLFB,ValueToList(GameDB.ConfOpt.GlideEmulationLFB,';,'),False,ValueWidth,True);
   If PrgSetup.AllowVGAChipsetSettings then begin
     AddSetting(5301,LanguageSetup.GameVGAChipset,ValueToList(GameDB.ConfOpt.VGAChipsets,';,'),False,ValueWidth,True);
     AddSetting(5302,LanguageSetup.GameVideoRam,ValueToList(GameDB.ConfOpt.VGAVideoRAM,';,'),False,ValueWidth,True);
@@ -963,16 +960,14 @@ begin
         end;
       end;
       If ValueActive(5009) then G.FrameSkip:=Max(0,Min(10,GetSpinValue));
-      If PrgSetup.AllowGlideSettings then begin
-        If ValueActive(5101) then begin
-          S:=GetComboText;
-          If S=LanguageSetup.On then S:='true';
-          If S=LanguageSetup.Off then S:='false';
-          G.GlideEmulation:=S;
-        end;
-        If ValueActive(5102) then G.GlidePort:=GetComboText;
-        If ValueActive(5103) then G.GlideLFB:=GetComboText;
+      If ValueActive(5101) then begin
+        S:=GetComboText;
+        If S=LanguageSetup.On then S:='true';
+        If S=LanguageSetup.Off then S:='false';
+        G.GlideEmulation:=S;
       end;
+      If ValueActive(5102) then G.GlidePort:=GetComboText;
+      If ValueActive(5103) then G.GlideLFB:=GetComboText;
       If PrgSetup.AllowVGAChipsetSettings then begin
         If ValueActive(5301) then G.VGAChipset:=GetComboText;
         If ValueActive(5302) then begin try J:=StrToInt(GetComboText); except J:=512; end; G.VideoRam:=J; end;

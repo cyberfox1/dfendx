@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComCtrls, ZipMstr, SevenZipVCL, Buttons;
+  Dialogs, StdCtrls, ComCtrls, Buttons;
 
 Type TZipMode=(zmExtract, zmCreate, zmAdd, zmCreateAndDelete, zmAddAndDelete, zmDeleteOnly);
 
@@ -19,41 +19,19 @@ type
     procedure FormCreate(Sender: TObject);
     procedure CancelButtonClick(Sender: TObject);
   private
-    { Private-Deklarationen }
-    Zip : TZipMaster;
-    SevenZip : TSevenZip;
-
-    Start : Cardinal;
     ZipFile, Folder : String;
     Mode : TZipMode;
-    FCompressStrength : TCompressStrength;
     FDeleteMode : TDeleteMode;
     FProcessingCanceled : Boolean;
-
-    SevenZipLastError : Integer;
-    SevenZipMaxProgress : Int64;
+    FProcessHandle : THandle;
 
     Procedure PostShow(var Msg : TMessage); message WM_USER+1;
-    Function ZipWork : Boolean;
-    Procedure ZipExtract;
-    Procedure ZipCreate;
-    Procedure ZipAdd;
-    Procedure ZipPassword(Sender: TObject; IsZipAction: Boolean; var NewPassword: String; ForFile: String; var RepeatCount: LongWord; var Action: TPasswordButton);
-    Procedure ZipProgress(Sender: TObject; Details: TProgressDetails);
-    Function SevenZipWork : Boolean;
-    Procedure SevenZipExtract;
-    Procedure SevenZipCreate;
-    Procedure SevenZipPreProgress(Sender: TObject; MaxProgress: Int64);
-    Procedure SevenZipProgress(Sender: TObject; Filename: WideString; FilePosArc, FilePosFile: Int64);
-    Procedure SevenZipExtractOverwrite(Sender: TObject; FileName: WideString; var DoOverwrite: Boolean);
-    Procedure SevenZipMessage( Sender: TObject; ErrCode: Integer; Message: string;Filename:Widestring );
     Function ExternalWork(const Nr : Integer) : Boolean;
     Function DeleteFolder(Folder : String; const ThisIsMainFolder : Boolean) : Boolean;
     Function DeleteFiles : Boolean;
+    Procedure SetBusyInfo;
   public
-    { Public-Deklarationen }
     Function Init(const AMode : TZipMode; const AZipFile, AFolder : String) : Boolean;
-    property CompressStrength : TCompressStrength read FCompressStrength write FCompressStrength;
     property DeleteMode : TDeleteMode read FDeleteMode write FDeleteMode;
   end;
 
@@ -61,25 +39,28 @@ var
   ZipInfoForm: TZipInfoForm;
 
 Function ExtractZipFile(const AOwner : TComponent; const AZipFile, ADestFolder : String) : Boolean;
-Function CreateZipFile(const AOwner : TComponent; const AZipFile, ADestFolder : String; const DeleteMode : TDeleteMode = dmNo; const CompressStrength : TCompressStrength = MAXIMUM) : Boolean;
-Function AddToZipFile(const AOwner : TComponent; const AZipFile, ADestFolder : String; const DeleteMode : TDeleteMode = dmNo; const CompressStrength : TCompressStrength = MAXIMUM) : Boolean;
+Function CreateZipFile(const AOwner : TComponent; const AZipFile, ADestFolder : String; const DeleteMode : TDeleteMode = dmNo) : Boolean;
+Function AddToZipFile(const AOwner : TComponent; const AZipFile, ADestFolder : String; const DeleteMode : TDeleteMode = dmNo) : Boolean;
 Function DeleteUnpackedFiles(const AOwner : TComponent; const ADestFolder : String; const DeleteMode : TDeleteMode = dmNo) : Boolean;
 
 Function ExtractZipDrive(const AOwner : TComponent; const AZipFile, AZipAddFolder, ADestFolder : String) : Boolean;
 
 implementation
 
-uses Math, LanguageSetupUnit, PrgSetupUnit, CommonHelpers, CommonTools, DOSBoxUnit, PrgConsts,
-     ZipFormHelpers,
-     GameDBToolsUnit, VistaToolsUnit, System.UITypes;
+uses LanguageSetupUnit, PrgSetupUnit, CommonHelpers, CommonTools, DOSBoxUnit, PrgConsts,
+     ZipFormHelpers, GameDBToolsUnit, VistaToolsUnit, System.UITypes;
 
 {$R *.dfm}
 
 procedure TZipInfoForm.FormCreate(Sender: TObject);
 begin
   FProcessingCanceled:=false;
-  DoubleBuffered:=True;
-  FCompressStrength:=MAXIMUM;
+  FProcessHandle:=0;
+  { DoubleBuffered + GlassFrame break marquee progress painting }
+  DoubleBuffered:=False;
+  ProgressBar.DoubleBuffered:=False;
+  ProgressBar.Style:=pbstMarquee;
+  ProgressBar.MarqueeInterval:=50;
 end;
 
 function TZipInfoForm.Init(const AMode: TZipMode; const AZipFile, AFolder: String): Boolean;
@@ -103,8 +84,13 @@ begin
     end;
   end;
 
-  InfoLabel.Caption:='';
-  Refresh;
+  Case Mode of
+    zmExtract                   : Caption:=LanguageSetup.ZipFormCaptionExtract;
+    zmCreate, zmCreateAndDelete : Caption:=LanguageSetup.ZipFormCaptionCreate;
+    zmAdd, zmAddAndDelete       : Caption:=LanguageSetup.ZipFormCaptionAdd;
+    zmDeleteOnly                : Caption:=LanguageSetup.ZipFormCaptionDelete;
+  end;
+  SetBusyInfo;
 
   If Mode=zmExtract then begin
     If not ForceDirectories(Folder) then begin MessageDlg(Format(LanguageSetup.MessageCouldNotCreateDir,[Folder]),mtError,[mbOK],0); exit; end;
@@ -115,13 +101,6 @@ begin
   end;
 
   result:=True;
-
-  Case Mode of
-    zmExtract                   : Caption:=LanguageSetup.ZipFormCaptionExtract;
-    zmCreate, zmCreateAndDelete : Caption:=LanguageSetup.ZipFormCaptionCreate;
-    zmAdd, zmAddAndDelete       : Caption:=LanguageSetup.ZipFormCaptionAdd;
-    zmDeleteOnly                : Caption:=LanguageSetup.ZipFormCaptionDelete;
-  end;
 end;
 
 procedure TZipInfoForm.FormShow(Sender: TObject);
@@ -129,8 +108,25 @@ begin
   SetVistaFonts(self);
   Font.Charset:=CharsetNameToFontCharSet(LanguageSetup.CharsetName);
   CancelButton.Caption:=LanguageSetup.Cancel;
+  SetBusyInfo;
+  ProgressBar.Style:=pbstMarquee;
+  Application.ProcessMessages;
 
   PostMessage(Handle,WM_USER+1,0,0);
+end;
+
+procedure TZipInfoForm.SetBusyInfo;
+Var S : String;
+begin
+  Case Mode of
+    zmExtract                   : S:=LanguageSetup.ZipFormProgressExtract;
+    zmCreate, zmCreateAndDelete : S:=LanguageSetup.ZipFormProgressCreate;
+    zmAdd, zmAddAndDelete       : S:=LanguageSetup.ZipFormProgressAdd;
+    else S:=Caption;
+  end;
+  If Mode=zmDeleteOnly
+    then InfoLabel.Caption:=Caption
+    else InfoLabel.Caption:=Format(S,[ExtractFileName(ZipFile)])+#13+#13+Folder;
 end;
 
 procedure TZipInfoForm.PostShow(var Msg: TMessage);
@@ -138,8 +134,6 @@ Var Ext,SaveDir : String;
     Ok, Handled : Boolean;
     I : Integer;
 begin
-  Start:=GetTickCount;
-
   SaveDir:=GetCurrentDir;
   try
     SetCurrentDir(ExtractFilePath(ExpandFileName(Application.ExeName)));
@@ -156,16 +150,15 @@ begin
         exit;
       end;
 
-      Handled:=False; Ok:=False;
-      For I:=0 to PrgSetup.PackerSettingsCount-1 do If ExtensionInList(Ext,PrgSetup.PackerSettings[I].FileExtensions) then begin
-        Handled:=True;
-        Ok:=ExternalWork(I);
-      end;
+      EnsureBundled7zaPackerRow;
 
-      If not Handled then begin
-        If Ext='.ZIP' then begin Handled:=True; Ok:=ZipWork; end;
-        If Ext='.7Z' then begin Handled:=True; Ok:=SevenZipWork; end;
-      end;
+      Handled:=False; Ok:=False;
+      For I:=0 to PrgSetup.PackerSettingsCount-1 do
+        If ExtensionInList(Ext,PrgSetup.PackerSettings[I].FileExtensions) then begin
+          Handled:=True;
+          Ok:=ExternalWork(I);
+          Break;
+        end;
 
       If not Handled then begin
         MessageDlg(Format(LanguageSetup.ZipFormUnknownExtension,[Ext]),mtError,[mbOK],0);
@@ -181,252 +174,20 @@ begin
   PostMessage(Handle,WM_CLOSE,0,0);
 end;
 
-Function TZipInfoForm.ZipWork : Boolean;
-Var S : String;
-begin
-  result:=True;
-
-  If FileExists(PrgDir+DelZipDll_Name) then begin
-    Zip:=TZipMaster.Create(self);
-  end else begin
-    S:=GetCurrentDir;
-    SetCurrentDir(PrgDir+BinFolder);
-    Zip:=TZipMaster.Create(self);
-    Zip.Dll_Load:=True;
-    Zip.Unattended:=True;
-    SetCurrentDir(S);
-  end;
-
-  try
-    Zip.OnPasswordError:=ZipPassword;
-    Zip.OnProgressDetails:=ZipProgress;
-    Zip.ZipFileName:=ZipFile;
-    Zip.RootDir:=Folder;
-
-    CancelButton.Enabled:=True;
-
-    try case Mode of
-      zmExtract                   : ZipExtract;
-      zmCreate, zmCreateAndDelete : ZipCreate;
-      zmAdd, zmAddAndDelete       : ZipAdd;
-    end except end;
-
-    while Zip.Busy do begin
-      Sleep(500);
-      Application.ProcessMessages;
-      if FProcessingCanceled then begin Zip.Cancel:=True; result:=false; break; end;
-    end;
-
-    If Zip.ErrCode<>0 then begin
-      result:=False;
-      If Mode=zmExtract
-        then MessageDlg(LanguageSetup.ZipFormErrorExtract,mtError,[mbOK],0)
-        else MessageDlg(LanguageSetup.ZipFormErrorCompress,mtError,[mbOK],0);
-    end;
-  finally
-    Zip.Free;
-  end;
-end;
-
-procedure TZipInfoForm.ZipExtract;
-begin
-  Zip.ExtrOptions:=[ExtrDirNames,ExtrOverWrite];
-  Zip.ExtrBaseDir:=Folder;
-
-  Zip.Extract;
-end;
-
-procedure TZipInfoForm.ZipCreate;
-begin
-  Case FCompressStrength of
-    SAVE    : Zip.AddCompLevel:=0;
-    FAST    : Zip.AddCompLevel:=3;
-    NORMAL  : Zip.AddCompLevel:=7;
-    MAXIMUM : Zip.AddCompLevel:=8;
-    ULTRA   : Zip.AddCompLevel:=9;
-  end;
-
-  Zip.AddOptions:=[AddHiddenFiles,AddDirNames,AddSeparateDirs];
-  Zip.FSpecArgs.Add('>*.*');
-
-  Zip.Add;
-end;
-
-procedure TZipInfoForm.ZipAdd;
-Var Rec : TSearchRec;
-    I : Integer;
-    B : Boolean;
-begin
-  Case FCompressStrength of
-    SAVE    : Zip.AddCompLevel:=0;
-    FAST    : Zip.AddCompLevel:=3;
-    NORMAL  : Zip.AddCompLevel:=7;
-    MAXIMUM : Zip.AddCompLevel:=8;
-    ULTRA   : Zip.AddCompLevel:=9;
-  end;
-
-  Zip.AddOptions:=[AddHiddenFiles,AddDirNames,AddSeparateDirs,AddUpdate];
-  Zip.FSpecArgs.Add('>*.*');
-
-  B:=False;
-  I:=FindFirst(IncludeTrailingPathDelimiter(Folder)+'*.*',faAnyFile,Rec);
-  try
-    While I=0 do begin
-      If (Rec.Name<>'.') and (Rec.Name<>'..') then begin B:=True; break; end;
-      I:=FindNext(Rec);
-    end;
-  finally
-    FindClose(Rec);
-  end;
-
-  If B then Zip.Add;
-end;
-
-procedure TZipInfoForm.ZipPassword(Sender: TObject; IsZipAction: Boolean; var NewPassword: String; ForFile: String; var RepeatCount: LongWord; var Action: TPasswordButton);
-begin
-  If InputQuery(LanguageSetup.ZipFormCaptionExtract,LanguageSetup.ZipFormPasswordPrompt,NewPassword) then Action:=pwbOk else Action:=pwbAbort;
-end;
-
-procedure TZipInfoForm.ZipProgress(Sender: TObject; Details: TProgressDetails);
-Var S : String;
-begin
-  ProgressBar.Position:=Details.TotalPerCent;
-
-  Case Mode of
-    zmExtract                   : S:=LanguageSetup.ZipFormProgressExtract;
-    zmCreate, zmCreateAndDelete : S:=LanguageSetup.ZipFormProgressCreate;
-    zmAdd, zmAddAndDelete       : S:=LanguageSetup.ZipFormProgressAdd;
-  end;
-
-  InfoLabel.Caption:=
-    Format(S,[ExtractFileName(ZipFile)])+#13+#13+Folder+#13+#13+
-    Format(LanguageSetup.ZipFormProgress,[Details.TotalPerCent,Details.TotalPosition div 1024 div 1024,1000*Details.TotalPosition div 1024 div 1024 div Max(1,(GetTickCount-Start))]);
-
-  if FProcessingCanceled then Zip.Cancel:=True;
-end;
-
-function TZipInfoForm.SevenZipWork: Boolean;
-Var S : String;
-begin
-  result:=True;
-  SevenZipLastError:=0;
-
-  If FileExists(PrgDir+'7za.dll') then begin
-    SevenZip:=TSevenZip.Create(self);
-  end else begin
-    S:=GetCurrentDir;
-    SetCurrentDir(PrgDir+BinFolder);
-    SevenZip:=TSevenZip.Create(self);
-    SetCurrentDir(S);
-  end;
-
-  CancelButton.Enabled:=True;
-  try
-    SevenZip.SZFileName:=ZipFile;
-    SevenZip.OnPreProgress:=SevenZipPreProgress;
-    SevenZip.OnProgress:=SevenZipProgress;
-    SevenZip.OnExtractOverwrite:=SevenZipExtractOverwrite;
-    SevenZip.OnMessage:=SevenZipMessage;
-    SevenZip.AddRootDir:=Folder;
-    SevenZip.ExtrBaseDir:=Folder;
-
-    Case Mode of
-      zmExtract                   : SevenZipExtract;
-      zmCreate, zmCreateAndDelete : SevenZipCreate;
-      zmAdd, zmAddAndDelete       : begin
-                                      MessageDlg(LanguageSetup.ZipFormErrorNoRepack7ZipSupport,mtError,[mbOK],0);
-                                      result:=False;
-                                      exit;
-                                    end;
-    end;
-
-    If (SevenZip.ErrCode<>0) or (SevenZipLastError<>0) then begin
-      result:=False;
-      If Mode=zmExtract
-        then MessageDlg(LanguageSetup.ZipFormErrorExtract,mtError,[mbOK],0)
-        else MessageDlg(LanguageSetup.ZipFormErrorCompress,mtError,[mbOK],0);
-    end;
-    if FProcessingCanceled then result:=False;
-  finally
-    SevenZip.Free;
-  end;
-end;
-
-Procedure TZipInfoForm.SevenZipExtract;
-begin
-  SevenZip.ExtractOptions:=SevenZip.ExtractOptions+[ExtractOverwrite];
-  SevenZip.Files.Clear;
-
-  SevenZip.Extract;
-end;
-
-Procedure TZipInfoForm.SevenZipCreate;
-begin
-  SevenZip.LZMACompressStrength:=FCompressStrength;
-  SevenZip.AddOptions:=[AddRecurseDirs];
-  SevenZip.Files.Clear;
-  SevenZip.Files.AddString(Folder+'*.*');
-
-  SevenZip.Add;
-end;
-
-procedure TZipInfoForm.SevenZipPreProgress(Sender: TObject; MaxProgress: Int64);
-begin
-  SevenZipMaxProgress:=MaxProgress;
-end;
-
-procedure TZipInfoForm.SevenZipProgress(Sender: TObject; Filename: WideString; FilePosArc, FilePosFile: Int64);
-Var S : String;
-begin
-  ProgressBar.Position:=100*FilePosArc div SevenZipMaxProgress;
-
-  Case Mode of
-    zmExtract                   : S:=LanguageSetup.ZipFormProgressExtract;
-    zmCreate, zmCreateAndDelete : S:=LanguageSetup.ZipFormProgressCreate;
-    zmAdd, zmAddAndDelete       : S:=LanguageSetup.ZipFormProgressAdd;
-  end;
-
-  InfoLabel.Caption:=
-    Format(S,[ExtractFileName(ZipFile)])+#13+#13+Folder+#13+#13+
-    Format(LanguageSetup.ZipFormProgress,[100*FilePosArc div SevenZipMaxProgress,FilePosArc div 1024 div 1024,1000*FilePosArc div 1024 div 1024 div Max(1,(GetTickCount-Start))]);
-
-  Application.ProcessMessages;
-  if FProcessingCanceled then SevenZip.Cancel;
-end;
-
-procedure TZipInfoForm.SevenZipExtractOverwrite(Sender: TObject; FileName: WideString; var DoOverwrite: Boolean);
-begin
-  DoOverwrite:=True;
-end;
-
-procedure TZipInfoForm.SevenZipMessage(Sender: TObject; ErrCode: Integer; Message: string; Filename: Widestring);
-begin
-  If ErrCode=FDataError then begin
-    MessageDlg(LanguageSetup.ZipFormErrorNoPassword7ZipSupport,mtError,[mbOK],0);
-    SevenZipLastError:=ErrCode;
-    SevenZip.Cancel;
-    exit;
-  end;
-
-  If ErrCode in [FFileNotFound, FDataError, FCRCError, FUnsupportedMethod, FIndexOutOfRange, FSFXModuleError] then begin
-    SevenZipLastError:=ErrCode;
-    SevenZip.Cancel;
-    exit;
-  end;
-end;
-
 Function TZipInfoForm.ExternalWork(const Nr : Integer) : Boolean;
-Var PrgName,Parameters,ParametersOrig : String;
+Var PrgName,Parameters,ParametersOrig,Mx,CmdLine : String;
     StartupInfo : TStartupInfo;
     ProcessInformation : TProcessInformation;
     I : Integer;
+    ExitCode : DWORD;
+    Bundled : Boolean;
 begin
-  result:=True;
+  result:=False;
+  FProcessHandle:=0;
 
   PrgName:=PrgSetup.PackerSettings[Nr].ZipFileName;
   If not FileExists(PrgName) then begin
     MessageDlg(Format(LanguageSetup.MessageFileNotFound,[PrgName]),mtError,[mbOK],0);
-    result:=False;
     exit;
   end;
 
@@ -440,7 +201,6 @@ begin
   I:=Pos('%1',Parameters);
   If I=0 then begin
     MessageDlg(Format(LanguageSetup.ZipFormInvalidParameters,[ParametersOrig]),mtError,[mbOK],0);
-    result:=False;
     exit;
   end;
   Parameters:=Copy(Parameters,1,I-1)+ZipFile+Copy(Parameters,I+2,MaxInt);
@@ -448,7 +208,6 @@ begin
   I:=Pos('%2',Parameters);
   If I=0 then begin
     MessageDlg(Format(LanguageSetup.ZipFormInvalidParameters,[ParametersOrig]),mtError,[mbOK],0);
-    result:=False;
     exit;
   end;
   If PrgSetup.PackerSettings[Nr].TrailingBackslash then begin
@@ -457,25 +216,63 @@ begin
     Parameters:=Copy(Parameters,1,I-1)+ExcludeTrailingPathDelimiter(Folder)+Copy(Parameters,I+2,MaxInt);
   end;
 
-  StartupInfo.cb:=SizeOf(StartupInfo);
-  with StartupInfo do begin lpReserved:=nil; lpDesktop:=nil; lpTitle:=nil; dwFlags:=0; cbReserved2:=0; lpReserved2:=nil; end;
+  Bundled:=IsBundled7zaPath(PrgName);
+  If Bundled and (Mode in [zmCreate, zmCreateAndDelete, zmAdd, zmAddAndDelete]) then begin
+    Mx:='-mx='+IntToStr(CompressionLevelTo7zMx(PrgSetup.CompressionLevel));
+    If Pos(Mx, Parameters)=0 then Parameters:=Parameters+' '+Mx;
+  end;
 
-  If not CreateProcess(PChar(PrgName),PChar('"'+PrgName+'" '+Parameters),nil,nil,False,0,nil,nil,StartupInfo,ProcessInformation) then begin
+  CancelButton.Enabled:=True;
+  SetBusyInfo;
+  ProgressBar.Style:=pbstMarquee;
+  Application.ProcessMessages;
+
+  ZeroMemory(@StartupInfo, SizeOf(StartupInfo));
+  StartupInfo.cb:=SizeOf(StartupInfo);
+  StartupInfo.dwFlags:=STARTF_USESHOWWINDOW;
+  StartupInfo.wShowWindow:=SW_HIDE;
+
+  { CreateProcessW may write into the command line buffer — must be unique/writable }
+  CmdLine:='"'+PrgName+'" '+Parameters;
+  UniqueString(CmdLine);
+
+  If not CreateProcess(PChar(PrgName),PChar(CmdLine),nil,nil,False,CREATE_NO_WINDOW,nil,nil,StartupInfo,ProcessInformation) then begin
     MessageDlg(Format(LanguageSetup.MessageCouldNotStartProgram,[PrgName]),mtError,[mbOK],0);
+    CancelButton.Enabled:=False;
     exit;
   end;
 
-  InfoLabel.Caption:=Caption;
-  Paint;
+  FProcessHandle:=ProcessInformation.hProcess;
+  CloseHandle(ProcessInformation.hThread);
 
   try
-    While not (WaitForSingleObject(ProcessInformation.hProcess,0)=WAIT_OBJECT_0) do begin
+    While WaitForSingleObject(FProcessHandle,50)<>WAIT_OBJECT_0 do begin
       Application.ProcessMessages;
-      Sleep(100);
+      ProgressBar.Repaint;
+      If FProcessingCanceled then begin
+        TerminateProcess(FProcessHandle,1);
+        Break;
+      end;
+    end;
+
+    If FProcessingCanceled then begin
+      result:=False;
+      exit;
+    end;
+
+    If not GetExitCodeProcess(FProcessHandle, ExitCode) then ExitCode:=1;
+    If ExitCode=0 then begin
+      result:=True;
+    end else begin
+      result:=False;
+      If Mode=zmExtract
+        then MessageDlg(LanguageSetup.ZipFormErrorExtract,mtError,[mbOK],0)
+        else MessageDlg(LanguageSetup.ZipFormErrorCompress,mtError,[mbOK],0);
     end;
   finally
-    CloseHandle(ProcessInformation.hThread);
-    CloseHandle(ProcessInformation.hProcess);
+    CloseHandle(FProcessHandle);
+    FProcessHandle:=0;
+    CancelButton.Enabled:=False;
   end;
 end;
 
@@ -524,6 +321,7 @@ procedure TZipInfoForm.CancelButtonClick(Sender: TObject);
 begin
   CancelButton.Enabled:=False;
   FProcessingCanceled:=true;
+  If FProcessHandle<>0 then TerminateProcess(FProcessHandle,1);
 end;
 
 function TZipInfoForm.DeleteFiles: Boolean;
@@ -534,12 +332,11 @@ end;
 
 { global }
 
-Function ZipDialogWork(const AOwner : TComponent; const AZipFile, ADestFolder : String; const AZipMode : TZipMode; const ACompressStrength : TCompressStrength; const ADeleteMode : TDeleteMode) : Boolean;
+Function ZipDialogWork(const AOwner : TComponent; const AZipFile, ADestFolder : String; const AZipMode : TZipMode; const ADeleteMode : TDeleteMode) : Boolean;
 begin
   result:=False;
   ZipInfoForm:=TZipInfoForm.Create(AOwner);
   try
-    ZipInfoForm.CompressStrength:=ACompressStrength;
     ZipInfoForm.DeleteMode:=ADeleteMode;
     if not ZipInfoForm.Init(AZipMode,AZipFile,ADestFolder) then exit;
     result:=(ZipInfoForm.ShowModal=mrOK);
@@ -550,27 +347,27 @@ end;
 
 Function ExtractZipFile(const AOwner : TComponent; const AZipFile, ADestFolder : String) : Boolean;
 begin
-  result:=ZipDialogWork(AOwner,AZipFile,ADestFolder,zmExtract,MAXIMUM,dmNo);
+  result:=ZipDialogWork(AOwner,AZipFile,ADestFolder,zmExtract,dmNo);
 end;
 
-Function CreateZipFile(const AOwner : TComponent; const AZipFile, ADestFolder : String; const DeleteMode : TDeleteMode; const CompressStrength : TCompressStrength) : Boolean;
+Function CreateZipFile(const AOwner : TComponent; const AZipFile, ADestFolder : String; const DeleteMode : TDeleteMode) : Boolean;
 begin
   If (DeleteMode<>dmNo) and (DeleteMode<>dmNoNoWarning)
-    then result:=ZipDialogWork(AOwner,AZipFile,ADestFolder,zmCreateAndDelete,CompressStrength,DeleteMode)
-    else result:=ZipDialogWork(AOwner,AZipFile,ADestFolder,zmCreate,CompressStrength,DeleteMode);
+    then result:=ZipDialogWork(AOwner,AZipFile,ADestFolder,zmCreateAndDelete,DeleteMode)
+    else result:=ZipDialogWork(AOwner,AZipFile,ADestFolder,zmCreate,DeleteMode);
 end;
 
-Function AddToZipFile(const AOwner : TComponent; const AZipFile, ADestFolder : String; const DeleteMode : TDeleteMode; const CompressStrength : TCompressStrength) : Boolean;
+Function AddToZipFile(const AOwner : TComponent; const AZipFile, ADestFolder : String; const DeleteMode : TDeleteMode) : Boolean;
 begin
   If (DeleteMode<>dmNo) and (DeleteMode<>dmNoNoWarning)
-    then result:=ZipDialogWork(AOwner,AZipFile,ADestFolder,zmAddAndDelete,CompressStrength,DeleteMode)
-    else result:=ZipDialogWork(AOwner,AZipFile,ADestFolder,zmAdd,CompressStrength,DeleteMode);
+    then result:=ZipDialogWork(AOwner,AZipFile,ADestFolder,zmAddAndDelete,DeleteMode)
+    else result:=ZipDialogWork(AOwner,AZipFile,ADestFolder,zmAdd,DeleteMode);
 end;
 
 Function DeleteUnpackedFiles(const AOwner : TComponent; const ADestFolder : String; const DeleteMode : TDeleteMode = dmNo) : Boolean;
 begin
   If (DeleteMode=dmNo) or (DeleteMode=dmNoNoWarning) then begin result:=True; exit; end;
-  result:=ZipDialogWork(AOwner,'',ADestFolder,zmDeleteOnly,SAVE,DeleteMode);
+  result:=ZipDialogWork(AOwner,'',ADestFolder,zmDeleteOnly,DeleteMode);
 end;
 
 Function ExtractZipDrive(const AOwner : TComponent; const AZipFile, AZipAddFolder, ADestFolder : String) : Boolean;

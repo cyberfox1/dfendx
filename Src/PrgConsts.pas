@@ -95,6 +95,7 @@ const DosBoxFileName='DOSBOX.EXE';
       ZipTempDir='ZipTemp'; {Subdir of BaseDataDir; ment as base directory for extracting zip file for mounting}
       TempSubFolder='DFendX zip package'; {Subdir fo TempDir; ment for internal use when building/extracting zip packages}
       BinFolder='Bin';
+      Bundled7zaFileName='7za.exe';
       SettingsFolder='Settings';
       IconSetsFolder='IconSets';
 

@@ -405,7 +405,7 @@ begin
       T:=S; If (T<>'') and (T[length(T)]='\') then SetLength(T,length(T)-1);
       J:=Pos('\',T); While J>0 do begin T:=Copy(T,J+1,MaxInt); J:=Pos('\',T); end;
       T:=OutputDir+T+'.zip';
-      if not CreateZipFile(self,T,S,dmNo,GetCompressStrengthFromPrgSetup) then exit;
+      if not CreateZipFile(self,T,S,dmNo) then exit;
       if not AddPackageDataIconSet(Doc,IncludeTrailingPathDelimiter(S)+IconsConfFile,T) then exit;
     end;
 

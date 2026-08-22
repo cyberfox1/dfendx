@@ -44,12 +44,39 @@ Function FolderWindowsTest(const Folder : String; const FromArchive : Boolean) :
 implementation
 
 uses Windows, SysUtils, Forms, Controls, Dialogs, ShellAPI, ShlObj, Messages,
-     XMLDoc, Variants, SevenZipVCL, CommonHelpers, CommonTools, LanguageSetupUnit,
+     XMLDoc, Variants, CommonHelpers, CommonTools, LanguageSetupUnit,
      GameDBToolsUnit, PrgSetupUnit, PrgConsts, UninstallFormUnit,
       ZipFormHelpers, ZipInfoFormUnit, DosBoxUnit, DOSBoxUnitHelpers, ScummVMUnit, HashCalc,
      ImportSelectTemplateFormUnit, SelectTemplateForZipImportFormUnit,
       InstallationSupportFormHelpers, InstallationSupportFormUnit, PackageDBToolsUnit, ZipPackageDBGLFormUnit,
      SmallWaitFormUnit, System.UITypes;
+
+Type
+  TZipPackageErrorSync = class
+    Msg: String;
+    procedure Show;
+  end;
+
+procedure TZipPackageErrorSync.Show;
+begin
+  MessageDlg(Msg,mtError,[mbOK],0);
+end;
+
+Procedure ShowZipPackageError(const Msg : String);
+Var Sync: TZipPackageErrorSync;
+begin
+  If GetCurrentThreadId=MainThreadID then
+    MessageDlg(Msg,mtError,[mbOK],0)
+  else begin
+    Sync := TZipPackageErrorSync.Create;
+    try
+      Sync.Msg := Msg;
+      TThread.Synchronize(nil, Sync.Show);
+    finally
+      Sync.Free;
+    end;
+  end;
+end;
 
 Function CopyFileWithMsg(const Source, Dest : String; const ProcessMessages, MoveFileToDestDir : Boolean) : Boolean;
 begin
@@ -62,8 +89,8 @@ begin
       result:=CopyFile(PChar(Source),PChar(Dest),False);
     end;
   end;
-  If ProcessMessages then Application.ProcessMessages;
-  if not result then MessageDlg(Format(LanguageSetup.MessageCouldNotCopyFile,[Source,Dest]),mtError,[mbOK],0);
+  If ProcessMessages and (GetCurrentThreadId=MainThreadID) then Application.ProcessMessages;
+  if not result then ShowZipPackageError(Format(LanguageSetup.MessageCouldNotCopyFile,[Source,Dest]));
 end;
 
 Function CopyFolderWithMsg(Source, Dest : String; const ProcessMessages, MoveFiles : Boolean; const NewGame : TGame = nil; const IgnoreProfConfInRootDir : Boolean = False) : Boolean;
@@ -81,7 +108,7 @@ begin
   if not DirectoryExists(Source) then begin result:=True; exit; end;
 
   If not ForceDirectories(Dest) then begin
-    MessageDlg(Format(LanguageSetup.MessageCouldNotCreateDir,[Dest]),mtError,[mbOK],0);
+    ShowZipPackageError(Format(LanguageSetup.MessageCouldNotCreateDir,[Dest]));
     exit;
   end;
 
@@ -185,7 +212,7 @@ begin
     try
       St.SaveToFile(IncludeTrailingPathDelimiter(Dir)+'InstallReadme.txt');
     except
-      MessageDlg(Format(LanguageSetup.MessageCouldNotSaveFile,[IncludeTrailingPathDelimiter(Dir)+'InstallReadme.txt']),mtError,[mbOK],0);
+      ShowZipPackageError(Format(LanguageSetup.MessageCouldNotSaveFile,[IncludeTrailingPathDelimiter(Dir)+'InstallReadme.txt']));
       exit;
     end;
   finally
@@ -195,17 +222,12 @@ begin
   result:=True;
 end;
 
-Function CopyFilesToTempDir(const Game : TGame; const Dir : String; const ProcessMessages : Boolean) : Boolean;
+Function CopyFilesToTempDirWork(const Game : TGame; const Dir : String; const ProcessMessages : Boolean) : Boolean;
 Var S,T,U,V : String;
     St,Files,Folders : TStringList;
     I : Integer;
 begin
   result:=False;
-
-  LoadAndShowSmallWaitForm(LanguageSetup.MenuFileExportBuildZipPackagesWait);
-  try
-
-    Game.StoreAllValues;
 
     {prof file}
     if not CopyFileWithMsg(Game.SetupFile,Dir+ExtractFileName(Game.SetupFile),ProcessMessages,False) then exit;
@@ -216,7 +238,7 @@ begin
       St:=BuildConfFile(Game,False,False,-1,nil,true);
       If St<>nil then begin
         try
-          try St.SaveToFile(S); except MessageDlg(Format(LanguageSetup.MessageCouldNotSaveFile,[S]),mtError,[mbOK],0); exit; end;
+          try St.SaveToFile(S); except ShowZipPackageError(Format(LanguageSetup.MessageCouldNotSaveFile,[S])); exit; end;
         finally
           St.Free;
         end;
@@ -225,7 +247,7 @@ begin
     If ScummVMMode(Game) then begin
       St:=BuildScummVMIniFile(Game);
       try
-        try St.SaveToFile(S); except MessageDlg(Format(LanguageSetup.MessageCouldNotSaveFile,[S]),mtError,[mbOK],0); exit; end;
+        try St.SaveToFile(S); except ShowZipPackageError(Format(LanguageSetup.MessageCouldNotSaveFile,[S])); exit; end;
       finally
         St.Free;
       end;
@@ -239,7 +261,7 @@ begin
       If S<>'' then begin
         S:=IncludeTrailingPathDelimiter(MakeRelPath(S,PrgSetup.BaseDir,True));
         If Copy(S,2,2)=':\' then begin
-          MessageDlg(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]),mtError,[mbOK],0);
+          ShowZipPackageError(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]));
           result:=False; exit;
         end;
         if not CopyFolderWithMsg(MakeAbsPath(S,PrgSetup.BaseDir),MakeAbsPath(S,Dir),ProcessMessages,False) then exit;
@@ -250,7 +272,7 @@ begin
       If S<>'' then begin
         S:=MakeRelPath(S,PrgSetup.BaseDir);
         If Copy(S,2,2)=':\' then begin
-          MessageDlg(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]),mtError,[mbOK],0);
+          ShowZipPackageError(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]));
           result:=False; exit;
         end;
         T:=ExtractFilePath(S);
@@ -263,7 +285,7 @@ begin
       If S<>'' then begin
         S:=IncludeTrailingPathDelimiter(MakeRelPath(S,PrgSetup.BaseDir,True));
         If Copy(S,2,2)=':\' then begin
-          MessageDlg(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]),mtError,[mbOK],0);
+          ShowZipPackageError(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]));
           result:=False; exit;
         end;
         if not CopyFolderWithMsg(MakeAbsPath(S,PrgSetup.BaseDir),MakeAbsPath(S,Dir),ProcessMessages,False) then exit;
@@ -281,7 +303,7 @@ begin
       If S<>'' then begin
         S:=IncludeTrailingPathDelimiter(MakeRelPath(ExtractFilePath(S),PrgSetup.BaseDir));
         If Copy(S,2,2)=':\' then begin
-          MessageDlg(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]),mtError,[mbOK],0);
+          ShowZipPackageError(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]));
           result:=False; exit;
         end;
         if not CopyFolderWithMsg(MakeAbsPath(S,PrgSetup.BaseDir),MakeAbsPath(S,Dir),ProcessMessages,False) then exit;
@@ -296,7 +318,7 @@ begin
         S:=IncludeTrailingPathDelimiter(MakeRelPath(ExtractFilePath(S),PrgSetup.BaseDir));
         If Copy(S,2,2)=':\' then begin
           If ExtUpperCase(IncludeTrailingPathDelimiter(GetSpecialFolder(Application.MainForm.Handle,CSIDL_WINDOWS)))=ExtUpperCase(IncludeTrailingPathDelimiter(S)) then begin
-            MessageDlg(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]),mtError,[mbOK],0);
+            ShowZipPackageError(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]));
             result:=False; exit;
           end;
           S:=MakeAbsPath(S,PrgSetup.BaseDir);
@@ -319,7 +341,7 @@ begin
     If S<>'' then begin
       S:=IncludeTrailingPathDelimiter(MakeRelPath(S,PrgSetup.BaseDir,True));
       If Copy(S,2,2)=':\' then begin
-        MessageDlg(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]),mtError,[mbOK],0);
+        ShowZipPackageError(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]));
         result:=False; exit;
       end;
       if not CopyFolderWithMsg(MakeAbsPath(S,PrgSetup.BaseDir),MakeAbsPath(S,Dir),ProcessMessages,False) then exit;
@@ -333,7 +355,7 @@ begin
       end else begin
         S:=MakeRelPath(S,PrgSetup.BaseDir);
         If Copy(S,2,2)=':\' then begin
-          MessageDlg(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]),mtError,[mbOK],0);
+          ShowZipPackageError(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]));
           result:=False; exit;
         end;
         T:=ExtractFilePath(S);
@@ -349,7 +371,7 @@ begin
     If S<>'' then begin
       S:=IncludeTrailingPathDelimiter(MakeRelPath(S,PrgSetup.BaseDir,True));
       If Copy(S,2,2)=':\' then begin
-        MessageDlg(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]),mtError,[mbOK],0);
+        ShowZipPackageError(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]));
         result:=False; exit;
       end;
       if not CopyFolderWithMsg(MakeAbsPath(S,PrgSetup.BaseDir),MakeAbsPath(S,Dir),ProcessMessages,False) then exit;
@@ -364,7 +386,7 @@ begin
           S:=MakeRelPath(St[I],PrgSetup.BaseDir);
           If Copy(S,2,2)=':\' then begin
             If (not WindowsExeMode(Game)) or (ExtUpperCase(IncludeTrailingPathDelimiter(GetSpecialFolder(Application.MainForm.Handle,CSIDL_WINDOWS)))=ExtUpperCase(IncludeTrailingPathDelimiter(S))) then begin
-              MessageDlg(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]),mtError,[mbOK],0);
+              ShowZipPackageError(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]));
               result:=False; exit;
             end;
             S:=MakeAbsPath(S,PrgSetup.BaseDir);
@@ -395,7 +417,7 @@ begin
           S:=IncludeTrailingPathDelimiter(MakeRelPath(IncludeTrailingPathDelimiter(St[I]),PrgSetup.BaseDir,True));
           If Copy(S,2,2)=':\' then begin
             If (not WindowsExeMode(Game)) or (ExtUpperCase(IncludeTrailingPathDelimiter(GetSpecialFolder(Application.MainForm.Handle,CSIDL_WINDOWS)))=ExtUpperCase(IncludeTrailingPathDelimiter(S))) then begin
-              MessageDlg(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]),mtError,[mbOK],0);
+              ShowZipPackageError(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]));
               result:=False; exit;
             end;
             S:=MakeAbsPath(S,PrgSetup.BaseDir);
@@ -418,7 +440,7 @@ begin
       For I:=0 to Files.Count-1 do begin
         S:=MakeRelPath(Files[I],PrgSetup.BaseDir);
         If Copy(S,2,2)=':\' then begin
-          MessageDlg(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]),mtError,[mbOK],0);
+          ShowZipPackageError(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]));
           result:=False; exit;
         end;
         T:=ExtractFilePath(S);
@@ -430,7 +452,7 @@ begin
       For I:=0 to Folders.Count-1 do begin
         S:=IncludeTrailingPathDelimiter(MakeRelPath(IncludeTrailingPathDelimiter(Folders[I]),PrgSetup.BaseDir,True));
         If Copy(S,2,2)=':\' then begin
-          MessageDlg(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]),mtError,[mbOK],0);
+          ShowZipPackageError(Format(LanguageSetup.MessagePathNotRelative,[S,Game.Name,PrgSetup.BaseDir]));
           result:=False; exit;
         end;
         if not CopyFolderWithMsg(MakeAbsPath(S,PrgSetup.BaseDir),MakeAbsPath(S,Dir),ProcessMessages,False) then exit;
@@ -441,11 +463,38 @@ begin
     end;
 
     CreateInfoFile(Game, Dir);
-  finally
-    FreeSmallWaitForm;
-  end;
 
   result:=True;
+end;
+
+Type
+  TCopyFilesToTempDirWork = class
+    Game: TGame;
+    Dir: String;
+    Ok: Boolean;
+    procedure Run;
+  end;
+
+procedure TCopyFilesToTempDirWork.Run;
+begin
+  Ok:=CopyFilesToTempDirWork(Game,Dir,False);
+end;
+
+Function CopyFilesToTempDir(const Game : TGame; const Dir : String; const ProcessMessages : Boolean) : Boolean;
+Var Work: TCopyFilesToTempDirWork;
+begin
+  result:=False;
+  Game.StoreAllValues;
+  Work:=TCopyFilesToTempDirWork.Create;
+  try
+    Work.Game:=Game;
+    Work.Dir:=Dir;
+    Work.Ok:=False;
+    If not RunWorkWithSmallWaitForm(LanguageSetup.MenuFileExportBuildZipPackagesWait, LanguageSetup.MenuFileExportBuildZipPackagesCopying, Work.Run) then exit;
+    result:=Work.Ok;
+  finally
+    Work.Free;
+  end;
 end;
 
 Procedure SplitLargeFile(AFileName : String);
@@ -511,7 +560,7 @@ begin
   end;
   try
     If CopyFilesToTempDir(AGame,Temp,True) then begin
-      CreateZipFile(AOwner,AFileName,Temp,dmNo,GetCompressStrengthFromPrgSetup);
+      CreateZipFile(AOwner,AFileName,Temp,dmNo);
       If SplitLargeFiles and (GetFileSize(AFileName)>PackageMaxFileSize) then SplitLargeFile(AFileName);
     end;
   finally

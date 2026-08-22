@@ -45,7 +45,7 @@ Var ZipManager : TZipManager;
 implementation
 
 uses Windows, SysUtils, Forms, Dialogs, LanguageSetupUnit, CommonHelpers,
-     GameDBToolsUnit, PrgSetupUnit, ZipFormHelpers, DOSBoxUnit, ZipInfoFormUnit, SevenZipVCL;
+     GameDBToolsUnit, PrgSetupUnit, ZipFormHelpers, DOSBoxUnit, ZipInfoFormUnit;
 
 { TZipManager }
 
@@ -289,8 +289,8 @@ begin
   end else begin
     {Repack and delete}
     If AddToZipFile
-      then ZipInfoFormUnit.AddToZipFile(Application.MainForm,AZipFile,ADestFolder,ADeleteMode,GetCompressStrengthFromPrgSetup)
-      else CreateZipFile(Application.MainForm,AZipFile,ADestFolder,ADeleteMode,GetCompressStrengthFromPrgSetup);
+      then ZipInfoFormUnit.AddToZipFile(Application.MainForm,AZipFile,ADestFolder,ADeleteMode)
+      else CreateZipFile(Application.MainForm,AZipFile,ADestFolder,ADeleteMode);
   end;
 end;
 

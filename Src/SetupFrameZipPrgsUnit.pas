@@ -14,6 +14,7 @@ end;
 
 Procedure FirstRunPackerAutoSetup();
 
+
 type
   TSetupFrameZipPrgs = class(TFrame, ISetupFrame)
     ScrollBox: TScrollBox;
@@ -72,7 +73,7 @@ end;
 const PackerDefaultValuesCount=5;
 
 Var PackerDefaultValues : Array[0..PackerDefaultValuesCount-1] of TPackerDefaultValue =(
-  (Name: '7z'; Extensions: 'GZIP;BZIP2;TAR'; {7z/zip by default by internal packer} CommandExtract: 'e "%1" -o"%2" -y'; CommandCreate: 'a "%1" "%2*.*" -r'; CommandUpdate: 'u "%1" "%2*.*" -r'; TrainlingBackslash: True; DefaultFileName: '7-Zip\7z.exe'),
+  (Name: '7z'; Extensions: 'GZIP;BZIP2;TAR'; CommandExtract: 'x "%1" -o"%2" -y'; CommandCreate: 'a "%1" "%2*" -r -y'; CommandUpdate: 'u "%1" "%2*" -r -y'; TrainlingBackslash: True; DefaultFileName: '7-Zip\7z.exe'),
   (Name: 'rar'; Extensions: 'RAR'; CommandExtract: 'x "%1" "%2" -y -c-'; CommandCreate: 'a -y -r0 -ep1 "%1" "%2*.*"'; CommandUpdate: 'u -y -r0 -ep1 "%1" "%2*.*"'; TrainlingBackslash: True; DefaultFileName: ''),
   (Name: 'winrar'; Extensions: 'RAR'; CommandExtract: 'x "%1" "%2" -y -c-'; CommandCreate: 'a -y -r0 -ep1 "%1" "%2*.*"'; CommandUpdate: 'u -y -r0 -ep1 "%1" "%2*.*"'; TrainlingBackslash: True; DefaultFileName: 'winrar\winrar.exe'),
   (Name: 'uha'; Extensions: 'UHA'; CommandExtract: 'a -m3 -pe -ph+ -r+ -ed+ "%1" "%2*.*"'; CommandCreate: 'x -y+ -o+ -t"%2" "%1"'; CommandUpdate: 'x -y+ -o+ -t"%2" "%1"'; TrainlingBackslash: False; DefaultFileName: ''),
@@ -113,6 +114,8 @@ begin
   NoFlicker(CommandAddEdit);
   NoFlicker(TrailingBackslashCheckBox);
   NoFlicker(AutoSetupButton);
+
+  EnsureBundled7zaPackerRow;
 
   SetLength(Packers,PrgSetup.PackerSettingsCount);
   For I:=0 to length(Packers)-1 do begin
@@ -172,6 +175,7 @@ begin
     1 : begin {Delete}
           I:=SelectComboBox.ItemIndex;
           If I<0 then exit;
+          If IsBundled7zaPath(Packers[I].FileName) then exit;
           SelectComboBox.ItemIndex:=-1;
           LastIndex:=-1;
           SelectComboBoxChange(Sender);
@@ -233,6 +237,8 @@ end;
 
 procedure TSetupFrameZipPrgs.SaveSetup;
 Var I : Integer;
+    Name, FileName, Extensions, ExtractFile, CreateFile, UpdateFile : String;
+    TrailingBackslash : Boolean;
 begin
   While PrgSetup.PackerSettingsCount>length(Packers) do PrgSetup.DeletePackerSettings(PrgSetup.PackerSettingsCount-1);
   while PrgSetup.PackerSettingsCount<length(Packers) do PrgSetup.AddPackerSettings('');
@@ -240,6 +246,16 @@ begin
   SelectComboBox.ItemIndex:=-1;
   SelectComboBoxChange(self);
   For I:=0 to length(Packers)-1 do begin
+    If IsBundled7zaPath(Packers[I].FileName) then begin
+      ApplyBundled7zaDefaults(Name, FileName, Extensions, ExtractFile, CreateFile, UpdateFile, TrailingBackslash);
+      Packers[I].Name:=Name;
+      Packers[I].FileName:=FileName;
+      Packers[I].Extensions:=Extensions;
+      Packers[I].ExtractFile:=ExtractFile;
+      Packers[I].CreateFile:=CreateFile;
+      Packers[I].UpdateFile:=UpdateFile;
+      Packers[I].TrailingBackslash:=TrailingBackslash;
+    end;
     PrgSetup.PackerSettings[I].Name:=ChangeFileExt(ExtractFileName(Packers[I].FileName),'');
     PrgSetup.PackerSettings[I].ZipFileName:=Packers[I].FileName;
     PrgSetup.PackerSettings[I].FileExtensions:=CheckExtensionsList(Packers[I].Extensions);
@@ -248,10 +264,11 @@ begin
     PrgSetup.PackerSettings[I].UpdateFile:=Packers[I].UpdateFile;
     PrgSetup.PackerSettings[I].TrailingBackslash:=Packers[I].TrailingBackslash;
   end;
+  EnsureBundled7zaPackerRow;
 end;
 
 procedure TSetupFrameZipPrgs.SelectComboBoxChange(Sender: TObject);
-Var B : Boolean;
+Var B, Bundled : Boolean;
     S : String;
     I : Integer;
 begin
@@ -259,17 +276,20 @@ begin
   JustChanging:=True;
   try
     If LastIndex>=0 then begin
-      Packers[LastIndex].Name:=SelectComboBox.Items[LastIndex];
-      Packers[LastIndex].FileName:=FilenameEdit.Text;
-      Packers[LastIndex].Extensions:=CheckExtensionsList(ExtensionsEdit.Text);
-      Packers[LastIndex].ExtractFile:=CommandExtractEdit.Text;
-      Packers[LastIndex].CreateFile:=CommandCreateEdit.Text;
-      Packers[LastIndex].UpdateFile:=CommandAddEdit.Text;
-      Packers[LastIndex].TrailingBackslash:=TrailingBackslashCheckBox.Checked;
+      If not IsBundled7zaPath(Packers[LastIndex].FileName) then begin
+        Packers[LastIndex].Name:=SelectComboBox.Items[LastIndex];
+        Packers[LastIndex].FileName:=FilenameEdit.Text;
+        Packers[LastIndex].Extensions:=CheckExtensionsList(ExtensionsEdit.Text);
+        Packers[LastIndex].ExtractFile:=CommandExtractEdit.Text;
+        Packers[LastIndex].CreateFile:=CommandCreateEdit.Text;
+        Packers[LastIndex].UpdateFile:=CommandAddEdit.Text;
+        Packers[LastIndex].TrailingBackslash:=TrailingBackslashCheckBox.Checked;
+      end;
     end;
 
     SelectComboBox.Enabled:=(SelectComboBox.Items.Count>0);
-    DeleteButton.Enabled:=(SelectComboBox.ItemIndex>=0);
+    Bundled:=(SelectComboBox.ItemIndex>=0) and IsBundled7zaPath(Packers[SelectComboBox.ItemIndex].FileName);
+    DeleteButton.Enabled:=(SelectComboBox.ItemIndex>=0) and (not Bundled);
     UpButton.Enabled:=(SelectComboBox.ItemIndex>0);
     DownButton.Enabled:=(SelectComboBox.ItemIndex>=0) and (SelectComboBox.ItemIndex<SelectComboBox.Items.Count-1);
 
@@ -286,7 +306,7 @@ begin
     If B then begin
       S:=Trim(ExtUpperCase(Packers[SelectComboBox.ItemIndex].Name));
       For I:=0 to PackerDefaultValuesCount-1 do If Trim(ExtUpperCase(PackerDefaultValues[I].Name))=S then begin
-        AutoSetupButton.Visible:=True;
+        AutoSetupButton.Visible:=not Bundled;
         AutoSetupButton.Caption:=LanguageSetup.SetupFormExternalPackersSetupButton+' '+PackerDefaultValues[I].Name;
         break;
       end;
@@ -299,6 +319,14 @@ begin
     CommandCreateEdit.Text:=Packers[SelectComboBox.ItemIndex].CreateFile;
     CommandAddEdit.Text:=Packers[SelectComboBox.ItemIndex].UpdateFile;
     TrailingBackslashCheckBox.Checked:=Packers[SelectComboBox.ItemIndex].TrailingBackslash;
+
+    FilenameEdit.ReadOnly:=Bundled;
+    FilenameButton.Enabled:=not Bundled;
+    ExtensionsEdit.ReadOnly:=Bundled;
+    CommandExtractEdit.ReadOnly:=Bundled;
+    CommandCreateEdit.ReadOnly:=Bundled;
+    CommandAddEdit.ReadOnly:=Bundled;
+    TrailingBackslashCheckBox.Enabled:=not Bundled;
   finally
     JustChanging:=False;
   end;
@@ -308,6 +336,7 @@ procedure TSetupFrameZipPrgs.FilenameButtonClick(Sender: TObject);
 Var S : String;
     DoAutoSetup : Boolean;
 begin
+  If (SelectComboBox.ItemIndex>=0) and IsBundled7zaPath(Packers[SelectComboBox.ItemIndex].FileName) then exit;
   S:=Trim(FilenameEdit.Text); If S<>'' then S:=ExtractFilePath(S);
   If S='' then S:=GetSpecialFolder(Application.MainForm.Handle,CSIDL_PROGRAM_FILES);
   PrgOpenDialog.Title:=LanguageSetup.SetupFormExternalPackersFileNameTitle;
@@ -326,6 +355,8 @@ procedure TSetupFrameZipPrgs.FilenameEditChange(Sender: TObject);
 Var I : Integer;
 begin
   I:=SelectComboBox.ItemIndex;
+  If I<0 then exit;
+  If IsBundled7zaPath(Packers[I].FileName) then exit;
   If Trim(FilenameEdit.Text)=''
     then SelectComboBox.Items[I]:='-'
     else SelectComboBox.Items[I]:=ChangeFileExt(ExtractFileName(FilenameEdit.Text),'');
@@ -338,6 +369,7 @@ procedure TSetupFrameZipPrgs.AutoSetupButtonClick(Sender: TObject);
 Var S : String;
     I : Integer;
 begin
+  If (SelectComboBox.ItemIndex>=0) and IsBundled7zaPath(Packers[SelectComboBox.ItemIndex].FileName) then exit;
   S:=Trim(ExtUpperCase(Packers[SelectComboBox.ItemIndex].Name));
   For I:=0 to PackerDefaultValuesCount-1 do If Trim(ExtUpperCase(PackerDefaultValues[I].Name))=S then begin
     ExtensionsEdit.Text:=PackerDefaultValues[I].Extensions;

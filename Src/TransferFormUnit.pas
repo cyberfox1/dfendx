@@ -170,8 +170,7 @@ begin
       St.Add('libFLAC.dll');
       St.Add('LicenseComponents.txt');
       St.Add(NSIInstallerHelpFile);
-      St.Add('7za.dll');
-      St.Add('DelZip179.dll');
+      St.Add(Bundled7zaFileName);
       St.Add('LicenseBASS.txt');
       St.Add('AdminLauncher.exe');
       For I:=0 to St.Count-1 do begin

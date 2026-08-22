@@ -15,6 +15,8 @@ Procedure RunWithCommandlineAndWait(const Game : TGame; const DeleteOnExit : TSt
 Function BuildConfFile(const Game : TGame; const RunSetup : Boolean; const WarnIfNotReachable : Boolean; const RunExtraFile : Integer; const DeleteOnExit : TStringList; const BuildForArchivePackage : Boolean) : TStringList;
 Function BuildAutoexec(const Game : TGame; const RunSetup : Boolean; const St : TStringList; const WarnIfNotReachable : Boolean; const RunExtraFile : Integer; const WarnIfWindowsExe, SelectCD : Boolean; const BuildForArchivePackage : Boolean) : Boolean;
 Function GetDOSBoxCommandLine(const DOSBoxNr : Integer; const ConfFile : String; const ShowConsole : Integer; const DosBoxCommandLine : String ='') : String;
+{ X: if profile data dir exists, ensure DataDir\.save and return -savedir "…"; else ''. }
+Function BuildDOSBoxXSaveDirArg(const Game : TGame) : String;
 
 var MinimizedAtDOSBoxStart : Boolean = False;
 
@@ -1136,8 +1138,7 @@ begin
     result.Add('videoram='+IntToStr(Game.VideoRam));
   end;
 
-  If PrgSetup.AllowGlideSettings then
-    GenerateGlideConf(Game,result);
+  GenerateGlideConf(Game,result);
 
   GenerateCPUConf(Game,result,DOSBoxVersion);
 
@@ -1257,6 +1258,24 @@ begin
     Add:=Add+' '+Trim(PrgSetup.DOSBoxSettings[SettingsNr].CommandLineParameters);
   If DosBoxCommandLine<>'' then Add:=Add+' '+DosBoxCommandLine;
   result:='-CONF "'+ConfFile+'"'+Add;
+end;
+
+Function BuildDOSBoxXSaveDirArg(const Game : TGame) : String;
+Var DataDir, SaveDir : String;
+begin
+  {
+    Mirror Pure path_saves: if the profile data dir exists, put X savestates in
+    DataDir\.save via -savedir (DOSBox-X custom_savedir). Temp/workdir defaults
+    are unsuitable when a persistent data dir is available.
+  }
+  result:='';
+  if Game.DosBoxKind<>dbkX then exit;
+  DataDir:=Game.ResolveDataDir;
+  if (DataDir='') or (not DirectoryExists(DataDir)) then exit;
+  SaveDir:=IncludeTrailingPathDelimiter(DataDir)+'.save';
+  ForceDirectories(SaveDir);
+  result:='-savedir "'+ExcludeTrailingPathDelimiter(SaveDir)+'"';
+  LogInfo('DOSBox-X savedir: '+SaveDir);
 end;
 
 Function CreateDOSBoxProcess(const PrgFile, Params, Cwd : String; EnvBlock : Pointer; CreationFlags : DWORD; out ProcessId : DWORD) : THandle;
@@ -1633,15 +1652,7 @@ begin
     Cfg.Add('"screen_height" : "'+IntToStr(ScreenH)+'"');
   end;
 
-  {
-    Pure Voodoo settings: 8mb (default) or off. Pure will pick a default if the
-    value is invalid or empty.
-  }
-  if Game.isGlideEnabled then begin
-    Cfg.Add('"dosbox_pure_voodoo" : "8mb"');
-    Cfg.Add('"dosbox_pure_voodoo_perf" : "auto"');
-  end else
-    Cfg.Add('"dosbox_pure_voodoo" : "off"');
+  GeneratePureGlideCfg(Game,Cfg);
   S:=Trim(Game.Scale);
   
   {
@@ -1764,7 +1775,7 @@ end;
 
 Function RunGameInt(const Game : TGame; const RunSetup : Boolean; const DosBoxCommandLine : String; const DeleteOnExit : TStringList; const RunExtraFile : Integer = -1) : THandle;
 Var St,St2 : TStringList;
-    T, ConfPath, PureWorkDir : String;
+    T, ConfPath, PureWorkDir, ExtraCmd, XSaveArg : String;
     ZipRecNr : Integer;
     Error : Boolean;
     DOSBoxNr : Integer;
@@ -1778,6 +1789,7 @@ begin
   RunAsAdmin:=False;
   PureWorkDir:='';
   ConfPath:='';
+  ExtraCmd:=DosBoxCommandLine;
 
   SpeedTestInfo('Starting profile '+Game.SetupFile,True);
   SpeedTestInfo('File checksum test');
@@ -1846,9 +1858,15 @@ begin
       end;
 
       if Game.DosBoxKind=dbkPure then
-        result:=InvokeDOSBoxPure(T,ConfPath,PureWorkDir,Game.StartFullscreen,DosBoxCommandLine)
-      else
-        result:=RunDosBox(T,DOSBoxNr,ConfPath,Game.StartFullscreen,Game.ShowConsoleWindow,RunAsAdmin,DosBoxCommandLine);
+        result:=InvokeDOSBoxPure(T,ConfPath,PureWorkDir,Game.StartFullscreen,ExtraCmd)
+      else begin
+        XSaveArg:=BuildDOSBoxXSaveDirArg(Game);
+        if XSaveArg<>'' then begin
+          if Trim(ExtraCmd)<>'' then ExtraCmd:=ExtraCmd+' ';
+          ExtraCmd:=ExtraCmd+XSaveArg;
+        end;
+        result:=RunDosBox(T,DOSBoxNr,ConfPath,Game.StartFullscreen,Game.ShowConsoleWindow,RunAsAdmin,ExtraCmd);
+      end;
       { asAdmin uses ShellExecute and intentionally returns INVALID_HANDLE_VALUE }
       DOSBoxStartedOk:=(result<>INVALID_HANDLE_VALUE) or RunAsAdmin;
 

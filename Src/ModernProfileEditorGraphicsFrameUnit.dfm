@@ -18,34 +18,6 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
     Height = 15
     Caption = 'FullscreenResolutionLabel'
   end
-  object RenderLabel: TLabel
-    Left = 24
-    Top = 296
-    Width = 65
-    Height = 15
-    Caption = 'RenderLabel'
-  end
-  object VideoCardLabel: TLabel
-    Left = 184
-    Top = 296
-    Width = 83
-    Height = 15
-    Caption = 'VideoCardLabel'
-  end
-  object ScaleLabel: TLabel
-    Left = 24
-    Top = 352
-    Width = 55
-    Height = 15
-    Caption = 'ScaleLabel'
-  end
-  object FrameSkipLabel: TLabel
-    Left = 422
-    Top = 352
-    Width = 83
-    Height = 15
-    Caption = 'FrameSkipLabel'
-  end
   object FullscreenInfoLabel: TLabel
     Left = 40
     Top = 138
@@ -54,13 +26,6 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
     AutoSize = False
     Caption = 'FullscreenInfoLabel'
     WordWrap = True
-  end
-  object PixelShaderLabel: TLabel
-    Left = 24
-    Top = 400
-    Width = 88
-    Height = 15
-    Caption = 'PixelShaderLabel'
   end
   object ResolutionInfoLabel: TLabel
     Left = 24
@@ -71,34 +36,6 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
     Caption = 'ResolutionInfoLabel'
     Constraints.MinWidth = 357
     WordWrap = True
-  end
-  object GlideEmulationLabel: TLabel
-    Left = 24
-    Top = 240
-    Width = 109
-    Height = 15
-    Caption = 'GlideEmulationLabel'
-  end
-  object GlideEmulationPortLabel: TLabel
-    Left = 184
-    Top = 240
-    Width = 131
-    Height = 15
-    Caption = 'GlideEmulationPortLabel'
-  end
-  object GlideEmulationLFBLabel: TLabel
-    Left = 363
-    Top = 240
-    Width = 128
-    Height = 15
-    Caption = 'GlideEmulationLFBLabel'
-  end
-  object ShaderPresetLabel: TLabel
-    Left = 422
-    Top = 400
-    Width = 88
-    Height = 15
-    Caption = 'PixelShaderLabel'
   end
   object VSyncLabel: TLabel
     Left = 349
@@ -147,62 +84,27 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
     Caption = 'KeepAspectRatioCheckBox'
     TabOrder = 4
   end
-  object RenderComboBox: TComboBox
-    Left = 24
-    Top = 315
-    Width = 145
-    Height = 23
-    Style = csDropDownList
-    TabOrder = 8
-  end
-  object VideoCardComboBox: TComboBox
-    Left = 184
-    Top = 315
-    Width = 330
-    Height = 23
-    Style = csDropDownList
-    TabOrder = 9
-  end
-  object ScaleComboBox: TComboBox
-    Left = 24
-    Top = 371
-    Width = 385
-    Height = 23
-    Style = csDropDownList
-    Constraints.MinWidth = 371
-    TabOrder = 10
-  end
-  object FrameSkipEdit: TSpinEdit
-    Left = 422
-    Top = 371
-    Width = 92
-    Height = 24
-    MaxValue = 10
-    MinValue = 0
-    TabOrder = 11
-    Value = 0
-  end
   object TextModeLinesRadioGroup: TRadioGroup
-    Left = 24
+    Left = 3
     Top = 456
     Width = 169
-    Height = 76
+    Height = 105
     Caption = 'TextModeLinesRadioGroup'
     ItemIndex = 0
     Items.Strings = (
       '25'
       '28'
       '50')
-    TabOrder = 13
+    TabOrder = 6
     Visible = False
   end
   object VGASettingsGroupBox: TGroupBox
-    Left = 207
+    Left = 184
     Top = 456
-    Width = 341
+    Width = 364
     Height = 105
     Caption = 'VGASettingsGroupBox'
-    TabOrder = 14
+    TabOrder = 8
     Visible = False
     object VGAChipsetLabel: TLabel
       Left = 16
@@ -212,15 +114,15 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
       Caption = 'VGAChipsetLabel'
     end
     object VideoRamLabel: TLabel
-      Left = 167
+      Left = 199
       Top = 26
       Width = 82
       Height = 15
       Caption = 'VideoRamLabel'
     end
     object VGASettingsLabel: TLabel
-      Left = 16
-      Top = 68
+      Left = 24
+      Top = 76
       Width = 385
       Height = 34
       AutoSize = False
@@ -229,59 +131,20 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
     end
     object VGAChipsetComboBox: TComboBox
       Left = 16
-      Top = 40
+      Top = 47
       Width = 145
       Height = 23
       Style = csDropDownList
       TabOrder = 0
     end
     object VideoRamComboBox: TComboBox
-      Left = 167
-      Top = 40
+      Left = 199
+      Top = 47
       Width = 145
       Height = 23
       Style = csDropDownList
       TabOrder = 1
     end
-  end
-  object PixelShaderComboBox: TComboBox
-    Left = 24
-    Top = 421
-    Width = 385
-    Height = 23
-    TabOrder = 12
-    OnChange = PixelShaderComboBoxChange
-  end
-  object GlideEmulationComboBox: TComboBox
-    Left = 24
-    Top = 259
-    Width = 105
-    Height = 23
-    Style = csDropDownList
-    TabOrder = 5
-  end
-  object GlideEmulationPortComboBox: TComboBox
-    Left = 184
-    Top = 259
-    Width = 105
-    Height = 23
-    TabOrder = 6
-  end
-  object GlideEmulationLFBComboBox: TComboBox
-    Left = 363
-    Top = 259
-    Width = 105
-    Height = 23
-    Style = csDropDownList
-    TabOrder = 7
-  end
-  object ShaderPresetComboBox: TComboBox
-    Left = 422
-    Top = 421
-    Width = 126
-    Height = 23
-    TabOrder = 15
-    OnChange = PixelShaderComboBoxChange
   end
   object VSyncComboBox: TComboBox
     Left = 387
@@ -289,7 +152,7 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
     Width = 161
     Height = 23
     Style = csDropDownList
-    TabOrder = 16
+    TabOrder = 5
   end
   object rgScreenInactive: TRadioGroup
     Left = 387
@@ -301,6 +164,107 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
       'Do nothing'
       'Mute'
       'Pause')
-    TabOrder = 17
+    TabOrder = 7
+  end
+  object GroupBox1: TGroupBox
+    Left = 3
+    Top = 240
+    Width = 545
+    Height = 210
+    Caption = 'Render Options'
+    TabOrder = 9
+    object RenderLabel: TLabel
+      Left = 17
+      Top = 29
+      Width = 38
+      Height = 15
+      Caption = 'Output'
+    end
+    object VideoCardLabel: TLabel
+      Left = 176
+      Top = 29
+      Width = 83
+      Height = 15
+      Caption = 'VideoCardLabel'
+    end
+    object ScaleLabel: TLabel
+      Left = 16
+      Top = 87
+      Width = 55
+      Height = 15
+      Caption = 'ScaleLabel'
+    end
+    object FrameSkipLabel: TLabel
+      Left = 414
+      Top = 88
+      Width = 83
+      Height = 15
+      Caption = 'FrameSkipLabel'
+    end
+    object PixelShaderLabel: TLabel
+      Left = 17
+      Top = 148
+      Width = 88
+      Height = 15
+      Caption = 'PixelShaderLabel'
+    end
+    object ShaderPresetLabel: TLabel
+      Left = 418
+      Top = 148
+      Width = 88
+      Height = 15
+      Caption = 'PixelShaderLabel'
+    end
+    object RenderComboBox: TComboBox
+      Left = 16
+      Top = 50
+      Width = 145
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 0
+    end
+    object VideoCardComboBox: TComboBox
+      Left = 176
+      Top = 50
+      Width = 330
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 1
+    end
+    object ScaleComboBox: TComboBox
+      Left = 16
+      Top = 109
+      Width = 385
+      Height = 23
+      Style = csDropDownList
+      Constraints.MinWidth = 371
+      TabOrder = 2
+    end
+    object FrameSkipEdit: TSpinEdit
+      Left = 414
+      Top = 109
+      Width = 92
+      Height = 24
+      MaxValue = 10
+      MinValue = 0
+      TabOrder = 3
+      Value = 0
+    end
+    object PixelShaderComboBox: TComboBox
+      Left = 16
+      Top = 169
+      Width = 385
+      Height = 23
+      TabOrder = 4
+      OnChange = PixelShaderComboBoxChange
+    end
+    object ShaderPresetComboBox: TComboBox
+      Left = 414
+      Top = 169
+      Width = 126
+      Height = 23
+      TabOrder = 5
+      OnChange = PixelShaderComboBoxChange
+    end
   end
 end

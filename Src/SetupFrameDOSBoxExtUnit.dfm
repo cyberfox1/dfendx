@@ -94,54 +94,45 @@ object SetupFrameDOSBoxExt: TSetupFrameDOSBoxExt
         Caption = 'Activate 28 and 50 line text modes'
         TabOrder = 0
       end
-      object GlideEmulationCheckBox: TCheckBox
+      object VGAChipsetCheckBox: TCheckBox
         Left = 16
         Top = 47
         Width = 513
         Height = 17
         Anchors = [akLeft, akTop, akRight]
-        Caption = 'Activate Glide emulation settings'
-        TabOrder = 1
-      end
-      object VGAChipsetCheckBox: TCheckBox
-        Left = 16
-        Top = 72
-        Width = 513
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
         Caption = 'Activate VGA chipset settings'
-        TabOrder = 2
+        TabOrder = 1
       end
       object RenderModesCheckBox: TCheckBox
         Left = 16
-        Top = 95
+        Top = 70
         Width = 513
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Add "openglhq" and "direct3d" render modes'
-        TabOrder = 3
+        TabOrder = 2
         OnClick = DefaultValueChanged
       end
       object VideoModesCheckBox: TCheckBox
         Tag = 1
         Left = 16
-        Top = 118
+        Top = 93
         Width = 513
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Add "pcjr", "ega" and "demovga" graphic modes'
-        TabOrder = 4
+        TabOrder = 3
         OnClick = DefaultValueChanged
       end
       object PixelShaderCheckBox: TCheckBox
         Tag = 3
         Left = 16
-        Top = 141
+        Top = 116
         Width = 513
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Activate pixel shader settings'
-        TabOrder = 5
+        TabOrder = 4
         OnClick = DefaultValueChanged
       end
     end

@@ -2,8 +2,6 @@ unit ModernProfileEditorFormHelpers;
 
 interface
 
-uses SysUtils;
-
 function FormatMultiLineHint(const InputString: String): String;
 
 implementation

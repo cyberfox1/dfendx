@@ -18,15 +18,6 @@ SDeanComponents v2.60.00
 written by Sarah Dean (sdean12@sdean12.org)
 (http://www.SDean12.org/)
 
-TZipMaster 1.79
-written by Chris Vleghert and Eric W. Engler
-(http://www.delphizip.org)
-Related runtime DLL: DelZip179.dll (ZipMaster / DelZip package)
-
-TSevenZip 0.7.4a
-written by Ivo Andonov and Rainer Geigenberger (SevenZipVCL@rg-software.de)
-(http://www.rg-software.de)
-
 Bitmap Resampler 01.02
 written by Anders Melander (anders@melander.dk)
 
@@ -65,15 +56,11 @@ Doszip Commander 1.41
 (c) 1996-2010 Hjort Nidudsson
 (http://sourceforge.net/projects/doszip)
 
-7-Zip LZMA / 7za.dll
+7-Zip standalone console (7za.exe)
 (c) Igor Pavlov
 (https://www.7-zip.org/)
-Runtime DLL: Bin\7za.dll
-(The Delphi wrapper TSevenZip is listed under source components above.)
-
-DelZip / ZipMaster runtime DLL
-DelZip179.dll (Bin\DelZip179.dll)
-See TZipMaster 1.79 above (http://www.delphizip.org)
+Runtime: Bin\7za.exe
+See also Bin\License.txt for 7za license notes.
 
 BASS audio library 2.4
 (c) 1999-2025 Un4seen Developments Ltd.

@@ -89,8 +89,7 @@ call :CopyBin "libFLAC.dll" || exit /b 1
 call :CopyBin "LicenseComponents.txt" || exit /b 1
 call :CopyBin "Links.txt" || exit /b 1
 call :CopyBin "SearchLinks.txt" || exit /b 1
-call :CopyBin "7za.dll" || exit /b 1
-call :CopyBin "DelZip179.dll" || exit /b 1
+call :CopyBin "7za.exe" || exit /b 1
 call :CopyBin "LicenseBASS.txt" || exit /b 1
 call :CopyBin "AdminLauncher.exe" || exit /b 1
 call :CopyBin "SetInstallerLanguage.exe" || exit /b 1

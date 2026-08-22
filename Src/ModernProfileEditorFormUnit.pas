@@ -122,6 +122,12 @@ Function EditGameProfilInt(const AOwner : TComponent; const AGameDB : TGameDB; v
 
 Procedure AddDefaultValueHint(const AComboBox : TComboBox);
 
+Procedure RebuildComboFromConfOpt(Combo: TComboBox; const ConfOptList: String; const PreferredValue: String = '');
+Procedure SetComboNoSelect(Combo: TComboBox);
+Procedure ApplyComboFromConfOpt(Combo: TComboBox; const ConfOptList: String; const PreferredValue: String = '');
+Procedure SelectComboValue(Combo: TComboBox; const Value: String);
+Function ComboHasValue(Combo: TComboBox; const Value: String): Boolean;
+
 implementation
 
 uses ShellAPI, Math, VistaToolsUnit, LanguageSetupUnit,
@@ -129,6 +135,7 @@ uses ShellAPI, Math, VistaToolsUnit, LanguageSetupUnit,
      ModernProfileEditorDirectoryFrameUnit, ModernProfileEditorDOSBoxFrameUnit,
      ModernProfileEditorHardwareFrameUnit, ModernProfileEditorCPUFrameUnit,
      ModernProfileEditorMemoryFrameUnit, ModernProfileEditorGraphicsFrameUnit,
+     ModernProfileEditorGlideFrameUnit,
      ModernProfileEditorKeyboardFrameUnit, ModernProfileEditorMouseFrameUnit,
      ModernProfileEditorSoundFrameUnit, ModernProfileEditorVolumeFrameUnit,
      ModernProfileEditorSoundBlasterFrameUnit, ModernProfileEditorGUSFrameUnit,
@@ -537,6 +544,7 @@ begin
         F:=TModernProfileEditorCPUFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorCPUFrame(F),LanguageSetup.ProfileEditorCPUSheet,3,9);
         F:=TModernProfileEditorMemoryFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorMemoryFrame(F),LanguageSetup.ProfileEditorMemorySheet,4,10);
         F:=TModernProfileEditorGraphicsFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorGraphicsFrame(F),LanguageSetup.ProfileEditorGraphicsSheet,4,11);
+        F:=TModernProfileEditorGlideFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorGlideFrame(F),LanguageSetup.ProfileEditorGlideSheet,4,24);
         F:=TModernProfileEditorKeyboardFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorKeyboardFrame(F),LanguageSetup.ProfileEditorKeyboardSheet,4,15);
         F:=TModernProfileEditorMouseFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorMouseFrame(F),LanguageSetup.ProfileEditorMouseSheet,4,12);
         F:=TModernProfileEditorSoundFrame.Create(self); N2:=AddTreeNode(N,F,TModernProfileEditorSoundFrame(F),LanguageSetup.ProfileEditorSoundSheet,5,5);
@@ -1035,6 +1043,85 @@ begin
   S:=FormatMultiLineHint(LanguageSetup.ProfileEditorDefaultValueHint);
   AComboBox.Hint:=S;
   AComboBox.ShowHint:=True;
+end;
+
+Procedure RebuildComboFromConfOpt(Combo: TComboBox; const ConfOptList: String; const PreferredValue: String);
+Var Want: String;
+    St: TStringList;
+    I: Integer;
+    OldChange: TNotifyEvent;
+begin
+  if Combo = nil then Exit;
+  if Trim(PreferredValue) <> '' then Want := Trim(PreferredValue) else Want := Trim(Combo.Text);
+  OldChange := Combo.OnChange;
+  Combo.OnChange := nil;
+  Combo.Items.BeginUpdate;
+  Combo.Items.Clear;
+  if Trim(ConfOptList) <> '' then begin
+    St := ValueToList(ConfOptList, ',');
+    Combo.Items.AddStrings(St);
+    St.Free;
+  end;
+  Combo.Items.EndUpdate;
+  Combo.ItemIndex := -1;
+  if Want <> '' then
+    for I := 0 to Combo.Items.Count - 1 do
+      if SameText(Trim(Combo.Items[I]), Want) then begin
+        Combo.ItemIndex := I;
+        break;
+      end;
+  Combo.OnChange := OldChange;
+end;
+
+Procedure SetComboNoSelect(Combo: TComboBox);
+Var OldChange: TNotifyEvent;
+begin
+  if Combo = nil then Exit;
+  OldChange := Combo.OnChange;
+  Combo.OnChange := nil;
+  Combo.ItemIndex := -1;
+  Combo.OnChange := OldChange;
+end;
+
+Procedure ApplyComboFromConfOpt(Combo: TComboBox; const ConfOptList: String; const PreferredValue: String);
+begin
+  if Combo = nil then Exit;
+  if not Combo.Enabled then
+    SetComboNoSelect(Combo)
+  else
+    RebuildComboFromConfOpt(Combo, ConfOptList, PreferredValue);
+end;
+
+Function ComboHasValue(Combo: TComboBox; const Value: String): Boolean;
+Var I: Integer;
+    Want: String;
+begin
+  Result := False;
+  if (Combo = nil) or (Trim(Value) = '') then Exit;
+  Want := Trim(Value);
+  for I := 0 to Combo.Items.Count - 1 do
+    if SameText(Trim(Combo.Items[I]), Want) then begin
+      Result := True;
+      Exit;
+    end;
+end;
+
+Procedure SelectComboValue(Combo: TComboBox; const Value: String);
+Var I: Integer;
+    Want: String;
+    OldChange: TNotifyEvent;
+begin
+  if (Combo = nil) or (Trim(Value) = '') then Exit;
+  Want := Trim(Value);
+  OldChange := Combo.OnChange;
+  Combo.OnChange := nil;
+  Combo.ItemIndex := -1;
+  for I := 0 to Combo.Items.Count - 1 do
+    if SameText(Trim(Combo.Items[I]), Want) then begin
+      Combo.ItemIndex := I;
+      break;
+    end;
+  Combo.OnChange := OldChange;
 end;
 
 end.

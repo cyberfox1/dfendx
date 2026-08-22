@@ -20,6 +20,7 @@ DFendX has first level support for these modern DOSBox forks. This includes:
 * VSync options.
 * Inactive screen behaviour options.
 * Ouput render, pixel shaders and preset selection.
+* Full Glide/Voodoo support.
 * More available machine types to choose from.
 
 ### Modern Windows and Unicode support

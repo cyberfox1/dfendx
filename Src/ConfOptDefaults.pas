@@ -92,9 +92,24 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
       DefaultValuesScummVMLanguages='maniac:en-de-fr-it-es,zak:en-de-fr-it-es,dig_jp-zh-kr,comi:en-de-fr-it-pt-es-jp-zh-kr,sky:gb-en-de-fr-it-pt-es-se,sword1:en-de-fr-it-es-pt-cz,simon1:en-de-fr-it-es-hb-pl-ru,simon2:en-de-fr-it-es-hb-pl-ru';
       DefaultValuesCPUType='auto,386,386_slow,486_slow,pentium_slow,386_prefetch';
       DefaultValuesOplEmu='default,compat,fast,old';
+      { Glide / Voodoo — Default = shared by all kinds that use the control;
+        kind-specific suffix when value sets differ (X, NewStaging, Pure). }
       DefaultValuesGlideEmulation='false,true,emu';
       DefaultValuesGlideEmulationPort='400,500,600';
       DefaultValuesGlideEmulationLFB='full,read,write,none';
+      DefaultValuesGlideEmulationLFBX='full_noaux,full,read_noaux,read,write_noaux,write,none';
+      { Memory: X maxmem + Staging voodoo_memsize share 4|12; Pure also has 8. }
+      DefaultValuesGlideVoodooMem='4,12';
+      DefaultValuesGlideVoodooMemPure='4,8,12';
+      { Card / performance: X voodoo_card vs Pure dosbox_pure_voodoo_perf. }
+      DefaultValuesGlideVoodooCardX='false,software,opengl,auto';
+      DefaultValuesGlideVoodooPerfPure='auto,0,1,2,3,4';
+      { Staging 0.83+ only. }
+      DefaultValuesGlideVoodooThreads='auto,1,2,4,8,16';
+      DefaultValuesGlideVoodooBilinear='true,false';
+      { Pure only. }
+      DefaultValuesGlideVoodooScale='1,2,3,4,5,6,7,8';
+      DefaultValuesGlideVoodooGamma='-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,999';
       DefaultValuesInnovaEmulationSampleRate='44100,48000,32000,22050,16000,11025,8000,49716';
       DefaultValuesInnovaEmulationBaseAddress='240,220,260,280,2a0,2c0,2e0,300';
       DefaultValuesInnovaEmulationQuality='0,1,2,3';

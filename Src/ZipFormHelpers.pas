@@ -2,19 +2,30 @@ unit ZipFormHelpers;
 
 interface
 
-uses Classes, SevenZipVCL;
+uses Classes;
 
 function AvoidSomeNames(const St: TStringList; const SetupNumber: Integer): String;
 function CheckExtension(Extension: String): String;
 function CheckExtensionsList(Extensions: String): String;
 function ExtensionInList(Extension, List: String): Boolean;
 function ProcessFileNameFilter(Filter, ArchiveFiles: String): String;
-function GetCompressStrengthFromPrgSetup: TCompressStrength;
-function StripAllSuffixes(const FileName: String): String;
+
+function Bundled7zaPath: String;
+function IsBundled7zaPath(const FileName: String): Boolean;
+function CompressionLevelTo7zMx(Level: Integer): Integer;
+procedure ApplyBundled7zaDefaults(out Name, FileName, Extensions, ExtractFile, CreateFile, UpdateFile: String; out TrailingBackslash: Boolean);
+procedure EnsureBundled7zaPackerRow;
 
 implementation
 
-uses SysUtils, CommonHelpers, PrgSetupUnit, PrgConsts;
+uses SysUtils, CommonHelpers, CommonTools, PrgSetupUnit, PrgConsts;
+
+const
+  Bundled7zaName = '7za';
+  Bundled7zaExtensions = 'ZIP;7Z;TAR;GZ;GZIP;TGZ;BZ2;BZIP2;TBZ2;XZ;TXZ';
+  Bundled7zaExtract = 'x "%1" -o"%2" -y';
+  Bundled7zaCreate = 'a -mmt=on "%1" "%2*" -r -y';
+  Bundled7zaUpdate = 'u -mmt=on "%1" "%2*" -r -y';
 
 function StripAllSuffixes(const FileName: String): String;
 begin
@@ -140,16 +151,73 @@ begin
   end;
 end;
 
-function GetCompressStrengthFromPrgSetup: TCompressStrength;
+function Bundled7zaPath: String;
 begin
-  Case PrgSetup.CompressionLevel of
-    0 : result:=SAVE;
-    1 : result:=FAST;
-    2 : result:=NORMAL;
-    3 : result:=MAXIMUM;
-    4 : result:=ULTRA;
-    else result:=MAXIMUM;
+  result:=PrgDir+BinFolder+'\'+Bundled7zaFileName;
+end;
+
+function IsBundled7zaPath(const FileName: String): Boolean;
+begin
+  result:=(Trim(FileName)<>'') and
+    (AnsiSameText(ExpandFileName(FileName), ExpandFileName(Bundled7zaPath)));
+end;
+
+function CompressionLevelTo7zMx(Level: Integer): Integer;
+begin
+  Case Level of
+    0 : result:=0;
+    1 : result:=3;
+    2 : result:=5;
+    3 : result:=7;
+    4 : result:=9;
+    else result:=7;
   end;
+end;
+
+procedure ApplyBundled7zaDefaults(out Name, FileName, Extensions, ExtractFile, CreateFile, UpdateFile: String; out TrailingBackslash: Boolean);
+begin
+  Name:=Bundled7zaName;
+  FileName:=Bundled7zaPath;
+  Extensions:=Bundled7zaExtensions;
+  ExtractFile:=Bundled7zaExtract;
+  CreateFile:=Bundled7zaCreate;
+  UpdateFile:=Bundled7zaUpdate;
+  TrailingBackslash:=True;
+end;
+
+procedure EnsureBundled7zaPackerRow;
+Var I, J : Integer;
+    Name, FileName, Extensions, ExtractFile, CreateFile, UpdateFile : String;
+    TrailingBackslash : Boolean;
+begin
+  If PrgSetup=nil then exit;
+  If not FileExists(Bundled7zaPath) then exit;
+
+  ApplyBundled7zaDefaults(Name, FileName, Extensions, ExtractFile, CreateFile, UpdateFile, TrailingBackslash);
+
+  J:=-1;
+  For I:=0 to PrgSetup.PackerSettingsCount-1 do
+    If IsBundled7zaPath(PrgSetup.PackerSettings[I].ZipFileName) then begin
+      If J<0 then J:=I
+      else begin
+        { Keep first shipped row; drop duplicates later if any appear }
+      end;
+    end;
+
+  If J<0 then J:=PrgSetup.AddPackerSettings(Name);
+
+  PrgSetup.PackerSettings[J].Name:=Name;
+  PrgSetup.PackerSettings[J].ZipFileName:=FileName;
+  PrgSetup.PackerSettings[J].FileExtensions:=Extensions;
+  PrgSetup.PackerSettings[J].ExtractFile:=ExtractFile;
+  PrgSetup.PackerSettings[J].CreateFile:=CreateFile;
+  PrgSetup.PackerSettings[J].UpdateFile:=UpdateFile;
+  PrgSetup.PackerSettings[J].TrailingBackslash:=TrailingBackslash;
+
+  { Remove extra rows pointing at the same bundled exe }
+  For I:=PrgSetup.PackerSettingsCount-1 downto 0 do
+    If (I<>J) and IsBundled7zaPath(PrgSetup.PackerSettings[I].ZipFileName) then
+      PrgSetup.DeletePackerSettings(I);
 end;
 
 end.

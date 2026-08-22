@@ -301,6 +301,15 @@ begin
   AddStringRec(42,'GlideEmulation','value',DefaultValuesGlideEmulation);
   AddStringRec(43,'GlideEmulationPort','value',DefaultValuesGlideEmulationPort);
   AddStringRec(44,'GlideEmulationLFB','value',DefaultValuesGlideEmulationLFB);
+  AddStringRec(67,'GlideEmulationLFBX','value',DefaultValuesGlideEmulationLFBX);
+  AddStringRec(68,'GlideVoodooMem','value',DefaultValuesGlideVoodooMem);
+  AddStringRec(69,'GlideVoodooMemPure','value',DefaultValuesGlideVoodooMemPure);
+  AddStringRec(70,'GlideVoodooCardX','value',DefaultValuesGlideVoodooCardX);
+  AddStringRec(71,'GlideVoodooPerfPure','value',DefaultValuesGlideVoodooPerfPure);
+  AddStringRec(72,'GlideVoodooThreads','value',DefaultValuesGlideVoodooThreads);
+  AddStringRec(73,'GlideVoodooBilinear','value',DefaultValuesGlideVoodooBilinear);
+  AddStringRec(74,'GlideVoodooScale','value',DefaultValuesGlideVoodooScale);
+  AddStringRec(75,'GlideVoodooGamma','value',DefaultValuesGlideVoodooGamma);
   AddStringRec(45,'InnovaEmulationSampleRate','value',DefaultValuesInnovaEmulationSampleRate);
   AddStringRec(46,'InnovaEmulationBaseAddress','value',DefaultValuesInnovaEmulationBaseAddress);
   AddStringRec(47,'InnovaEmulationQuality','value',DefaultValuesInnovaEmulationQuality);

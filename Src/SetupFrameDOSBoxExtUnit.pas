@@ -15,7 +15,6 @@ type
     PhysFSCheckBox: TCheckBox;
     GraphicsGroupBox: TGroupBox;
     ExtendedTextModeCheckBox: TCheckBox;
-    GlideEmulationCheckBox: TCheckBox;
     VGAChipsetCheckBox: TCheckBox;
     SoundGroupBox: TGroupBox;
     PrinterGroupBox: TGroupBox;
@@ -74,7 +73,6 @@ begin
   NoFlicker(PhysFSCheckBox);
   NoFlicker(GraphicsGroupBox);
   NoFlicker(ExtendedTextModeCheckBox);
-  NoFlicker(GlideEmulationCheckBox);
   NoFlicker(VGAChipsetCheckBox);
   NoFlicker(RenderModesCheckBox);
   NoFlicker(VideoModesCheckBox);
@@ -90,7 +88,6 @@ begin
   MultiFloppyImageCheckBox.Checked:=PrgSetup.AllowMultiFloppyImagesMount;
   PhysFSCheckBox.Checked:=PrgSetup.AllowPhysFSUsage;
   ExtendedTextModeCheckBox.Checked:=PrgSetup.AllowTextModeLineChange;
-  GlideEmulationCheckBox.Checked:=PrgSetup.AllowGlideSettings;
   VGAChipsetCheckBox.Checked:=PrgSetup.AllowVGAChipsetSettings;
 
   I:=0;
@@ -148,7 +145,6 @@ begin
   PhysFSCheckBox.Caption:=LanguageSetup.SetupFormDosBoxCVSPhysFS;
   GraphicsGroupBox.Caption:=LanguageSetup.SetupFormDosBoxCVSGraphicsGroup;
   ExtendedTextModeCheckBox.Caption:=LanguageSetup.SetupFormDosBoxCVSExtendedTextMode;
-  GlideEmulationCheckBox.Caption:=LanguageSetup.SetupFormDosBoxCVSGlideEmulation;
   VGAChipsetCheckBox.Caption:=LanguageSetup.SetupFormDosBoxCVSVGAChipset;
   RenderModesCheckBox.Caption:=LanguageSetup.SetupFormDosBoxCVSRenderModes;
   VideoModesCheckBox.Caption:=LanguageSetup.SetupFormDosBoxCVSVideoModes;
@@ -186,7 +182,6 @@ begin
   MultiFloppyImageCheckBox.Checked:=False;
   PhysFSCheckBox.Checked:=False;
   ExtendedTextModeCheckBox.Checked:=False;
-  GlideEmulationCheckBox.Checked:=False;
   VGAChipsetCheckBox.Checked:=False;
   PixelShaderCheckBox.Checked:=True;
   PixelShaderCheckBox.Enabled:=False;
@@ -224,7 +219,6 @@ begin
   PrgSetup.AllowMultiFloppyImagesMount:=MultiFloppyImageCheckBox.Checked;
   PrgSetup.AllowPhysFSUsage:=PhysFSCheckBox.Checked;
   PrgSetup.AllowTextModeLineChange:=ExtendedTextModeCheckBox.Checked;
-  PrgSetup.AllowGlideSettings:=GlideEmulationCheckBox.Checked;
   PrgSetup.AllowVGAChipsetSettings:=VGAChipsetCheckBox.Checked;
 
   If ValueChanged[0] then begin

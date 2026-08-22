@@ -21,8 +21,7 @@ object ZipInfoForm: TZipInfoForm
     176)
   PixelsPerInch = 96
   TextHeight = 13
-  GlassFrame.Enabled = True
-  GlassFrame.SheetOfGlass = True
+  GlassFrame.Enabled = False
   object InfoLabel: TLabel
     Left = 24
     Top = 56
@@ -39,6 +38,7 @@ object ZipInfoForm: TZipInfoForm
     Width = 307
     Height = 17
     Anchors = [akLeft, akTop, akRight]
+    Style = pbstMarquee
     TabOrder = 0
   end
   object CancelButton: TBitBtn
@@ -50,7 +50,6 @@ object ZipInfoForm: TZipInfoForm
     Cancel = True
     Caption = 'Cancel'
     Enabled = False
-    ModalResult = 2
     TabOrder = 1
     OnClick = CancelButtonClick
     NumGlyphs = 2

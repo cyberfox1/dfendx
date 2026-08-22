@@ -803,6 +803,9 @@ begin
     end;
   end;
 
+  LogInfo('Ensuring bundled 7za packer');
+  EnsureBundled7zaPackerRow;
+
   FirstRunInfoPanel.Visible:=(GameDB.Count<=1) and PrgSetup.ShowAddGameInfoOnEmptyGamesList;
 
   LogInfo('Update checker');

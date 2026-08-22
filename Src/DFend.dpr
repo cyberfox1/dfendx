@@ -46,6 +46,7 @@ uses
   ModernProfileEditorCPUFrameUnit in 'ModernProfileEditorCPUFrameUnit.pas' {ModernProfileEditorCPUFrame: TFrame},
   ModernProfileEditorMemoryFrameUnit in 'ModernProfileEditorMemoryFrameUnit.pas' {ModernProfileEditorMemoryFrame: TFrame},
   ModernProfileEditorGraphicsFrameUnit in 'ModernProfileEditorGraphicsFrameUnit.pas' {ModernProfileEditorGraphicsFrame: TFrame},
+  ModernProfileEditorGlideFrameUnit in 'ModernProfileEditorGlideFrameUnit.pas' {ModernProfileEditorGlideFrame: TFrame},
   ListViewImageUnit in 'ListViewImageUnit.pas',
   ModernProfileEditorKeyboardFrameUnit in 'ModernProfileEditorKeyboardFrameUnit.pas' {ModernProfileEditorKeyboardFrame: TFrame},
   StatisticsFormUnit in 'StatisticsFormUnit.pas' {StatisticsForm},
