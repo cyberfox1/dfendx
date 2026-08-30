@@ -46,7 +46,7 @@ implementation
 uses Windows, SysUtils, Forms, Controls, Dialogs, ShellAPI, ShlObj, Messages,
      XMLDoc, Variants, CommonHelpers, CommonTools, LanguageSetupUnit,
      GameDBToolsUnit, PrgSetupUnit, PrgConsts, UninstallFormUnit,
-      ZipFormHelpers, ZipInfoFormUnit, DosBoxUnit, DOSBoxUnitHelpers, ScummVMUnit, HashCalc,
+      ZipFormHelpers, ZipInfoFormUnit, DosBoxUnit, DOSBoxUnitHelpers, ScummVMUnitNew, HashCalc,
      ImportSelectTemplateFormUnit, SelectTemplateForZipImportFormUnit,
       InstallationSupportFormHelpers, InstallationSupportFormUnit, PackageDBToolsUnit, ZipPackageDBGLFormUnit,
      SmallWaitFormUnit, System.UITypes;

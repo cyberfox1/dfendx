@@ -25,7 +25,7 @@ DFendX has first level support for these modern DOSBox forks. This includes:
 
 ### Modern Windows and Unicode support
 
-DFendX is built using Delphi 12 RAD Studio, bringing native support for modern Windows and Unicode text support.
+DFendX is built using Delphi 13 RAD Studio, bringing native support for modern Windows and Unicode text support.
 
 ### Direct MIDI interface support
 

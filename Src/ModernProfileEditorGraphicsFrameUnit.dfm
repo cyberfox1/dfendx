@@ -21,7 +21,7 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
   object FullscreenInfoLabel: TLabel
     Left = 40
     Top = 138
-    Width = 341
+    Width = 281
     Height = 35
     AutoSize = False
     Caption = 'FullscreenInfoLabel'
@@ -39,10 +39,24 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
   end
   object VSyncLabel: TLabel
     Left = 349
-    Top = 194
+    Top = 151
     Width = 32
     Height = 15
     Caption = 'VSync'
+  end
+  object lblPresMode: TLabel
+    Left = 281
+    Top = 179
+    Width = 100
+    Height = 15
+    Caption = 'Presentation Mode'
+  end
+  object lblHostRate: TLabel
+    Left = 316
+    Top = 206
+    Width = 65
+    Height = 15
+    Caption = 'Refresh Rate'
   end
   object WindowResolutionComboBox: TComboBox
     Left = 24
@@ -148,7 +162,7 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
   end
   object VSyncComboBox: TComboBox
     Left = 387
-    Top = 191
+    Top = 148
     Width = 161
     Height = 23
     Style = csDropDownList
@@ -156,7 +170,7 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
   end
   object rgScreenInactive: TRadioGroup
     Left = 387
-    Top = 44
+    Top = 13
     Width = 161
     Height = 129
     Caption = 'When Screen Inactive'
@@ -266,5 +280,21 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
       TabOrder = 5
       OnChange = PixelShaderComboBoxChange
     end
+  end
+  object cbPresMode: TComboBox
+    Left = 387
+    Top = 177
+    Width = 161
+    Height = 23
+    Style = csDropDownList
+    TabOrder = 10
+  end
+  object cbHostRate: TComboBox
+    Left = 387
+    Top = 206
+    Width = 161
+    Height = 23
+    Style = csDropDownList
+    TabOrder = 11
   end
 end

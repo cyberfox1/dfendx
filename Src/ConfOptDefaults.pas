@@ -17,6 +17,8 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
       DefaultValueVSyncStagingOld='auto,on,adaptive,off,yield';
       DefaultValueVSyncX='off,on,force,host';
       DefaultValueVSyncPure='off,Force 60fps';
+      DefaultValuePresentationModeStaging='auto,dos-rate,host-rate';
+      DefaultValueDosRateStaging='default,host,50,60,70,72,75,90,100,120,144,165,240';
       DefaultValueScalePure='default,nearest,bilinear,integer';
       DefaultValueShaderPure='scanline,blur,mask,curvature,corner';
       DefaultValueCycles='auto,max,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,6000,7000,8000,9000,10000,11000,12000,12000,13000,14000,15000,16000,17000,18000,19000,20000';
@@ -82,13 +84,25 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
       DefaultValuesTandyRate='8000,11025,16000,22050,32000,44100,48000,49716';
       DefaultValuesScummVMFilter='No filtering. no scaling. Fastest (1x),No filtering. factor 2x. default for non 640x480 games (2x),No filtering. factor 3x (3x),2xSAI filter. factor 2x (2xsai),Enhanced 2xSAI filtering. factor 2x (super2xsai),'+
                                  'Less blurry than 2xSAI but slower. Factor 2x (supereagle),Doesn''t rely on blurring like 2xSAI. fast. Factor 2x (advmame2x),Doesn''t rely on blurring like 2xSAI. fast. Factor 3x (advmame3x),Very nice high quality filter but slow. Factor 2x (hq2x),'+
-                                 'Very nice high quality filter but slow. Factor 3x (hq3x),Interlace filter. Tries to emulate a TV. Factor 2x (tv2x),Dot matrix effect. Factor 2x (dotmatrix)';
+                                 'Very nice high quality filter but slow. Factor 3x (hq3x),Interlace filter. Tries to emulate a TV. Factor 2x (tv2x),Dot matrix effect. Factor 2x (dotmatrix),'+
+                                 'No filtering. factor 4x (4x),Doesn''t rely on blurring like 2xSAI. fast. Factor 4x (advmame4x),Edge-directed interpolation. Factor 2x (edge2x),Edge-directed interpolation. Factor 3x (edge3x),Smoother diagonals and rounded edges. Factor 2x (pm2x)';
       DefaultValuesScummVMMusicDriver='No music (null),Automatic (auto),Adlib emulation (adlib),FluidSynth MIDI emulation (fluidsynth),MT-32 emulation (mt32),PCjr emulation (only usable in SCUMM games) (pcjr),PC Speaker emulation (pcspk),'+
-                                      'FM-TOWNS YM2612 emulation (only usable in SCUMM FM-TOWNS games) (towns),Windows MIDI (windows)';
+                                      'FM-TOWNS YM2612 emulation (only usable in SCUMM FM-TOWNS games) (towns),Windows MIDI (windows),'+
+                                      'Creative Music System (cms),C64 Audio (C64),PC-98 Audio (pc98),SegaCD Audio (segacd),Apple Macintosh Audio (mac),Amiga Audio (amiga),Apple IIgs Audio (appleIIgs)';
+      DefaultValuesScummVMOplDriver='default,MAME OPL emulator (mame),DOSBox OPL emulator (db),Nuked OPL emulator (nuked)';
       DefaultValuesVGAChipsets='s3,et4000,et4000new,et3000,pvga1a,none';
       DefaultValuesVGAVideoRAM='512,1024,2048,4096,8192';
-      DefaultValuesScummVMRenderMode='default,CGA,EGA,Hercules green (hercGreen),Hercules amber (hercAmber),Amiga';
-      DefaultValuesScummVMPlatform='auto,2gs,3do,acorn,amiga,atari,c64,fmtowns,mac,nes,pc,pce,segacd,windows';
+      DefaultValuesScummVMRenderMode='default,CGA,EGA,Hercules green,Hercules amber,Amiga,'+
+                                      'VGA,CGA Composite,CGA b/w,FM-TOWNS,PC-9821 256 Colors,PC-9801 16 Colors,PC-9801 8 Colors,'+
+                                      'Apple IIgs,Atari ST,Macintosh,Macintosh b/w,Amstrad CPC,ZX Spectrum,Commodore 64,VGA Grey Scale,Windows 256 Colors,Windows 16 Colors';
+      DefaultValuesScummVMGfxMode='default,OpenGL,SDL Surface';
+      DefaultValuesScummVMScaler='default,Normal (normal),HQ (hq),Edge (edge),AdvMAME (advmame),SAI (sai),SuperSAI (supersai),SuperEagle (supereagle),PM (pm),DotMatrix (dotmatrix),TV (tv)';
+      DefaultValuesScummVMScaleFactor='default,1,2,3,4';
+      DefaultValuesScummVMStretchMode='default,Center,Pixel-perfect scaling,Even pixels scaling,Fit to window,Stretch to window,Fit to window 4:3';
+      DefaultValuesScummVMShader='None';
+      DefaultValuesScummVMRenderer='default,OpenGL,OpenGL with shaders,Software';
+      DefaultValuesScummVMAntialiasing='default,None,2x,4x,8x';
+      DefaultValuesScummVMPlatform='auto,2gs,apple2,3do,acorn,amiga,atari8,atari,c64,cpc,pc,pc98,wii,coco,coco3,fmtowns,linux,macintosh,pce,nes,segacd,windows,playstation,playstation2,playstation3,xbox,cdi,ios,android,os2,beos,ppc,megadrive,saturn,pippin,macintosh2,shockwave,zx,ti994,switch';
       DefaultValuesScummVMLanguages='maniac:en-de-fr-it-es,zak:en-de-fr-it-es,dig_jp-zh-kr,comi:en-de-fr-it-pt-es-jp-zh-kr,sky:gb-en-de-fr-it-pt-es-se,sword1:en-de-fr-it-es-pt-cz,simon1:en-de-fr-it-es-hb-pl-ru,simon2:en-de-fr-it-es-hb-pl-ru';
       DefaultValuesCPUType='auto,386,386_slow,486_slow,pentium_slow,386_prefetch';
       DefaultValuesOplEmu='default,compat,fast,old';

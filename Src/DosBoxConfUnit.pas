@@ -39,8 +39,6 @@ Var S, OutputVal, ShaderVal: String;
     I: Integer;
 begin
   OutputVal:=Trim(Game.Render);
-  If not IsValidConfOptValue(Game.GameDB.ConfOpt.Render,OutputVal) then
-    OutputVal:='opengl';
   ShaderVal:=Trim(Game.PixelShader);
 
   Dest.Add('');
@@ -411,6 +409,10 @@ begin
       end;
     end;
   end;
+  If Game.IsNewStaging then begin
+    S:=Trim(Game.PresentationMode);
+    If S<>'' then Dest.Add('presentation_mode='+S);
+  end;
   { Standard DOSBox (and unknown): pixelshader under [sdl], with .fx suffix.
     Staging/X shaders go under [render] below. Pure uses interface_crtfilter in cfg.
     No selection → no key. }
@@ -487,6 +489,10 @@ begin
     I:=Game.VideoRam;
     if (I mod 1024)<>0 then I:=(I div 1024)+1 else I:=I div 1024;
     Dest.Add('vmemsize='+IntToStr(I));
+  end;
+  If Game.IsNewStaging then begin
+    S:=Trim(Game.DosRefreshRate);
+    If S<>'' then Dest.Add('dos_rate='+S);
   end;
 end;
 

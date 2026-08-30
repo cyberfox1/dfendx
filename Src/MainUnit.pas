@@ -542,7 +542,7 @@ uses ShellAPI, ShlObj, ClipBrd, Math, CommCtrl, CommonHelpers, CommonTools, Lang
      LanguageEditorFormUnit, PlaySoundFormUnit, WallpaperStyleFormUnit, System.UITypes,
      CreateISOImageFormUnit, CreateXMLFormUnit, ExpandImageFormUnit,
      FirstRunWizardFormUnit, CommonComponents, BuildImageFromFolderFormUnit,
-     MiniRunFormUnit, ScummVMUnit, ListScummVMGamesFormUnit,
+     MiniRunFormUnit, ScummVMUnitNew, ListScummVMGamesFormUnit,
      DragNDropErrorFormUnit, SimpleXMLUnit, OperationModeInfoFormUnit,
      ZipManagerUnit, ZipWaitInfoFormUnit, CopyProfileFormUnit,
      ImageCacheUnit, ZipPackageUnit, WindowsProfileUnit,
@@ -864,7 +864,10 @@ begin
 
   if hEvent<>0 then CloseHandle(hEvent);
 
-  if not Assigned(PrgSetup) then Exit;
+  if not Assigned(PrgSetup) then begin
+    LogInfo('Invalid configuration, exiting!');
+    Exit;
+  end;
   If ListView.Selected<>nil then PrgSetup.LastSelectedProfile:=TGame(ListView.Selected.Data).CacheName else PrgSetup.LastSelectedProfile:='';
   PrgSetup.MainMaximized:=(WindowState=wsMaximized);
   PrgSetup.MainLeft:=Left;
@@ -887,6 +890,7 @@ begin
 
   AfterPlaySoundDialog:=nil;
   FreeBassMedia;
+  LogInfo('DFendX shutdown complete, process exiting....');
 end;
 
 procedure TDFendReloadedMainForm.LoadMenuLanguage;

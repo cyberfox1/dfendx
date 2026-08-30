@@ -14,7 +14,13 @@ type
 end;
 
 type
-  TExoWaitResult = record
+  TWaitCaptions = record
+    Success : String;
+    Fail1 : String;
+    Fail2 : String;
+  end;
+
+  TWaitResult = record
     ShowError1 : Boolean;
     ShowError2 : Boolean;
     Error1Shown : Boolean;
@@ -22,6 +28,8 @@ type
     ShouldSpin : Boolean;
     FinalCaption : String;
   end;
+
+  TExoWaitResult = TWaitResult;
 
 {$IFDEF FPC}
   TMediaFileEvent = procedure(const FullPath: String) of object;
@@ -72,6 +80,12 @@ function GameExeIsUnderExoDOS(const GameExeFullPath, ExoDOSDir : String) : Boole
 
 function NormalizeExoMediaKey(const S : String) : String;
 function ExoMediaFilenameKey(const S : String) : String;
+
+function EvaluateWaitState(
+  Thread1 : TThread; var T1ErrorShown : Boolean; T1Count : Integer;
+  Thread2 : TThread; var T2ErrorShown : Boolean; T2Count : Integer;
+  const Captions : TWaitCaptions
+) : TWaitResult;
 
 function EvaluateExoWaitState(
   Thread1 : TThread; var T1ErrorShown : Boolean; T1GameCount : Integer;
@@ -792,10 +806,11 @@ end;
 
 { EvaluateExoWaitState }
 
-function EvaluateExoWaitState(
-  Thread1 : TThread; var T1ErrorShown : Boolean; T1GameCount : Integer;
-  Thread2 : TThread; var T2ErrorShown : Boolean; T2MediaCount : Integer
-) : TExoWaitResult;
+function EvaluateWaitState(
+  Thread1 : TThread; var T1ErrorShown : Boolean; T1Count : Integer;
+  Thread2 : TThread; var T2ErrorShown : Boolean; T2Count : Integer;
+  const Captions : TWaitCaptions
+) : TWaitResult;
 Var
   T1Done, T2Done : Boolean;
 begin
@@ -833,14 +848,26 @@ begin
     exit;
   end;
 
-  { Both threads done }
-  if (Thread2<>nil) and ((Thread2.FatalException<>nil) or (T2MediaCount<1)) then
-    result.FinalCaption:='Failed to load media';
+  if (Thread2<>nil) and ((Thread2.FatalException<>nil) or (T2Count<1)) then
+    result.FinalCaption:=Captions.Fail2;
 
-  if (Thread1=nil) or (Thread1.FatalException<>nil) or (T1GameCount<1) then
-    result.FinalCaption:='Failed to read XML games list'
+  if (Thread1=nil) or (Thread1.FatalException<>nil) or (T1Count<1) then
+    result.FinalCaption:=Captions.Fail1
   else if result.FinalCaption='' then
-    result.FinalCaption:='Read '+IntToStr(T1GameCount)+' games';
+    result.FinalCaption:=Format(Captions.Success,[T1Count]);
+end;
+
+function EvaluateExoWaitState(
+  Thread1 : TThread; var T1ErrorShown : Boolean; T1GameCount : Integer;
+  Thread2 : TThread; var T2ErrorShown : Boolean; T2MediaCount : Integer
+) : TExoWaitResult;
+Var
+  Caps : TWaitCaptions;
+begin
+  Caps.Success:='Read %d games';
+  Caps.Fail1:='Failed to read XML games list';
+  Caps.Fail2:='Failed to load media';
+  result:=EvaluateWaitState(Thread1,T1ErrorShown,T1GameCount,Thread2,T2ErrorShown,T2MediaCount,Caps);
 end;
 
 end.

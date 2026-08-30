@@ -546,7 +546,7 @@ begin
 
   If not DirectoryExists(PrgSetup.ScummVMPath) then begin
     S:=IncludeTrailingPathDelimiter(GetSpecialFolder(Application.MainForm.Handle,CSIDL_PROGRAM_FILES))+'ScummVM\';
-    If FileExists(S+ScummPrgFile) then PrgSetup.ScummVMPath:=S;
+    If FileExists(S+ScummPrgFile) then begin PrgSetup.ScummVMPath:=S; end;
   end;
 
   If not FileExists(PrgSetup.QBasic) then begin

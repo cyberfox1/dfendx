@@ -1,5 +1,13 @@
 DFendX Changelog
 
+Version 2.4.0 (08/30/2026)
+==========================
+- Major overhaul of ScummVM profile support.
+- Presentation mode/dos-rate options for Staging.
+- Updated help/wiki to cover most DFendX features.
+- [Fix] Crash when installing from source media.
+
+
 Version 2.3.0 (08/22/2026)
 ==========================
 - Full Glide support for DOSBox-X, Staging and Pure Unleashed.

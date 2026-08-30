@@ -10,29 +10,29 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
   object LanguageLabel: TLabel
     Left = 24
     Top = 13
-    Width = 72
-    Height = 13
+    Width = 80
+    Height = 15
     Caption = 'LanguageLabel'
   end
   object AutosaveLabel: TLabel
     Left = 24
     Top = 60
-    Width = 71
-    Height = 13
+    Width = 77
+    Height = 15
     Caption = 'AutosaveLabel'
   end
   object TalkSpeedLabel: TLabel
     Left = 24
     Top = 100
-    Width = 74
-    Height = 13
+    Width = 81
+    Height = 15
     Caption = 'TalkSpeedLabel'
   end
   object CustomSetsLabel: TLabel
     Left = 24
     Top = 410
-    Width = 82
-    Height = 13
+    Width = 91
+    Height = 15
     Caption = 'CustomSetsLabel'
   end
   object ExtraDirButton: TSpeedButton
@@ -63,9 +63,8 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
     Left = 24
     Top = 30
     Width = 105
-    Height = 21
+    Height = 23
     Style = csDropDownList
-    ItemHeight = 0
     TabOrder = 0
     OnChange = LanguageComboBoxChange
   end
@@ -82,7 +81,7 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
     Left = 24
     Top = 74
     Width = 105
-    Height = 22
+    Height = 24
     MaxValue = 86400
     MinValue = 1
     TabOrder = 2
@@ -92,7 +91,7 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
     Left = 24
     Top = 114
     Width = 105
-    Height = 22
+    Height = 24
     MaxValue = 1000
     MinValue = 1
     TabOrder = 3
@@ -102,13 +101,13 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
     Left = 24
     Top = 216
     Width = 561
-    Height = 81
+    Height = 90
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Folder for saved games'
     TabOrder = 7
     DesignSize = (
       561
-      81)
+      90)
     object SavePathEditButton: TSpeedButton
       Left = 535
       Top = 54
@@ -157,7 +156,7 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
       Left = 32
       Top = 54
       Width = 497
-      Height = 21
+      Height = 23
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 2
       OnChange = SavePathEditChange
@@ -178,6 +177,12 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
     Width = 558
     Height = 51
     Anchors = [akLeft, akTop, akRight, akBottom]
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
     PlainText = True
     ScrollBars = ssBoth
     TabOrder = 11
@@ -190,8 +195,6 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'L'#246'schen'
-    TabOrder = 12
-    OnClick = ButtonWork
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000120B0000120B00001000000000000000000000000000
@@ -206,6 +209,8 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
       BBB35555F55555575F555550555555550BBB55575555555575F5555555555555
       50BB555555555555575F555555555555550B5555555555555575}
     NumGlyphs = 2
+    TabOrder = 12
+    OnClick = ButtonWork
   end
   object CustomSetsLoadButton: TBitBtn
     Tag = 1
@@ -215,8 +220,6 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Laden...'
-    TabOrder = 13
-    OnClick = ButtonWork
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000130B0000130B00001000000000000000000000000000
@@ -231,6 +234,8 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
       B3333337FFFF77377FF333B000000333BB33337777777F3377FF3BB3333BB333
       3BB33773333773333773B333333B3333333B7333333733333337}
     NumGlyphs = 2
+    TabOrder = 13
+    OnClick = ButtonWork
   end
   object CustomSetsSaveButton: TBitBtn
     Tag = 2
@@ -240,8 +245,6 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Speichern...'
-    TabOrder = 14
-    OnClick = ButtonWork
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000130B0000130B00001000000000000000000000000000
@@ -256,6 +259,8 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
       99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
       93337FFFF7737777733300000033333333337777773333333333}
     NumGlyphs = 2
+    TabOrder = 14
+    OnClick = ButtonWork
   end
   object ExtraDirCheckBox: TCheckBox
     Left = 24
@@ -270,7 +275,7 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
     Left = 24
     Top = 330
     Width = 529
-    Height = 21
+    Height = 23
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 9
     OnChange = ExtraDirEditChange
@@ -279,7 +284,7 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
     Left = 135
     Top = 30
     Width = 50
-    Height = 21
+    Height = 23
     TabOrder = 1
     Visible = False
   end
@@ -287,12 +292,13 @@ object ModernProfileEditorScummVMFrame: TModernProfileEditorScummVMFrame
     Left = 24
     Top = 376
     Width = 527
-    Height = 21
+    Height = 23
     Anchors = [akLeft, akTop, akRight]
-    EditLabel.Width = 84
-    EditLabel.Height = 13
+    EditLabel.Width = 99
+    EditLabel.Height = 15
     EditLabel.Caption = 'CommandLineEdit'
     TabOrder = 10
+    Text = ''
   end
   object RunAsAdminCheckBox: TCheckBox
     Left = 24

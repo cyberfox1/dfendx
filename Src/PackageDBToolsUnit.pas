@@ -5,7 +5,7 @@ uses Classes, XMLDoc, XMLIntf;
 
 const PackageMaxFileSize=MaxInt;
 
-Function LoadXMLDoc(const FileName : String; var XMLDoc : TXMLDocument; const OrigFileName : String ='') : String; overload;
+Function LoadXMLDoc(const FileName : String; var XMLDoc : TXMLDocument; const OrigFileName : String =''; AOwner : TComponent = nil) : String; overload;
 Function LoadXMLDoc(const FileName : String; const OrigFileName : String ='') : TXMLDocument; overload;
 
 Function SaveXMLDoc(const Doc : IXMLDocument; const Lines : Array of String; const Standalone : Boolean) : TStringList; overload;
@@ -47,7 +47,7 @@ begin
   Result.validateOnParse:=False;
 end;
 
-Function LoadXMLDoc(const FileName : String; var XMLDoc : TXMLDocument; const OrigFileName : String) : String;
+Function LoadXMLDoc(const FileName : String; var XMLDoc : TXMLDocument; const OrigFileName : String; AOwner : TComponent) : String;
 Var ErrorFileName : String;
     NativeDoc : IXMLDOMDocument2;
     AbsFile, Body : String;
@@ -85,7 +85,8 @@ begin
   end;
   Body:='<?xml version="1.0" encoding="UTF-8"?>'+#13#10+NativeDoc.documentElement.xml;
 
-  XMLDoc:=TXMLDocument.Create(Application.MainForm);
+  if AOwner=nil then AOwner:=Application.MainForm;
+  XMLDoc:=TXMLDocument.Create(AOwner);
   try
     XMLDoc.DOMVendor:=MSXML_DOM;
     XMLDoc.ParseOptions:=[];

@@ -59,18 +59,27 @@ object SetupFrameScummVM: TSetupFrameScummVM
     OnClick = ButtonWork
     ExplicitLeft = 567
   end
+  object SpinnerLabel: TLabel
+    Left = 311
+    Top = 63
+    Width = 335
+    Height = 21
+    Anchors = [akLeft, akTop, akRight]
+    AutoSize = False
+    Visible = False
+  end
   object ScummVMDownloadURLInfo: TLabel
     Left = 16
     Top = 304
-    Width = 162
-    Height = 13
+    Width = 189
+    Height = 15
     Caption = 'You can download ScummVM from'
   end
   object ScummVMDownloadURL: TLabel
     Left = 16
     Top = 323
-    Width = 113
-    Height = 13
+    Width = 134
+    Height = 15
     Caption = 'ScummVMDownloadURL'
     OnClick = ScummVMDownloadURLClick
   end
@@ -78,12 +87,13 @@ object SetupFrameScummVM: TSetupFrameScummVM
     Left = 16
     Top = 32
     Width = 572
-    Height = 21
+    Height = 23
     Anchors = [akLeft, akTop, akRight]
-    EditLabel.Width = 78
-    EditLabel.Height = 13
+    EditLabel.Width = 94
+    EditLabel.Height = 15
     EditLabel.Caption = 'ScummVMDirEdit'
     TabOrder = 0
+    Text = ''
   end
   object ScummVMReadList: TBitBtn
     Tag = 18
@@ -92,8 +102,6 @@ object SetupFrameScummVM: TSetupFrameScummVM
     Width = 289
     Height = 25
     Caption = 'Liste unterst'#252'tzter Spiele einlesen'
-    TabOrder = 1
-    OnClick = ButtonWork
     Glyph.Data = {
       F6000000424DF600000000000000760000002800000010000000100000000100
       0400000000008000000000000000000000001000000000000000000000000000
@@ -103,6 +111,8 @@ object SetupFrameScummVM: TSetupFrameScummVM
       200880078332733330088800300333333008880003333B333008880033333333
       008888033333373000888003B3330003000888033333333300088800B3333333
       30088800288BBB32000888800000000000888888800000008888}
+    TabOrder = 1
+    OnClick = ButtonWork
   end
   object MinimizeDFendScummVMCheckBox: TCheckBox
     Left = 16
@@ -121,8 +131,6 @@ object SetupFrameScummVM: TSetupFrameScummVM
     Width = 289
     Height = 25
     Caption = 'Liste unterst'#252'tzter Spiele anzeigen'
-    TabOrder = 2
-    OnClick = ButtonWork
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000120B0000120B00001000000000000000000000000000
@@ -137,6 +145,8 @@ object SetupFrameScummVM: TSetupFrameScummVM
       C8807FF7777777777FF700000000000000007777777777777777333333333333
       3333333333333333333333333333333333333333333333333333}
     NumGlyphs = 2
+    TabOrder = 2
+    OnClick = ButtonWork
   end
   object CenterScummVMCheckBox: TCheckBox
     Left = 16
@@ -168,11 +178,13 @@ object SetupFrameScummVM: TSetupFrameScummVM
   object CommandLineEdit: TLabeledEdit
     Left = 16
     Top = 256
-    Width = 630
-    Height = 21
-    EditLabel.Width = 84
-    EditLabel.Height = 13
+    Width = 628
+    Height = 23
+    Anchors = [akLeft, akTop, akRight]
+    EditLabel.Width = 99
+    EditLabel.Height = 15
     EditLabel.Caption = 'CommandLineEdit'
     TabOrder = 7
+    Text = ''
   end
 end

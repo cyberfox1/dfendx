@@ -158,9 +158,10 @@ uses SysUtils, GameDBToolsHelpers, Forms, Dialogs, ShellAPI, ShlObj, IniFiles, M
       Vcl.Imaging.jpeg, GIFImage, CommonHelpers, CommonTools, LanguageSetupUnit, PrgSetupUnit,
      ModernProfileEditorFormUnit, HashCalc,
      SmallWaitFormUnit, ChecksumFormUnit, WaitFormUnit, ImageCacheUnit,
-     DosBoxUnit, ScummVMUnit, ImageStretch, ResampleHelpers, MainUnit, GameDBFilterUnit,
+     DosBoxUnit, ScummVMUnitNew, ImageStretch, ResampleHelpers, MainUnit, GameDBFilterUnit,
      HistoryUnit, IconLoaderUnit, NewScreenshotsCacheUnit, LoggingUnit, System.UITypes,
-      ExoDOSHelpers, DataReaderExoDOSUnit, SetupFrameExoDOSUnit;
+      ExoDOSHelpers, DataReaderExoDOSUnit, SetupFrameExoDOSUnit,
+     ModernProfileEditorScummVMSettingsHelpers;
 
 var
   { Per-list-refresh cache: one image-list slot per DOSBox kind (reused by many profiles).
@@ -3647,7 +3648,7 @@ begin
 end;
 
 Procedure OpenConfigurationFile(const Game : TGame; const DeleteOnExit : TStringList);
-Var S,T : String;
+Var S,T,GameId,GameVariant : String;
     St : TStringList;
     I : Integer;
 begin
@@ -3675,7 +3676,9 @@ begin
           If T<>'' then T:=T+' ';
           T:=T+Trim(Game.ScummVMParameters);
         end;
-        T:=GetScummVMCommandLine(S,Game.ScummVMGame,T,Game.ScummVMRenderMode,Game.ScummVMPlatform);
+        ScummVMSettingsParseGameToken(Game.ScummVMGame, GameId, GameVariant);
+        If Trim(GameId)='' then GameId:=Trim(Game.ScummVMGame);
+        T:=GetScummVMCommandLine(S,GameId,T,Game.ScummVMRenderMode,Game.ScummVMPlatform);
       end else begin
         I:=GetDOSBoxNr(Game);
         If I<0 then I:=0;

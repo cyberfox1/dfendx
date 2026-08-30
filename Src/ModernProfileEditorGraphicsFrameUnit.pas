@@ -41,6 +41,10 @@ type
     ShaderPresetLabel: TLabel;
     PixelShaderComboBox: TComboBox;
     ShaderPresetComboBox: TComboBox;
+    cbPresMode: TComboBox;
+    cbHostRate: TComboBox;
+    lblPresMode: TLabel;
+    lblHostRate: TLabel;
     procedure PixelShaderComboBoxChange(Sender: TObject);
     procedure PixelShaderComboBoxKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ShaderPresetComboBoxChange(Sender: TObject);
@@ -61,6 +65,8 @@ type
     FVSyncStagingOldConfOpt : String;
     FVSyncXConfOpt : String;
     FVSyncPureConfOpt : String;
+    FPresentationModeStagingConfOpt : String;
+    FDosRateStagingConfOpt : String;
     FAllPixelShaders : TStringList;
     FAllPresets : TStringList;
     FBackendMaps : TDOSBoxShaderBackendMaps; { owns OpenGL + Direct3D maps }
@@ -214,6 +220,8 @@ begin
   NoFlicker(PixelShaderComboBox);
   NoFlicker(ShaderPresetComboBox);
   NoFlicker(VSyncComboBox);
+  NoFlicker(cbPresMode);
+  NoFlicker(cbHostRate);
   NoFlicker(rgScreenInactive);
   NoFlicker(VGASettingsGroupBox);
   NoFlicker(VGAChipsetComboBox);
@@ -242,6 +250,8 @@ begin
   FVSyncStagingOldConfOpt:=InitData.GameDB.ConfOpt.VSyncStagingOld;
   FVSyncXConfOpt:=InitData.GameDB.ConfOpt.VSyncX;
   FVSyncPureConfOpt:=InitData.GameDB.ConfOpt.VSyncPure;
+  FPresentationModeStagingConfOpt:=InitData.GameDB.ConfOpt.PresentationModeStaging;
+  FDosRateStagingConfOpt:=InitData.GameDB.ConfOpt.DosRateStaging;
   FScalePureConfOpt:=InitData.GameDB.ConfOpt.ScalePure;
   FShaderPureConfOpt:=InitData.GameDB.ConfOpt.ShaderPure;
   RenderComboBox.OnChange:=RenderComboBoxChange;
@@ -261,6 +271,8 @@ begin
   PixelShaderLabel.Caption:=LanguageSetup.GamePixelShader;
   ShaderPresetLabel.Caption:=LanguageSetup.GameShaderPreset;
   VSyncLabel.Caption:=LanguageSetup.GameVSync;
+  lblPresMode.Caption:=LanguageSetup.GamePresentationMode;
+  lblHostRate.Caption:=LanguageSetup.GameHostRate;
   rgScreenInactive.Caption:=LanguageSetup.GameScreenInactive;
   rgScreenInactive.Items.BeginUpdate;
   try
@@ -969,6 +981,8 @@ procedure TModernProfileEditorGraphicsFrame.Invalidate(Sender : TObject);
 begin
   rgScreenInactive.ItemIndex:=-1;
   VSyncComboBox.ItemIndex:=-1;
+  cbPresMode.ItemIndex:=-1;
+  cbHostRate.ItemIndex:=-1;
   RenderComboBox.ItemIndex:=-1;
   ScaleComboBox.ItemIndex:=-1;
   PixelShaderComboBox.ItemIndex:=-1;
@@ -1018,6 +1032,26 @@ begin
   ApplyScalerControls;
   ApplyFrameSkipControls;
 
+  cbPresMode.Visible:=(FTempGame<>nil) and FTempGame.IsNewStaging;
+  lblPresMode.Visible:=cbPresMode.Visible;
+  cbPresMode.Enabled:=cbPresMode.Visible;
+  if cbPresMode.Visible then begin
+    S:='';
+    if Assigned(FGame) then S:=FGame.PresentationMode;
+    ReloadComboFromConfOpt(cbPresMode,FPresentationModeStagingConfOpt,True,S);
+  end else
+    SetComboNoSelect(cbPresMode);
+
+  cbHostRate.Visible:=(FTempGame<>nil) and FTempGame.IsNewStaging;
+  lblHostRate.Visible:=cbHostRate.Visible;
+  cbHostRate.Enabled:=cbHostRate.Visible;
+  if cbHostRate.Visible then begin
+    S:='';
+    if Assigned(FGame) then S:=FGame.DosRefreshRate;
+    ReloadComboFromConfOpt(cbHostRate,FDosRateStagingConfOpt,True,S);
+  end else
+    SetComboNoSelect(cbHostRate);
+
   { 2) Shader inventory, then restore live combo text against whatever list was loaded. }
   WantShader:=Trim(PixelShaderComboBox.Text);
   if GetSelectedDosBoxKind=dbkPure then
@@ -1061,6 +1095,10 @@ begin
   Game.AspectCorrection:=KeepAspectRatioCheckBox.Checked;
   If VSyncComboBox.Visible and (VSyncComboBox.ItemIndex>=0) then
     Game.VSync:=Trim(VSyncComboBox.Items[VSyncComboBox.ItemIndex]);
+  If cbPresMode.Visible and (cbPresMode.ItemIndex>=0) then
+    Game.PresentationMode:=Trim(cbPresMode.Items[cbPresMode.ItemIndex]);
+  If cbHostRate.Visible and (cbHostRate.ItemIndex>=0) then
+    Game.DosRefreshRate:=Trim(cbHostRate.Items[cbHostRate.ItemIndex]);
   If rgScreenInactive.Enabled and (rgScreenInactive.ItemIndex>=0) then
     Game.OnScreenInactive:=rgScreenInactive.ItemIndex;
   If RenderComboBox.ItemIndex>=0 then

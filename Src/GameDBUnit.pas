@@ -6,6 +6,8 @@ interface
 uses Classes, CommonComponents, GameDBHelpers, PrgConsts, PrgSetupUnit, ConfOptDefaults;
 
 Type TConfOpt=class(TConfOptH)
+  private
+    function GetList(const KeyName: String): String;
   public
     Constructor Create;
     Destructor Destroy; override;
@@ -36,6 +38,7 @@ Type TGameDB=class;
     function ResolveDataDir: String;
     function GetValidMidiDevice: String;
     function GetValidMidiGain(out Value: Integer): Boolean;
+    function HasValidConfOptValue(const KeyName, OutputVal: String): Boolean;
 
     property GameDB : TGameDB read GetGameDB write SetGameDB;
     property BoundTo: TEphemeralDOSBoxInstall read FBoundTo;
@@ -170,6 +173,20 @@ begin
     Exit;
   Value := V;
   Result := True;
+end;
+
+function TGame.HasValidConfOptValue(const KeyName, OutputVal: String): Boolean;
+var
+  DB: TGameDB;
+  Opt: TConfOpt;
+begin
+  Result := False;
+  if not Assigned(Self) then Exit;
+  DB := GameDB;
+  if not Assigned(DB) then Exit;
+  Opt := DB.ConfOpt;
+  if not Assigned(Opt) then Exit;
+  Result := IsValidConfOptValue(Opt.GetList(KeyName), OutputVal);
 end;
 
 function TGame.GetIsStaging: Boolean;
@@ -332,6 +349,16 @@ begin
   AddStringRec(64,'scalePure','value',DefaultValueScalePure);
   AddStringRec(65,'shaderPure','value',DefaultValueShaderPure);
   AddStringRec(66,'MIDIDevicePure','value',DefaultValuesMIDIDevicePure);
+  AddStringRec(76,'presentationModeStaging','value',DefaultValuePresentationModeStaging);
+  AddStringRec(77,'dosRateStaging','value',DefaultValueDosRateStaging);
+  AddStringRec(78,'ScummVMGfxMode','value',DefaultValuesScummVMGfxMode);
+  AddStringRec(79,'ScummVMScaler','value',DefaultValuesScummVMScaler);
+  AddStringRec(80,'ScummVMScaleFactor','value',DefaultValuesScummVMScaleFactor);
+  AddStringRec(81,'ScummVMStretchMode','value',DefaultValuesScummVMStretchMode);
+  AddStringRec(82,'ScummVMShader','value',DefaultValuesScummVMShader);
+  AddStringRec(83,'ScummVMRenderer','value',DefaultValuesScummVMRenderer);
+  AddStringRec(84,'ScummVMAntialiasing','value',DefaultValuesScummVMAntialiasing);
+  AddStringRec(85,'ScummVMOplDriver','value',DefaultValuesScummVMOplDriver);
 
   CacheAllStrings;
 end;
@@ -340,6 +367,18 @@ destructor TConfOpt.Destroy;
 begin
   StoreAllValues;
   inherited Destroy;
+end;
+
+function TConfOpt.GetList(const KeyName: String): String;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 0 to High(StringList) do
+    if (StringList[I].Section <> '') and SameText(StringList[I].Section, KeyName) then begin
+      Result := GetString(StringList[I].Nr);
+      Exit;
+    end;
 end;
 
 { TGame }

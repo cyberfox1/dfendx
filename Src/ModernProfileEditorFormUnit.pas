@@ -125,6 +125,8 @@ Procedure AddDefaultValueHint(const AComboBox : TComboBox);
 Procedure RebuildComboFromConfOpt(Combo: TComboBox; const ConfOptList: String; const PreferredValue: String = '');
 Procedure SetComboNoSelect(Combo: TComboBox);
 Procedure ApplyComboFromConfOpt(Combo: TComboBox; const ConfOptList: String; const PreferredValue: String = '');
+Procedure ReloadComboFromConfOpt(Combo: TComboBox; const ConfOptList: String;
+  const KeepState: Boolean; const GameValue: String = '');
 Procedure SelectComboValue(Combo: TComboBox; const Value: String);
 Function ComboHasValue(Combo: TComboBox; const Value: String): Boolean;
 
@@ -145,11 +147,11 @@ uses ShellAPI, Math, VistaToolsUnit, LanguageSetupUnit,
      ModernProfileEditorDOSEnvironmentFrameUnit, ModernProfileEditorStartFrameUnit,
      ModernProfileEditorScummVMGraphicsFrameUnit, ModernProfileEditorScummVMFrameUnit,
      ModernProfileEditorScummVMSoundFrameUnit, ModernProfileEditorPrinterFrameUnit,
-     ModernProfileEditorScummVMGameFrameUnit, ModernProfileEditorHelperProgramsFrameUnit,
+     ModernProfileEditorHelperProgramsFrameUnit,
      ModernProfileEditorScummVMHardwareFrameUnit, ModernProfileEditorAddtionalChecksumFrameUnit,
-     ModernProfileEditorInnovaFrameUnit,
+     ModernProfileEditorInnovaFrameUnit, ModernProfileEditorScummVMSettingsFrameUnit,
       IconLoaderUnit, GameDBToolsUnit, GameDBToolsHelpers, GameDBHelpers, PrgSetupUnit, CommonHelpers, CommonTools, DOSBoxUnit,
-      DOSBoxUnitHelpers, HelpConsts, SelectAutoSetupFormUnit, ScummVMUnit,
+      DOSBoxUnitHelpers, HelpConsts, SelectAutoSetupFormUnit, ScummVMUnitNew,
       WindowsProfileUnit, DOSBoxTempUnit, MainUnit, System.Types, System.UITypes,
       ModernProfileEditorFormHelpers;
 
@@ -518,7 +520,7 @@ begin
       F:=TModernProfileEditorHelperProgramsFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorHelperProgramsFrame(F),LanguageSetup.ProfileEditorHelperProgramsSheet,0,0);
       F:=TModernProfileEditorScummVMFrame.Create(self); N:=AddTreeNode(nil,F,TModernProfileEditorScummVMFrame(F),LanguageSetup.ProfileEditorScummVMSheet,2,23);
 
-      F:=TModernProfileEditorScummVMGameFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorScummVMGameFrame(F),LanguageSetup.ProfileEditorScummVMGameSheet,6,23);
+      F:=TModernProfileEditorScummVMSettingsFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorScummVMSettingsFrame(F),LanguageSetup.ProfileEditorScummVMGameSheet,6,23);
       F:=TModernProfileEditorScummVMHardwareFrame.Create(self); N:=AddTreeNode(nil,F,TModernProfileEditorScummVMHardwareFrame(F),LanguageSetup.ProfileEditorHardwareSheet,3,3);
       F:=TModernProfileEditorScummVMGraphicsFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorScummVMGraphicsFrame(F),LanguageSetup.ProfileEditorGraphicsSheet,4,11);
       F:=TModernProfileEditorScummVMSoundFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorScummVMSoundFrame(F),LanguageSetup.ProfileEditorSoundSheet,5,5);
@@ -1090,6 +1092,26 @@ begin
     SetComboNoSelect(Combo)
   else
     RebuildComboFromConfOpt(Combo, ConfOptList, PreferredValue);
+end;
+
+Procedure ReloadComboFromConfOpt(Combo: TComboBox; const ConfOptList: String;
+  const KeepState: Boolean; const GameValue: String);
+Var Saved: String;
+begin
+  if Combo = nil then Exit;
+  if KeepState and (Combo.ItemIndex >= 0) then
+    Saved := Combo.Items[Combo.ItemIndex]
+  else
+    Saved := '';
+
+  SetComboNoSelect(Combo);
+  RebuildComboFromConfOpt(Combo, ConfOptList, '');
+  SetComboNoSelect(Combo);
+
+  if (Saved <> '') and ComboHasValue(Combo, Saved) then
+    SelectComboValue(Combo, Saved);
+  if (Combo.ItemIndex < 0) and (Trim(GameValue) <> '') and ComboHasValue(Combo, GameValue) then
+    SelectComboValue(Combo, GameValue);
 end;
 
 Function ComboHasValue(Combo: TComboBox; const Value: String): Boolean;

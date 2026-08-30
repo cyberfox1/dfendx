@@ -170,6 +170,14 @@ begin
   AddString(P2+LanguageSetup.ProfileEditorScummVMRenderMode,GameDB.ConfOpt.ScummVMRenderMode);
   AddString(P2+LanguageSetup.ProfileEditorScummVMFilter,GameDB.ConfOpt.ScummVMFilter);
   AddString(P2+LanguageSetup.ProfileEditorScummVMMusicDriver,GameDB.ConfOpt.ScummVMMusicDriver);
+  AddString(P2+LanguageSetup.ProfileEditorScummVMGfxMode,GameDB.ConfOpt.ScummVMGfxMode);
+  AddString(P2+LanguageSetup.ProfileEditorScummVMScaler,GameDB.ConfOpt.ScummVMScaler);
+  AddString(P2+LanguageSetup.ProfileEditorScummVMScaleFactor,GameDB.ConfOpt.ScummVMScaleFactor);
+  AddString(P2+LanguageSetup.ProfileEditorScummVMStretchMode,GameDB.ConfOpt.ScummVMStretchMode);
+  AddString(P2+LanguageSetup.ProfileEditorScummVMShader,GameDB.ConfOpt.ScummVMShader);
+  AddString(P2+LanguageSetup.ProfileEditorScummVMRenderer,GameDB.ConfOpt.ScummVMRenderer);
+  AddString(P2+LanguageSetup.ProfileEditorScummVMAntialiasing,GameDB.ConfOpt.ScummVMAntialiasing);
+  AddString(P2+LanguageSetup.ProfileEditorScummVMOplDriver,GameDB.ConfOpt.ScummVMOplDriver);
 
   SetLength(DefaultValueLists,DefaultValueComboBox.Items.Count);
   For J:=0 to length(DefaultValueLists)-1 do DefaultValueLists[J]:=TStringList(DefaultValueComboBox.Items.Objects[J]);
@@ -267,6 +275,14 @@ begin
   GameDB.ConfOpt.ScummVMRenderMode:=GetString;
   GameDB.ConfOpt.ScummVMFilter:=GetString;
   GameDB.ConfOpt.ScummVMMusicDriver:=GetString;
+  GameDB.ConfOpt.ScummVMGfxMode:=GetString;
+  GameDB.ConfOpt.ScummVMScaler:=GetString;
+  GameDB.ConfOpt.ScummVMScaleFactor:=GetString;
+  GameDB.ConfOpt.ScummVMStretchMode:=GetString;
+  GameDB.ConfOpt.ScummVMShader:=GetString;
+  GameDB.ConfOpt.ScummVMRenderer:=GetString;
+  GameDB.ConfOpt.ScummVMAntialiasing:=GetString;
+  GameDB.ConfOpt.ScummVMOplDriver:=GetString;
 end;
 
 procedure TSetupFrameDefaultValues.DefaultValueComboBoxChange(Sender: TObject);
@@ -380,6 +396,14 @@ begin
   Work(DefaultValuesScummVMRenderMode);
   Work(DefaultValuesScummVMFilter);
   Work(DefaultValuesScummVMMusicDriver);
+  Work(DefaultValuesScummVMGfxMode);
+  Work(DefaultValuesScummVMScaler);
+  Work(DefaultValuesScummVMScaleFactor);
+  Work(DefaultValuesScummVMStretchMode);
+  Work(DefaultValuesScummVMShader);
+  Work(DefaultValuesScummVMRenderer);
+  Work(DefaultValuesScummVMAntialiasing);
+  Work(DefaultValuesScummVMOplDriver);
 
   DefaultValueComboBox.ItemIndex:=I; DefaultValueComboBoxChange(Sender);
 end;

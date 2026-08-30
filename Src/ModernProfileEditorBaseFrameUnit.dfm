@@ -327,7 +327,7 @@ object ModernProfileEditorBaseFrame: TModernProfileEditorBaseFrame
       Top = 26
       Width = 506
       Height = 21
-      Style = csDropDownList
+      Style = csDropDown
       Anchors = [akLeft, akTop, akRight]
       ItemHeight = 13
       TabOrder = 0

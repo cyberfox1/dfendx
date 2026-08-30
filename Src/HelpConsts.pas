@@ -55,6 +55,7 @@ const ID_Index=1;
       ID_FileOptionsDOSBoxGlobal=1135;
       ID_FileOptionsDataPrivacy=1136;
       ID_FileOptionsResetProfiles=1137;
+      ID_FileOptionsExoDOS=1138;
 
       ID_ViewQuickStarter=1501;
 

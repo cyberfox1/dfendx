@@ -32,7 +32,7 @@ Function ShowMiniRunDialog(const AOwner : TComponent; const AGameDB : TGameDB) :
 
 implementation
 
-uses VistaToolsUnit, LanguageSetupUnit, CommonHelpers, CommonTools, DosBoxUnit, ScummVMUnit,
+uses VistaToolsUnit, LanguageSetupUnit, CommonHelpers, CommonTools, DosBoxUnit, ScummVMUnitNew,
      GameDBToolsUnit, WindowsProfileUnit, IconLoaderUnit, MainUnit, System.UITypes;
 
 {$R *.dfm}

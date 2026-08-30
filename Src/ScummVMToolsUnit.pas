@@ -6,13 +6,11 @@ uses Classes, PrgSetupUnit; {need to init PrgSetupUnit before init of this unit}
 Type TScummVMGamesList=class
   private
     FName, FLongName : TStringList;
-    FScummVMIniFile : String;
     Procedure LoadConfig;
     Procedure SaveConfig;
     function GetCount: Integer;
     Function LoadListFromScummVMFile(const ScummVMPrgFile : String) : Boolean;
     Function LoadListFromScummVMStringList(const St : TStringList) : Boolean;
-    function GetScummVMIniFile: String;
   public
     Constructor Create;
     Destructor Destroy; override;
@@ -21,15 +19,14 @@ Type TScummVMGamesList=class
     property Count : Integer read GetCount;
     property NamesList : TStringList read FName;
     property DescriptionList : TStringList read FLongName;
-    property ScummVMIniFile : String read GetScummVMIniFile;
 end;
 
 Var ScummVMGamesList : TScummVMGamesList;
 
 implementation
 
-uses Windows, SysUtils, Dialogs, IniFiles, PrgConsts, LanguageSetupUnit,
-     CommonTools;
+uses Windows, SysUtils, StrUtils, Dialogs, IniFiles, PrgConsts, LanguageSetupUnit,
+     CommonTools, LoggingUnit;
 
 { TScummVMGamesList }
 
@@ -40,7 +37,6 @@ begin
   FName:=TStringList.Create;
   FLongName:=TStringList.Create;
   LoadConfig;
-  FScummVMIniFile:='';
 end;
 
 destructor TScummVMGamesList.Destroy;
@@ -52,10 +48,10 @@ begin
 end;
 
 procedure TScummVMGamesList.LoadConfig;
-Var Ini : TIniFile;
+Var Ini : TMemIniFile;
     I : Integer;
 begin
-  Ini:=TIniFile.Create(PrgDataDir+SettingsFolder+'\'+ScummVMConfOptFile);
+  Ini:=TMemIniFile.Create(PrgDataDir+SettingsFolder+'\'+ScummVMConfOptFile, TEncoding.UTF8);
   try
     Ini.ReadSections(FName);
     For I:=0 to FName.Count-1 do FLongName.Add(Ini.ReadString(FName[I],'Description',''));
@@ -65,33 +61,31 @@ begin
 end;
 
 procedure TScummVMGamesList.SaveConfig;
-Var Ini : TIniFile;
+Var Ini : TMemIniFile;
     I : Integer;
+    DatFile : String;
 begin
+  DatFile:=PrgDataDir+SettingsFolder+'\'+ScummVMConfOptFile;
+  LogInfo('ScummVM.dat: writing '+IntToStr(FName.Count)+' entries to '+DatFile);
+  ExtDeleteFile(DatFile,ftProfile);
   If FName.Count=0 then begin
-    ExtDeleteFile(PrgDataDir+SettingsFolder+'\'+ScummVMConfOptFile,ftProfile);
+    LogInfo('ScummVM.dat: nothing to write');
     exit;
   end;
 
-  Ini:=TIniFile.Create(PrgDataDir+SettingsFolder+'\'+ScummVMConfOptFile);
+  Ini:=TMemIniFile.Create(DatFile, TEncoding.UTF8);
   try
     For I:=0 to FName.Count-1 do Ini.WriteString(FName[I],'Description',FLongName[I]);
+    Ini.UpdateFile;
   finally
     Ini.Free;
   end;
+  LogInfo('ScummVM.dat: saved '+DatFile);
 end;
 
 function TScummVMGamesList.GetCount: Integer;
 begin
   result:=FName.Count;
-end;
-
-function TScummVMGamesList.GetScummVMIniFile: String;
-begin
-  result:=FScummVMIniFile;
-  If result<>'' then exit;
-  LoadListFromScummVM(False);
-  result:=FScummVMIniFile;
 end;
 
 Function TScummVMGamesList.LoadListFromScummVM(const WarnIfScummVMNotFound : Boolean; const CustomScummVMPath : String) : Boolean;
@@ -130,28 +124,40 @@ begin
 end;
 
 function TScummVMGamesList.LoadListFromScummVMStringList(const St: TStringList): Boolean;
-Var I,Mode,J,K : Integer;
+Var I,Mode,J,ColonPos : Integer;
+    Id, Engine, GameId : String;
 begin
   Mode:=0; J:=10;
   For I:=0 to St.Count-1 do Case Mode of
     0 : begin
-          If I=0 then begin
-            K:=Pos(':\',St[I]);
-            If K>0 then FScummVMIniFile:=Copy(St[I],K-1,MaxInt);;
-          end;
           If Copy(St[I],1,3)='---' then begin J:=Pos(' ',St[I]); Mode:=1; end;
         end;
-    1 : begin FName.Add(Trim(Copy(St[I],1,J-1))); FLongName.Add(Trim(Copy(St[I],J+1,MaxInt))); end;
+    1 : begin
+          If StartsText('director:',St[I]) or StartsText('glk:',St[I]) then Continue;
+          Id:=Trim(Copy(St[I],1,J-1));
+          ColonPos:=Pos(':',Id);
+          If ColonPos<=0 then Continue;
+          Engine:=Copy(Id,1,ColonPos-1);
+          GameId:=Copy(Id,ColonPos+1,MaxInt);
+          FName.Add(Engine+':'+GameId);
+          FLongName.Add(Trim(Copy(St[I],J+1,MaxInt)));
+        end;
   end;
   result:=(Mode=1);
 end;
 
 function TScummVMGamesList.NameFromDescription(const Description: String): String;
 Var I : Integer;
+    Fallback : String;
 begin
   result:='';
-  I:=FLongName.IndexOf(Description);
-  If I>=0 then result:=FName[I];
+  Fallback:='';
+  For I:=0 to FLongName.Count-1 do
+    If CompareText(FLongName[I],Description)=0 then begin
+      If Pos(':',FName[I])>0 then begin result:=FName[I]; exit; end;
+      If Fallback='' then Fallback:=FName[I];
+    end;
+  result:=Fallback;
 end;
 
 end.

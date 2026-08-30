@@ -408,7 +408,7 @@
             <Form>ModernProfileEditorScummVMSoundFrame</Form>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="ScummVMUnit.pas"/>
+        <DCCReference Include="ScummVMUnitNew.pas"/>
         <DCCReference Include="ListScummVMGamesFormUnit.pas">
             <Form>ListScummVMGamesForm</Form>
         </DCCReference>
@@ -617,10 +617,17 @@
         <DCCReference Include="QuickStartFormUnit.pas">
             <Form>QuickStartForm</Form>
         </DCCReference>
-        <DCCReference Include="ModernProfileEditorScummVMGameFrameUnit.pas">
-            <Form>ModernProfileEditorScummVMGameFrame</Form>
+        <DCCReference Include="ScreenshotPaneFormUnit.pas">
+            <Form>ScreenshotPaneForm</Form>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorScummVMSettingsFrameUnit.pas">
+            <Form>ModernProfileEditorScummVMSettingsFrame</Form>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
+        <DCCReference Include="ModernProfileEditorScummVMSettingsHelpers.pas"/>
+        <DCCReference Include="ScummVMGameOptions.pas"/>
+        <DCCReference Include="ProcThreadUnit.pas"/>
+        <DCCReference Include="HiddenWaitFormUnit.pas"/>
         <DCCReference Include="SetupFrameEditorUnit.pas">
             <Form>SetupFrameEditor</Form>
             <DesignClass>TFrame</DesignClass>

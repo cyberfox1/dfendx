@@ -281,9 +281,8 @@ Var hStdOutReadPipe, hStdOutWritePipe, hStdInReadPipe, hStdInWritePipe : THandle
     StartupInfo : TStartupInfo;
     ProcessInformation : TProcessInformation;
     MSt : TMemoryStream;
-    I,J,K: Cardinal;
+    I, Avail: Cardinal;
     S : String;
-    LastLoop : Boolean;
 begin
   {See also msdn.microsoft.com/en-us/library/ms682499.aspx}
 
@@ -329,41 +328,34 @@ begin
       If Parameters<>'' then S:=' '+Parameters else S:='';
       if not CreateProcess(PChar(PrgFile),PChar('"'+PrgFile+'"'+S),nil,nil,True,0,nil,PChar(ExtractFilePath(PrgFile)),StartupInfo,ProcessInformation) then exit;
       CloseHandle(ProcessInformation.hProcess);
+      CloseHandle(hStdOutWritePipe);
+      hStdOutWritePipe:=0;
+      CloseHandle(hStdInReadPipe);
+      hStdInReadPipe:=0;
       try
-
-        {Wait for termination of program (or buffer full)}
-        WaitForSingleObject(ProcessInformation.hThread,250);
-
         MSt:=TMemoryStream.Create;
         try
-          {Read data from pipe}
           MSt.Size:=0;
-
-          {if pipe buffer is too small for all output data program won't terminate until all data is written}
           repeat
-            LastLoop:=(WaitForSingleObject(ProcessInformation.hThread,250)=WAIT_OBJECT_0);
-            {So begin reading the first blocks from pipe buffer}
-            repeat
-              MSt.Size:=MSt.Size+DataBlockSize;
-
-              {Do not try to read data if no data is available}
-              PeekNamedPipe(hStdOutReadPipe,nil,0,@I,@J,@K);
-              If J>0 then begin
-                If not ReadFile(hStdOutReadPipe,TByteArray(MSt.Memory^)[MSt.Size-DataBlockSize],DataBlockSize,I,nil) then exit;
-              end else begin
-                I:=0;
-              end;
-              If I<DataBlockSize then begin
-                MSt.Size:=MSt.Size-(DataBlockSize-I);
+            if not PeekNamedPipe(hStdOutReadPipe,nil,0,nil,@Avail,nil) then break;
+            if Avail>0 then begin
+              if Avail>DataBlockSize then Avail:=DataBlockSize;
+              MSt.Size:=MSt.Size+Avail;
+              If not ReadFile(hStdOutReadPipe,TByteArray(MSt.Memory^)[MSt.Size-Avail],Avail,I,nil) then begin
+                MSt.Size:=MSt.Size-Avail;
                 break;
               end;
-            until False;
-          until LastLoop;
+              If I<Avail then MSt.Size:=MSt.Size-(Avail-I);
+            end else if WaitForSingleObject(ProcessInformation.hThread,0)=WAIT_OBJECT_0 then
+              break
+            else
+              Sleep(1);
+          until False;
+          WaitForSingleObject(ProcessInformation.hThread,INFINITE);
 
-          {Copy data to TStringList}
           result:=TStringList.Create;
           Mst.Position:=0;
-          result.LoadFromStream(MSt);
+          result.LoadFromStream(MSt, TEncoding.UTF8);
         finally
           MSt.Free;
         end;
@@ -371,12 +363,12 @@ begin
         CloseHandle(ProcessInformation.hThread);
       end;
     finally
-      CloseHandle(hStdInReadPipe);
+      If hStdInReadPipe<>0 then CloseHandle(hStdInReadPipe);
       CloseHandle(hStdInWritePipe);
     end;
   finally
     CloseHandle(hStdOutReadPipe);
-    CloseHandle(hStdOutWritePipe);
+    If hStdOutWritePipe<>0 then CloseHandle(hStdOutWritePipe);
   end;
 end;
 

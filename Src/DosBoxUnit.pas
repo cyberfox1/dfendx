@@ -1658,10 +1658,10 @@ begin
   {
     Pure interface scaling/shader
   }
-  if IsValidConfOptValue(Game.GameDB.ConfOpt.ScalePure,S) then
+  if S<>'' then
     Cfg.Add('"interface_scaling" : "'+JsonString(S)+'"');
   S:=Trim(Game.PixelShader);
-  if IsValidConfOptValue(Game.GameDB.ConfOpt.ShaderPure,S) then
+  if S<>'' then
     Cfg.Add('"interface_crtfilter" : "'+JsonString(S)+'"');
 end;
 

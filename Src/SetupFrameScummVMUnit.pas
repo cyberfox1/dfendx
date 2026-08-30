@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
-  Dialogs, StdCtrls, Buttons, ExtCtrls, SetupFormUnit;
+  Dialogs, StdCtrls, Buttons, ExtCtrls, SetupFormUnit, Vcl.Mask;
 
 type
   TSetupFrameScummVM = class(TFrame, ISetupFrame)
@@ -20,6 +20,7 @@ type
     HideConsoleCheckBox: TCheckBox;
     RestoreWindowCheckBox: TCheckBox;
     CommandLineEdit: TLabeledEdit;
+    SpinnerLabel: TLabel;
     procedure ButtonWork(Sender: TObject);
     procedure ScummVMDownloadURLClick(Sender: TObject);
     procedure MinimizeDFendScummVMCheckBoxClick(Sender: TObject);
@@ -40,9 +41,10 @@ type
 
 implementation
 
-uses ShellAPI, ShlObj, LanguageSetupUnit, VistaToolsUnit, PrgSetupUnit,
+uses ShellAPI, ShlObj, LanguageSetupUnit, VistaToolsUnit, PrgSetupUnit, PrgConsts,
      CommonTools, ScummVMToolsUnit, SetupDosBoxFormUnit,
-     ListScummVMGamesFormUnit, HelpConsts, IconLoaderUnit;
+     ListScummVMGamesFormUnit, HelpConsts, IconLoaderUnit,
+     HiddenWaitFormUnit, ProcThreadUnit, ExoDOSHelpers;
 
 {$R *.dfm}
 
@@ -69,6 +71,7 @@ begin
   CenterScummVMCheckBox.Checked:=PrgSetup.CenterScummVMWindow;
   HideConsoleCheckBox.Checked:=PrgSetup.HideScummVMConsole;
   CommandLineEdit.Text:=PrgSetup.ScummVMAdditionalCommandLine;
+  SpinnerLabel.Visible:=False;
 
   UserIconLoader.DialogImage(DI_SelectFile,ScummVMButton);
   UserIconLoader.DialogImage(DI_FindFile,FindScummVMButton);
@@ -94,6 +97,7 @@ begin
   CenterScummVMCheckBox.Caption:=LanguageSetup.SetupFormCenterScummVMWindow;
   HideConsoleCheckBox.Caption:=LanguageSetup.SetupFormHideScummVMConsole;
   CommandLineEdit.EditLabel.Caption:=LanguageSetup.SetupFormScummVMAdditionalParameters;
+  SpinnerLabel.Visible:=False;
 
   ScummVMDownloadURLInfo.Caption:=LanguageSetup.SetupFormScummVMDownloadURL;
   ScummVMDownloadURL.Caption:='http:/'+'/www.scummvm.org/downloads.php';
@@ -156,6 +160,11 @@ end;
 
 procedure TSetupFrameScummVM.ButtonWork(Sender: TObject);
 Var S : String;
+    Thread : TProcThread;
+    Dialog : THiddenWaitDialog;
+    R : TWaitResult;
+    Caps : TWaitCaptions;
+    T1Err, T2Err : Boolean;
 begin
   Case (Sender as TComponent).Tag of
    16 : begin
@@ -164,7 +173,41 @@ begin
           if SelectDirectory(Handle,LanguageSetup.SetupFormScummVMDir,S) then ScummVMDirEdit.Text:=S;
         end;
    17 : if SearchScummVM(self) then ScummVMDirEdit.Text:=PrgSetup.ScummVMPath;
-   18 : ScummVMGamesList.LoadListFromScummVM(True,ScummVMDirEdit.Text);
+   18 : begin
+          if Trim(ScummVMDirEdit.Text)<>'' then
+            S:=IncludeTrailingPathDelimiter(Trim(ScummVMDirEdit.Text))+ScummPrgFile
+          else
+            S:=IncludeTrailingPathDelimiter(PrgSetup.ScummVMPath)+ScummPrgFile;
+          if not FileExists(S) then begin
+            MessageDlg(Format(LanguageSetup.MessageFileNotFound,[S]),mtError,[mbOK],0);
+            exit;
+          end;
+          S:=ScummVMDirEdit.Text;
+          SpinnerLabel.Visible:=True;
+          Thread:=TProcThread.Create(
+            function : Integer
+            begin
+              ScummVMGamesList.LoadListFromScummVM(False,S);
+              Result:=ScummVMGamesList.Count;
+            end);
+          Dialog:=THiddenWaitDialog.Create(nil,Thread,nil,SpinnerLabel);
+          try
+            Dialog.ShowModal;
+          finally
+            Dialog.Free;
+          end;
+          T1Err:=False;
+          T2Err:=False;
+          Caps.Success:='Read %d games';
+          Caps.Fail1:='Failed to read games list';
+          Caps.Fail2:='';
+          R:=EvaluateWaitState(Thread,T1Err,Thread.ResultCount,nil,T2Err,0,Caps);
+          if R.ShowError1 and (Thread.FatalException is Exception) then
+            MessageDlg('Exception: '+Exception(Thread.FatalException).Message,mtError,[mbOK],0);
+          SpinnerLabel.Caption:=R.FinalCaption;
+          Thread.WaitFor;
+          Thread.Free;
+        end;
    19 : ShowListScummVMGamesDialog(self);
   end;
 end;

@@ -87,6 +87,16 @@ Type TConfOptH=class(TBasePrgSetup)
     { MT-32 model conf values: Staging [mt32] model / DOSBox-X mt32.model }
     property MT32ModelStaging : String index 61 read GetString write SetString;
     property MT32ModelX : String index 62 read GetString write SetString;
+    property PresentationModeStaging : String index 76 read GetString write SetString;
+    property DosRateStaging : String index 77 read GetString write SetString;
+    property ScummVMGfxMode : String index 78 read GetString write SetString;
+    property ScummVMScaler : String index 79 read GetString write SetString;
+    property ScummVMScaleFactor : String index 80 read GetString write SetString;
+    property ScummVMStretchMode : String index 81 read GetString write SetString;
+    property ScummVMShader : String index 82 read GetString write SetString;
+    property ScummVMRenderer : String index 83 read GetString write SetString;
+    property ScummVMAntialiasing : String index 84 read GetString write SetString;
+    property ScummVMOplDriver : String index 85 read GetString write SetString;
 end;
 
 const NR_Name=1;
@@ -249,6 +259,8 @@ const NR_Name=1;
       NR_MixerVolumeCDLeft=317;
       NR_MixerVolumeCDRight=318;
       NR_PureVolumeBoost=319;
+      NR_PresentationMode=320;
+      NR_DosRefreshRate=321;
 
       NR_SBType=331;
       NR_SBBase=332;
@@ -340,6 +352,18 @@ const NR_Name=1;
       NR_ScummVMExtraPath=471;
       NR_ScummVMPlatform=472;
       NR_ScummVMParameters=473;
+      NR_ScummVMExtraOptions=474;
+      NR_ScummVMExtraVariant=475;
+      NR_ScummVMGfxMode=476;
+      NR_ScummVMScaler=477;
+      NR_ScummVMScaleFactor=478;
+      NR_ScummVMStretchMode=479;
+      NR_ScummVMShader=480;
+      NR_ScummVMFiltering=481;
+      NR_ScummVMVSync=482;
+      NR_ScummVMRenderer=483;
+      NR_ScummVMAntialiasing=484;
+      NR_ScummVMOplDriver=485;
 
       NR_CommandBeforeExecution=490;
       NR_CommandAfterExecution=491;
@@ -362,14 +386,16 @@ const NR_Name=1;
       NR_AddtionalChecksumFile5Checksum=509;
 
 
-const ScummVMSettings : Array[0..32] of Integer =(
+const ScummVMSettings : Array[0..44] of Integer =(
   NR_ScummVMGame, NR_ScummVMPath, NR_ScummVMZip, NR_ScummVMFilter, NR_ScummVMRenderMode, NR_ScummVMAutosave,
   NR_ScummVMLanguage, NR_ScummVMMusicVolume, NR_ScummVMSpeechVolume, NR_ScummVMSFXVolume, NR_ScummVMMIDIGain,
   NR_ScummVMSampleRate, NR_ScummVMMusicDriver, NR_ScummVMNativeMT32, NR_ScummVMEnableGS, NR_ScummVMMultiMIDI,
   NR_ScummVMTalkSpeed, NR_ScummVMSpeechMute, NR_ScummVMSubtitles, NR_ScummVMSavePath, NR_ScummVMConfirmExit,
   NR_ScummVMCDROM, NR_ScummVMJoystickNum, NR_ScummVMAltIntro, NR_ScummVMGFXDetails, NR_ScummVMMusicMute,
   NR_ScummVMObjectLabels, NR_ScummVMReverseStereo, NR_ScummVMSFXMute, NR_ScummVMWalkspeed, NR_ScummVMExtraPath,
-  NR_ScummVMPlatform, NR_ScummVMParameters
+  NR_ScummVMPlatform, NR_ScummVMParameters, NR_ScummVMExtraOptions, NR_ScummVMExtraVariant,
+  NR_ScummVMGfxMode, NR_ScummVMScaler, NR_ScummVMScaleFactor, NR_ScummVMStretchMode, NR_ScummVMShader,
+  NR_ScummVMFiltering, NR_ScummVMVSync, NR_ScummVMRenderer, NR_ScummVMAntialiasing, NR_ScummVMOplDriver
 );
 
 Type TGameDBH=class;
@@ -524,6 +550,8 @@ Type TGameDBH=class;
     property ShaderPreset : String index NR_ShaderPreset read GetString write SetString;
     { Staging: [sdl] vsync; DOSBox-X: [vsync] vsyncmode. Empty = omit from conf. }
     property VSync : String index NR_VSync read GetString write SetString;
+    property PresentationMode : String index NR_PresentationMode read GetString write SetString;
+    property DosRefreshRate : String index NR_DosRefreshRate read GetString write SetString;
     { Staging/X FluidSynth SoundFont path. Empty = unset / omit from conf. }
     property FluidSoundFont : String index NR_FluidSoundFont read GetString write SetString;
     { Staging/X FluidSynth gain percent as string "1".."800". Empty = unset / omit. }
@@ -668,6 +696,19 @@ Type TGameDBH=class;
     property ScummVMExtraPath : String index NR_ScummVMExtraPath read GetString write SetString;
     property ScummVMPlatform : String index NR_ScummVMPlatform read GetString write SetString;
     property ScummVMParameters : String index NR_ScummVMParameters read GetString write SetString;
+    property ScummVMExtraOptions : String index NR_ScummVMExtraOptions read GetString write SetString; { legacy alias }
+    property ScummGameOptions : String index NR_ScummVMExtraOptions read GetString write SetString;
+    property ScummVMExtraVariant : String index NR_ScummVMExtraVariant read GetString write SetString;
+    property ScummVMGfxMode : String index NR_ScummVMGfxMode read GetString write SetString;
+    property ScummVMScaler : String index NR_ScummVMScaler read GetString write SetString;
+    property ScummVMScaleFactor : String index NR_ScummVMScaleFactor read GetString write SetString;
+    property ScummVMStretchMode : String index NR_ScummVMStretchMode read GetString write SetString;
+    property ScummVMShader : String index NR_ScummVMShader read GetString write SetString;
+    property ScummVMFiltering : Boolean index NR_ScummVMFiltering read GetBoolean write SetBoolean;
+    property ScummVMVSync : String index NR_ScummVMVSync read GetString write SetString;
+    property ScummVMRenderer : String index NR_ScummVMRenderer read GetString write SetString;
+    property ScummVMAntialiasing : String index NR_ScummVMAntialiasing read GetString write SetString;
+    property ScummVMOplDriver : String index NR_ScummVMOplDriver read GetString write SetString;
 
     property CommandBeforeExecution : String index NR_CommandBeforeExecution read GetString write SetString;
     property CommandAfterExecution : String index NR_CommandAfterExecution read GetString write SetString;
@@ -857,6 +898,16 @@ begin
   AddStringRec(64,'scalePure','value',DefaultValueScalePure);
   AddStringRec(65,'shaderPure','value',DefaultValueShaderPure);
   AddStringRec(66,'MIDIDevicePure','value',DefaultValuesMIDIDevicePure);
+  AddStringRec(76,'presentationModeStaging','value',DefaultValuePresentationModeStaging);
+  AddStringRec(77,'dosRateStaging','value',DefaultValueDosRateStaging);
+  AddStringRec(78,'ScummVMGfxMode','value',DefaultValuesScummVMGfxMode);
+  AddStringRec(79,'ScummVMScaler','value',DefaultValuesScummVMScaler);
+  AddStringRec(80,'ScummVMScaleFactor','value',DefaultValuesScummVMScaleFactor);
+  AddStringRec(81,'ScummVMStretchMode','value',DefaultValuesScummVMStretchMode);
+  AddStringRec(82,'ScummVMShader','value',DefaultValuesScummVMShader);
+  AddStringRec(83,'ScummVMRenderer','value',DefaultValuesScummVMRenderer);
+  AddStringRec(84,'ScummVMAntialiasing','value',DefaultValuesScummVMAntialiasing);
+  AddStringRec(85,'ScummVMOplDriver','value',DefaultValuesScummVMOplDriver);
 
   CacheAllStrings;
 end;
@@ -1029,6 +1080,8 @@ begin
   AddStringRec(NR_PixelShader,'vga','PixelShader','none');
   AddStringRec(NR_ShaderPreset,'vga','ShaderPreset','');
   AddStringRec(NR_VSync,'render','vsync','');
+  AddStringRec(NR_PresentationMode,'sdl','presentation_mode','');
+  AddStringRec(NR_DosRefreshRate,'dosbox','DosRefreshRate','');
   AddStringRec(NR_FluidSoundFont,'midi','FluidSoundFont','');
   AddStringRec(NR_MIDIDeviceGainValue,'midi','MIDIDeviceGainValue','');
   AddStringRec(NR_PureVolumeBoost,'mixer','PureVolumeBoost','');
@@ -1167,6 +1220,18 @@ begin
   AddStringRec(NR_ScummVMExtraPath,'ScummVM','ExtraPath','');
   AddStringRec(NR_ScummVMPlatform,'ScummVM','Platform','');
   AddStringRec(NR_ScummVMParameters,'ScummVM','AdditionalParameters','');
+  AddStringRec(NR_ScummVMExtraOptions,'ScummVM','ScummGameOptions','');
+  AddStringRec(NR_ScummVMExtraVariant,'ScummVM','ExtraVariant','');
+  AddStringRec(NR_ScummVMGfxMode,'ScummVM','GfxMode','');
+  AddStringRec(NR_ScummVMScaler,'ScummVM','Scaler','');
+  AddStringRec(NR_ScummVMScaleFactor,'ScummVM','ScaleFactor','');
+  AddStringRec(NR_ScummVMStretchMode,'ScummVM','StretchMode','');
+  AddStringRec(NR_ScummVMShader,'ScummVM','Shader','');
+  AddBooleanRec(NR_ScummVMFiltering,'ScummVM','Filtering',False);
+  AddStringRec(NR_ScummVMVSync,'ScummVM','VSync','');
+  AddStringRec(NR_ScummVMRenderer,'ScummVM','Renderer','');
+  AddStringRec(NR_ScummVMAntialiasing,'ScummVM','Antialiasing','');
+  AddStringRec(NR_ScummVMOplDriver,'ScummVM','OplDriver','');
 
   AddStringRec(NR_CommandBeforeExecution,'ExtraCommands','BeforeExecution','');
   AddStringRec(NR_CommandAfterExecution,'ExtraCommands','AfterExecution','');

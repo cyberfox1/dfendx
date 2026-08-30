@@ -46,7 +46,7 @@ Function ExportProfFiles(const AOwner : TComponent; const AGameDB : TGameDB) : B
 implementation
 
 uses ShlObj, VistaToolsUnit, LanguageSetupUnit, DosBoxUnit, CommonHelpers, CommonTools,
-     PrgSetupUnit, GameDBToolsUnit, ScummVMUnit, HelpConsts, TemplateFormUnit, System.UITypes,
+     PrgSetupUnit, GameDBToolsUnit, ScummVMUnitNew, HelpConsts, TemplateFormUnit, System.UITypes,
      IconLoaderUnit, PrgConsts, HashCalc, System.Types;
 
 {$R *.dfm}

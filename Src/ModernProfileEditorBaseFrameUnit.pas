@@ -46,6 +46,7 @@ type
     procedure ProfileNameEditChange(Sender: TObject);
     procedure RelPathCheckBoxClick(Sender: TObject);
     procedure GameComboBoxChange(Sender: TObject);
+    procedure GameComboBoxKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ExtraExeFilesButtonClick(Sender: TObject);
     procedure SetupExeEditChange(Sender: TObject);
     procedure GameExeEditChange(Sender: TObject);
@@ -61,7 +62,10 @@ type
     ProfileName,ProfileExe,ProfileSetup,ProfileScummVMGameName,ProfileScummVMPath,ProfileCaptureDir : PString;
     ScummVM, WindowsMode : Boolean;
     FGameDB : TGameDB;
+    FAllScummVMGames : TStringList;
+    FFilteringGames : Boolean;
     procedure LoadIcon;
+    procedure FilterGameCombo;
     Procedure CheckValue(Sender : TObject; var OK : Boolean);
     Procedure ShowFrame(Sender : TObject);
     Procedure ProfileNameChangedCallback(Sender : TObject);
@@ -93,12 +97,17 @@ begin
   FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
   ExtraExeFiles:=TStringList.Create;
   ExtraExeFilesParameters:=TStringList.Create;
+  FAllScummVMGames:=TStringList.Create;
+  FAllScummVMGames.Sorted:=True;
+  FAllScummVMGames.Duplicates:=dupIgnore;
+  FFilteringGames:=False;
 end;
 
 destructor TModernProfileEditorBaseFrame.Destroy;
 begin
   ExtraExeFiles.Free;
   ExtraExeFilesParameters.Free;
+  FAllScummVMGames.Free;
   inherited Destroy;
 end;
 
@@ -122,6 +131,8 @@ begin
   NoFlicker(SetupParameterEdit);
   NoFlicker(GameGroup);
   NoFlicker(GameComboBox);
+  GameComboBox.AutoComplete:=False;
+  GameComboBox.OnKeyDown:=GameComboBoxKeyDown;
   NoFlicker(GameEdit);
   NoFlicker(GameZipCheckBox);
   NoFlicker(GameZipEdit);
@@ -229,12 +240,20 @@ begin
     ScummVM:=True;
 
     If ScummVMGamesList.Count=0 then ScummVMGamesList.LoadListFromScummVM(True);
-    GameComboBox.Items.Clear;
-    GameComboBox.Sorted:=False;
-    GameComboBox.Items.AddStrings(ScummVMGamesList.DescriptionList);
-    GameComboBox.Sorted:=True;
-    If GameComboBox.Items.Count>0 then GameComboBox.ItemIndex:=0;
-    S:=Trim(ExtUpperCase(Game.ScummVMGame));
+    FAllScummVMGames.Clear;
+    FAllScummVMGames.AddStrings(ScummVMGamesList.DescriptionList);
+    GameComboBox.Items.BeginUpdate;
+    try
+      GameComboBox.Items.Clear;
+      GameComboBox.Items.AddStrings(FAllScummVMGames);
+    finally
+      GameComboBox.Items.EndUpdate;
+    end;
+    GameComboBox.ItemIndex:=-1;
+    S:=Trim(Game.ScummVMGame);
+    I:=Pos('[',S);
+    If I>0 then S:=Trim(Copy(S,1,I-1));
+    S:=Trim(ExtUpperCase(S));
     For I:=0 to ScummVMGamesList.NamesList.Count-1 do If Trim(ExtUpperCase(ScummVMGamesList.NamesList[I]))=S then begin
       GameComboBox.ItemIndex:=GameComboBox.Items.IndexOf(ScummVMGamesList.DescriptionList[I]);
       break;
@@ -337,10 +356,76 @@ begin
   end;
 end;
 
-procedure TModernProfileEditorBaseFrame.GameComboBoxChange(Sender: TObject);
+procedure TModernProfileEditorBaseFrame.FilterGameCombo;
+Var Filter, Item, Keep : String;
+    I, OldSelStart, OldSelLength : Integer;
 begin
-  If GameComboBox.ItemIndex>=0 then
-    FOnProfileNameChange(Sender,ProfileNameEdit.Text,ProfileExe^,ProfileSetup^,ScummVMGamesList.NameFromDescription(GameComboBox.Text),ProfileScummVMPath^,ProfileCaptureDir^);
+  Keep:=GameComboBox.Text;
+  OldSelStart:=GameComboBox.SelStart;
+  OldSelLength:=GameComboBox.SelLength;
+  Filter:=Trim(ExtUpperCase(Keep));
+  FFilteringGames:=True;
+  try
+    GameComboBox.Items.BeginUpdate;
+    try
+      GameComboBox.Items.Clear;
+      for I:=0 to FAllScummVMGames.Count-1 do begin
+        Item:=FAllScummVMGames[I];
+        if (Filter='') or (Pos(Filter,ExtUpperCase(Item))>0) then
+          GameComboBox.Items.Add(Item);
+      end;
+    finally
+      GameComboBox.Items.EndUpdate;
+    end;
+    GameComboBox.ItemIndex:=-1;
+    GameComboBox.Text:=Keep;
+    if OldSelStart>Length(Keep) then OldSelStart:=Length(Keep);
+    if OldSelStart+OldSelLength>Length(Keep) then
+      OldSelLength:=Length(Keep)-OldSelStart;
+    GameComboBox.SelStart:=OldSelStart;
+    GameComboBox.SelLength:=OldSelLength;
+  finally
+    FFilteringGames:=False;
+  end;
+end;
+
+function GameComboIsAsciiFilterKey(Key: Word; Shift: TShiftState): Boolean;
+begin
+  Result:=False;
+  if (ssCtrl in Shift) or (ssAlt in Shift) then Exit;
+  if Key in [VK_BACK, VK_DELETE, VK_CLEAR, VK_RETURN, VK_ESCAPE, VK_TAB,
+             VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT, VK_HOME, VK_END, VK_PRIOR, VK_NEXT,
+             VK_SHIFT, VK_CONTROL, VK_MENU, VK_INSERT] then Exit;
+  if (Key>=Ord('A')) and (Key<=Ord('Z')) then begin Result:=True; Exit; end;
+  if (Key>=Ord('0')) and (Key<=Ord('9')) then begin Result:=True; Exit; end;
+  if (Key>=VK_NUMPAD0) and (Key<=VK_NUMPAD9) then begin Result:=True; Exit; end;
+  if Key in [VK_SPACE, VK_OEM_MINUS, VK_OEM_PERIOD, VK_SUBTRACT, VK_DECIMAL,
+             VK_OEM_2, VK_DIVIDE] then
+    Result:=True;
+end;
+
+procedure TModernProfileEditorBaseFrame.GameComboBoxKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if FFilteringGames then Exit;
+  if not GameComboIsAsciiFilterKey(Key,Shift) then Exit;
+  if not GameComboBox.DroppedDown then
+    GameComboBox.DroppedDown:=True;
+end;
+
+procedure TModernProfileEditorBaseFrame.GameComboBoxChange(Sender: TObject);
+Var GameId : String;
+begin
+  if FFilteringGames then Exit;
+  if (Trim(GameComboBox.Text)='') or (FAllScummVMGames.IndexOf(GameComboBox.Text)>=0) then begin
+    if Trim(GameComboBox.Text)='' then
+      FilterGameCombo;
+    if FAllScummVMGames.IndexOf(GameComboBox.Text)>=0 then begin
+      GameId:=ScummVMGamesList.NameFromDescription(GameComboBox.Text);
+      if GameId<>'' then
+        FOnProfileNameChange(Sender,ProfileNameEdit.Text,ProfileExe^,ProfileSetup^,GameId,ProfileScummVMPath^,ProfileCaptureDir^);
+    end;
+  end else
+    FilterGameCombo;
 end;
 
 procedure TModernProfileEditorBaseFrame.GetGame(const Game: TGame);
@@ -354,9 +439,11 @@ begin
   If ScummVM then begin
     { ScummVM mode }
     Game.ProfileMode:='ScummVM';
-    If GameComboBox.ItemIndex>=0
-      then Game.ScummVMGame:=ScummVMGamesList.NameFromDescription(GameComboBox.Text)
-      else Game.ScummVMGame:='';
+    S:=GameComboBox.Text;
+    if FAllScummVMGames.IndexOf(S)>=0 then begin
+      S:=ScummVMGamesList.NameFromDescription(S);
+      if S<>'' then Game.ScummVMGame:=S;
+    end;
     Game.ScummVMPath:=GameEdit.Text;
     If GameZipCheckBox.Checked then begin
       Game.ScummVMZip:=Trim(GameZipEdit.Text);

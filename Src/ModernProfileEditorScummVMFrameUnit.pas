@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, StdCtrls, Spin, Buttons, GameDBUnit, ModernProfileEditorFormUnit,
-  ComCtrls, ExtCtrls;
+  ComCtrls, ExtCtrls, Vcl.Mask;
 
 type
   TModernProfileEditorScummVMFrame = class(TFrame, IModernProfileEditorFrame)

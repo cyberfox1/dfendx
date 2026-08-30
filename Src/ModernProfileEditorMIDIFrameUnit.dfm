@@ -185,8 +185,8 @@ object ModernProfileEditorMIDIFrame: TModernProfileEditorMIDIFrame
       489
       125)
     object BtnFluidSynthPath: TSpeedButton
-      Left = 431
-      Top = 89
+      Left = 427
+      Top = 86
       Width = 25
       Height = 23
       Anchors = [akTop, akRight]

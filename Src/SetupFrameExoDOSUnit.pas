@@ -29,33 +29,6 @@ type
     property DBPath : String read GetDBPath;
   end;
 
-  TExoDOSLoadThread=class(TThread)
-  private
-    FXMLDoc : TXMLDocument;
-    FCachePath, FDBPath : String;
-    FGameCount : Integer;
-    procedure LoadGames;
-  protected
-    procedure Execute; override;
-  public
-    constructor Create(const AXMLDoc: TXMLDocument; const ACachePath, ADBPath : String);
-    property GameCount : Integer read FGameCount;
-  end;
-
-  TExoDOSMediaScanThread=class(TThread)
-  private
-    FExoRoot : String;
-    FMediaDBPath : String;
-    FMediaCount : Integer;
-    procedure ScanMedia;
-    procedure ProcessMediaLine(const Line : String; DB : TExoDOSMediaDB);
-  protected
-    procedure Execute; override;
-  public
-    constructor Create(const AExoRoot, AMediaDBPath : String);
-    property MediaCount : Integer read FMediaCount;
-  end;
-
   TSetupFrameExoDOS=class(TFrame, ISetupFrame)
     ExoDOSDirEdit: TLabeledEdit;
     BrowseButton: TSpeedButton;
@@ -92,29 +65,9 @@ uses
   XMLIntf, Xml.XMLDom, Xml.Win.msxmldom, ActiveX,
   VistaToolsUnit, LanguageSetupUnit, CommonHelpers, CommonTools,
   HelpConsts, IconLoaderUnit, Math, PackageDBToolsUnit, ListScummVMGamesFormUnit,
-  LoggingUnit, System.JSON, ExoDOSHelpers;
-
-type
-  TExoDOSWaitDialog=class(TForm)
-  private
-    FThread1 : TExoDOSLoadThread;
-    FThread2 : TExoDOSMediaScanThread;
-    FSpinnerLabel : TLabel;
-    FTimer : TTimer;
-    FTimerCounter : Integer;
-    FShownThread1Error : Boolean;
-    FShownThread2Error : Boolean;
-    procedure TimerOnTimer(Sender : TObject);
-    procedure FormShow(Sender : TObject);
-  public
-    constructor Create(AOwner: TComponent; AThread1: TExoDOSLoadThread; AThread2: TExoDOSMediaScanThread; ASpinner: TLabel); reintroduce;
-    destructor Destroy; override;
-  end;
+  LoggingUnit, System.JSON, ExoDOSHelpers, HiddenWaitFormUnit, ProcThreadUnit;
 
 const
-  SpinnerChars : array[0..9] of String = (
-    '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'
-  );
   ExoDetectFailMsg = 'Failed to detect valid eXoDOS';
 
 {$R *.dfm}
@@ -198,62 +151,25 @@ begin
   end;
 end;
 
-{ TExoDOSLoadThread }
-
-constructor TExoDOSLoadThread.Create(const AXMLDoc: TXMLDocument; const ACachePath, ADBPath : String);
+function LoadGames(const XMLPath: String): Integer;
+Var Owner : TComponent;
+    XMLDoc : TXMLDocument;
+    Err : String;
 begin
-  FXMLDoc:=AXMLDoc;
-  FCachePath:=ACachePath;
-  FDBPath:=ADBPath;
-  FGameCount:=0;
-  inherited Create(False);
-end;
-
-procedure TExoDOSLoadThread.Execute;
-begin
-  LoadGames;
-end;
-
-procedure TExoDOSLoadThread.LoadGames;
-begin
-  ProcessExoDOSGames(FXMLDoc, FCachePath, FDBPath, FGameCount);
-end;
-
-{ TExoDOSMediaScanThread }
-
-constructor TExoDOSMediaScanThread.Create(const AExoRoot, AMediaDBPath : String);
-begin
-  FExoRoot:=AExoRoot;
-  FMediaDBPath:=AMediaDBPath;
-  FMediaCount:=0;
-  inherited Create(False);
-end;
-
-procedure TExoDOSMediaScanThread.Execute;
-begin
-  ScanMedia;
-end;
-
-  procedure TExoDOSMediaScanThread.ScanMedia;
-Var DB : TExoDOSMediaDB;
-begin
-  DB:=TExoDOSMediaDB.Create(FMediaDBPath);
+  Result:=0;
+  Owner:=TComponent.Create(nil);
   try
-    DB.Initialize;
-
-    GetExoMediaPaths(FExoRoot,
-      procedure(const Line : String)
-      begin
-        ProcessMediaLine(Line, DB);
-      end);
-
-    DB.FinalizeLoad;
+    Err:=LoadXMLDoc(XMLPath, XMLDoc, '', Owner);
+    if Err<>'' then raise Exception.Create(Err);
+    if XMLDoc=nil then exit;
+    if XMLDoc.DocumentElement.NodeName<>'LaunchBox' then exit;
+    ProcessExoDOSGames(XMLDoc, ExoDOSGamesList.GetCachePath, ExoDOSGamesList.GetDBPath, Result);
   finally
-    DB.Free;
+    Owner.Free;
   end;
 end;
 
-procedure TExoDOSMediaScanThread.ProcessMediaLine(const Line : String; DB : TExoDOSMediaDB);
+procedure ProcessMediaLine(const Line : String; DB : TExoDOSMediaDB; var MediaCount : Integer);
 Var DelimPos, J : Integer;
     Category, FullPath, TitleKey, Kind, Cleaned : String;
 begin
@@ -295,7 +211,29 @@ begin
       raise;
     end;
   end;
-  Inc(FMediaCount);
+  Inc(MediaCount);
+end;
+
+function ScanMedia(const ExoRoot, MediaDBPath : String) : Integer;
+Var DB : TExoDOSMediaDB;
+    MediaCount : Integer;
+begin
+  MediaCount:=0;
+  DB:=TExoDOSMediaDB.Create(MediaDBPath);
+  try
+    DB.Initialize;
+
+    GetExoMediaPaths(ExoRoot,
+      procedure(const Line : String)
+      begin
+        ProcessMediaLine(Line, DB, MediaCount);
+      end);
+
+    DB.FinalizeLoad;
+  finally
+    DB.Free;
+  end;
+  result:=MediaCount;
 end;
 
 function TSetupFrameExoDOS.GetName : String;
@@ -339,7 +277,7 @@ begin
   UserIconLoader.DialogImage(DI_ExoDOS,ExoDOSReadList);
   UserIconLoader.DialogImage(DI_Table,ExoDOSShowList);
 
-  HelpContext:=ID_FileOptionsScummVM;
+  HelpContext:=ID_FileOptionsExoDOS;
 end;
 
 procedure TSetupFrameExoDOS.DOSBoxDirChanged;
@@ -401,10 +339,12 @@ end;
 procedure TSetupFrameExoDOS.ButtonWork(Sender : TObject);
 Var S : String;
     SL, SL2 : TStringList;
-    Thread : TExoDOSLoadThread;
-    MediaThread : TExoDOSMediaScanThread;
-    Dialog : TExoDOSWaitDialog;
-    XMLDoc : TXMLDocument;
+    Thread : TProcThread;
+    MediaThread : TProcThread;
+    Dialog : THiddenWaitDialog;
+    R : TExoWaitResult;
+    T1Err, T2Err : Boolean;
+    XMLPath : String;
 begin
   Case (Sender as TComponent).Tag of
     16 : begin
@@ -434,37 +374,39 @@ begin
               SysUtils.DeleteFile(ExoDOSGamesList.GetDBPath);
               SysUtils.DeleteFile(PrgDataDir+ExoDOSMediaDBFile);
               SpinnerLabel.Visible:=True;
-             XMLDoc:=LoadXMLDoc(IncludeTrailingPathDelimiter(S)+ExoDOSXMLFile);
-             if XMLDoc=nil then begin
-               SpinnerLabel.Caption:='Failed to read XML games list';
-               SysUtils.DeleteFile(ExoDOSGamesList.GetCachePath);
-               SysUtils.DeleteFile(ExoDOSGamesList.GetDBPath);
-               exit;
-             end;
-             if XMLDoc.DocumentElement.NodeName<>'LaunchBox' then begin
-               SpinnerLabel.Caption:='Failed to read XML games list';
-               XMLDoc.Free;
-               SysUtils.DeleteFile(ExoDOSGamesList.GetCachePath);
-               SysUtils.DeleteFile(ExoDOSGamesList.GetDBPath);
-               exit;
-             end;
-               Thread:=TExoDOSLoadThread.Create(XMLDoc,ExoDOSGamesList.GetCachePath,ExoDOSGamesList.GetDBPath);
-              MediaThread:=TExoDOSMediaScanThread.Create(S,PrgDataDir+ExoDOSMediaDBFile);
-             Dialog:=TExoDOSWaitDialog.Create(nil,Thread,MediaThread,SpinnerLabel);
+             XMLPath:=IncludeTrailingPathDelimiter(S)+ExoDOSXMLFile;
+               Thread:=TProcThread.Create(
+                 function : Integer
+                 begin
+                   Result:=LoadGames(XMLPath);
+                 end);
+              MediaThread:=TProcThread.Create(
+                 function : Integer
+                 begin
+                   Result:=ScanMedia(S,PrgDataDir+ExoDOSMediaDBFile);
+                 end);
+             Dialog:=THiddenWaitDialog.Create(nil,Thread,MediaThread,SpinnerLabel);
              try
                Dialog.ShowModal;
              finally
                Dialog.Free;
-               if Thread.GameCount=0 then begin
-                 SysUtils.DeleteFile(ExoDOSGamesList.GetCachePath);
-                 SysUtils.DeleteFile(ExoDOSGamesList.GetDBPath);
-               end;
-                Thread.WaitFor;
-                Thread.Free;
-                MediaThread.WaitFor;
-                MediaThread.Free;
-               Self.FExoDOSXMLDoc:=XMLDoc;
              end;
+             T1Err:=False;
+             T2Err:=False;
+             R:=EvaluateExoWaitState(Thread,T1Err,Thread.ResultCount,MediaThread,T2Err,MediaThread.ResultCount);
+             if R.ShowError1 and (Thread.FatalException is Exception) then
+               MessageDlg('Exception: '+Exception(Thread.FatalException).Message,mtError,[mbOK],0);
+             if R.ShowError2 and (MediaThread.FatalException is Exception) then
+               MessageDlg('Exception: '+Exception(MediaThread.FatalException).Message,mtError,[mbOK],0);
+             SpinnerLabel.Caption:=R.FinalCaption;
+             if Thread.ResultCount=0 then begin
+               SysUtils.DeleteFile(ExoDOSGamesList.GetCachePath);
+               SysUtils.DeleteFile(ExoDOSGamesList.GetDBPath);
+             end;
+             Thread.WaitFor;
+             Thread.Free;
+             MediaThread.WaitFor;
+             MediaThread.Free;
             ExoDOSShowList.Enabled:=ExoDOSReadList.Enabled and ExoDOSGamesList.CacheFileHasContent;
           end;
      19 : begin
@@ -511,68 +453,6 @@ begin
       exit;
     end;
   end;
-end;
-
-{ TExoDOSWaitDialog }
-
-constructor TExoDOSWaitDialog.Create(AOwner: TComponent; AThread1: TExoDOSLoadThread; AThread2: TExoDOSMediaScanThread; ASpinner: TLabel);
-begin
-  inherited CreateNew(AOwner);
-  FThread1:=AThread1;
-  FThread2:=AThread2;
-  FSpinnerLabel:=ASpinner;
-  FTimerCounter:=0;
-  FShownThread1Error:=False;
-  FShownThread2Error:=False;
-  BorderStyle:=bsNone;
-  Left:=-100;
-  Top:=-100;
-  Width:=1;
-  Height:=1;
-  AlphaBlend:=True;
-  AlphaBlendValue:=1;
-  FTimer:=TTimer.Create(self);
-  FTimer.Interval:=50;
-  FTimer.Enabled:=False;
-  FTimer.OnTimer:=TimerOnTimer;
-  OnShow:=FormShow;
-end;
-
-destructor TExoDOSWaitDialog.Destroy;
-begin
-  FTimer.Free;
-  inherited Destroy;
-end;
-
-procedure TExoDOSWaitDialog.FormShow(Sender : TObject);
-begin
-  FTimer.Enabled:=True;
-end;
-
-procedure TExoDOSWaitDialog.TimerOnTimer(Sender : TObject);
-Var R : TExoWaitResult;
-begin
-  FTimer.Enabled:=False;
-
-  R:=EvaluateExoWaitState(
-    FThread1, FShownThread1Error, FThread1.GameCount,
-    FThread2, FShownThread2Error, FThread2.MediaCount
-  );
-
-  if R.ShowError1 and (FThread1.FatalException is Exception) then
-    MessageDlg('Exception: '+Exception(FThread1.FatalException).Message,mtError,[mbOK],0);
-  if R.ShowError2 and (FThread2<>nil) and (FThread2.FatalException is Exception) then
-    MessageDlg('Exception: '+Exception(FThread2.FatalException).Message,mtError,[mbOK],0);
-
-  if R.ShouldSpin then begin
-    Inc(FTimerCounter);
-    FSpinnerLabel.Caption:=SpinnerChars[FTimerCounter mod 10];
-    FTimer.Enabled:=True;
-    exit;
-  end;
-
-  FSpinnerLabel.Caption:=R.FinalCaption;
-  Close;
 end;
 
 initialization
