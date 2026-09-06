@@ -911,6 +911,39 @@ begin
   end;
 end;
 
+function AddEmbeddedIconToImageList(const ResName: String; const ImageList: TImageList): Boolean;
+var
+  Ico: TIcon;
+begin
+  Result := False;
+  if ImageList = nil then Exit;
+  Ico := LoadEmbeddedIconResource(ResName, ImageList.Width, ImageList.Height);
+  if Ico = nil then Exit;
+  try
+    ImageList.AddIcon(Ico);
+    Result := True;
+  finally
+    Ico.Free;
+  end;
+end;
+
+function AddScummListIcon(const AListViewImageList, AListViewIconImageList: TImageList): Integer;
+begin
+  Result := -1;
+  if not FKindIconCacheInited then
+    InvalidateDosBoxKindListIconCache;
+  if (FScummListIconList = AListViewIconImageList) and (FScummListIconIndex >= 0) then
+  begin
+    Result := FScummListIconIndex;
+    Exit;
+  end;
+  if not AddEmbeddedIconToImageList('SCUMMVM', AListViewImageList) then Exit;
+  if not AddEmbeddedIconToImageList('SCUMMVM', AListViewIconImageList) then Exit;
+  Result := AListViewIconImageList.Count - 1;
+  FScummListIconList := AListViewIconImageList;
+  FScummListIconIndex := Result;
+end;
+
 function AddDosBoxKindIconsToList(const Kind: TDOSBoxKind;
   const AListViewImageList, AListViewIconImageList: TImageList;
   const ScreenshotViewMode, UseBackgroundColor: Boolean;
@@ -1045,6 +1078,13 @@ begin
   If (not B) and DOSBoxMode(Game) then begin
     I:=AddDosBoxKindIconsToList(Game.DosBoxKind,AListViewImageList,AListViewIconImageList,
       ScreenshotViewMode,UseBackgroundColor,BackgroundColor);
+    If I>=0 then begin
+      B:=True;
+      IconNr:=I;
+    end;
+  end;
+  If (not B) and ScummVMMode(Game) then begin
+    I:=AddScummListIcon(AListViewImageList,AListViewIconImageList);
     If I>=0 then begin
       B:=True;
       IconNr:=I;
@@ -1585,7 +1625,7 @@ begin
   if (AGame=nil) or (not PrgSetup.HasValidExoInstallation) then exit;
   { ExtraRootPath unused: screenshots are MediaDB only. }
 
-  St:=MediaDB.GetScreenshotPaths(NormalizeExoMediaKey(AGame.Name));
+  St:=MediaDB.GetScreenshotPaths(NormalizeExoMediaKey(AGame.ResolveGameTitle));
   TooBigScaledThumb:=nil;
   TooBigImgIdx:=-1;
   try
@@ -1654,7 +1694,7 @@ Var St : TStringList;
   procedure CollectPlatformExtras;
   Var I : Integer;
   begin
-    St:=MediaDB.GetOtherImagePaths(NormalizeExoMediaKey(AGame.Name));
+    St:=MediaDB.GetOtherImagePaths(NormalizeExoMediaKey(AGame.ResolveGameTitle));
     try
       for I:=0 to St.Count-1 do begin
         Cap:=ExoExtraImageCaption(St[I]);
@@ -1823,7 +1863,7 @@ begin
   if (AGame=nil) or (not PrgSetup.HasValidExoInstallation) then exit;
 
   { Platform Music\MS-DOS (MediaDB) — captions contain "Soundtrack" for ambient autoplay. }
-  St:=MediaDB.GetAudioPaths(NormalizeExoMediaKey(AGame.Name));
+  St:=MediaDB.GetAudioPaths(NormalizeExoMediaKey(AGame.ResolveGameTitle));
   try
     for K:=0 to St.Count-1 do begin
       if St.Count=1 then
@@ -1867,7 +1907,7 @@ Var St : TStringList;
 begin
   if (AGame=nil) or (not PrgSetup.HasValidExoInstallation) then exit;
 
-  St:=MediaDB.GetVideoPaths(NormalizeExoMediaKey(AGame.Name));
+  St:=MediaDB.GetVideoPaths(NormalizeExoMediaKey(AGame.ResolveGameTitle));
   try
     for K:=0 to St.Count-1 do begin
       Cap:=StripExoTrailingYear(ChangeFileExt(ExtractFileName(St[K]), ''));
@@ -1920,7 +1960,7 @@ begin
 
     St:=TStringList.Create;
     try
-      St.AddStrings(MediaDB.GetManualPaths(NormalizeExoMediaKey(AGame.Name)));
+      St.AddStrings(MediaDB.GetManualPaths(NormalizeExoMediaKey(AGame.ResolveGameTitle)));
       if Trim(ExtraRootPath)<>'' then
         St.AddStrings(GetExoGameExtrasPaths(PrgSetup.ExoDOSDir, ExtraRootPath, DocumentExtensions));
 

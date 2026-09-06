@@ -94,6 +94,7 @@ begin
   GameInfoValueListEditor.TitleCaptions.Add(LanguageSetup.Value);
   with GameInfoValueListEditor do begin
     Strings.Delete(0);
+    Strings.Add(LanguageSetup.GameTitle+'=');
     Strings.Add(LanguageSetup.GameGenre+'=');
     ItemProps[Strings.Count-1].EditStyle:=esPickList;
     St:=ExtGenreList(GetCustomGenreName(InitData.GameDB.GetGenreList)); try ItemProps[Strings.Count-1].PickList.Assign(St); finally St.Free; end;
@@ -166,24 +167,27 @@ begin
 end;
 
 procedure TModernProfileEditorGameInfoFrame.SearchClick(Sender: TObject);
-Var S,Name,Genre,Developer,Publisher,Year,Internet,Notes : String;
+Var S,Name,Title,Genre,Developer,Publisher,Year,Internet,Notes,LookupName : String;
 begin
+  LookupName:=Trim(GameInfoValueListEditor.Strings.ValueFromIndex[0]);
+  If LookupName='' then LookupName:=FTempGame.ResolveGameTitle;
   Case (Sender as TComponent).Tag of
     0 : begin
           LinkFile.MoveToTop((Sender as TMenuItem).Caption);
           LoadLinks;
         end;
     1 : If LinkFile.EditFile(False) then LoadLinks;
-    2 : OpenLink(LinkFile.Link[0],'<GAMENAME>',PProfileName^);
+    2 : OpenLink(LinkFile.Link[0],'<GAMENAME>',LookupName);
     3 : begin
           If Trim(PCaptureDir^)='' then S:='' else S:=MakeAbsPath(PCaptureDir^,PrgSetup.BaseDir);
-          If ShowDataReaderDialog(self,PProfileName^,Name,Genre,Developer,Publisher,Year,Internet,Notes,S) then with GameInfoValueListEditor.Strings do begin
+          If ShowDataReaderDialog(self,LookupName,Name,Title,Genre,Developer,Publisher,Year,Internet,Notes,S) then with GameInfoValueListEditor.Strings do begin
             If Name <>'' then FOnProfileNameChange(self,Name,ProfileExe^,ProfileSetup^,ProfileScummVMGameName^,ProfileScummVMPath^,ProfileCaptureDir^);
-            If Genre<>'' then ValueFromIndex[0]:=Genre;
-            If Developer<>'' then ValueFromIndex[1]:=Developer;
-            If Publisher<>'' then ValueFromIndex[2]:=Publisher;
-            If Year<>'' then ValueFromIndex[3]:=Year;
-            If (Internet<>'') and (Trim(ValueFromIndex[5])='') then ValueFromIndex[5]:=Internet;
+            If Title<>'' then ValueFromIndex[0]:=Title;
+            If Genre<>'' then ValueFromIndex[1]:=Genre;
+            If Developer<>'' then ValueFromIndex[2]:=Developer;
+            If Publisher<>'' then ValueFromIndex[3]:=Publisher;
+            If Year<>'' then ValueFromIndex[4]:=Year;
+            If (Internet<>'') and (Trim(ValueFromIndex[6])='') then ValueFromIndex[6]:=Internet;
             if Notes<>'' then NotesMemo.Lines.Add(Notes);
           end;
         end;
@@ -196,18 +200,19 @@ Var St : TStringList;
     S,T : String;
 begin
   If Game=nil then begin
-    GameInfoValueListEditor.Strings.ValueFromIndex[6]:=RemoveUnderline(LanguageSetup.No);
+    GameInfoValueListEditor.Strings.ValueFromIndex[7]:=RemoveUnderline(LanguageSetup.No);
     exit;
   end;
 
   with GameInfoValueListEditor.Strings do begin
-    If Game.Genre<>'' then ValueFromIndex[0]:=GetCustomGenreName(Game.Genre) else GameInfoValueListEditor.Strings[0]:=GameInfoValueListEditor.Strings.Names[0]+'=';
-    If Game.Developer<>'' then ValueFromIndex[1]:=Game.Developer else GameInfoValueListEditor.Strings[1]:=GameInfoValueListEditor.Strings.Names[1]+'=';
-    If Game.Publisher<>'' then ValueFromIndex[2]:=Game.Publisher else GameInfoValueListEditor.Strings[2]:=GameInfoValueListEditor.Strings.Names[2]+'=';
-    If Game.Year<>'' then ValueFromIndex[3]:=Game.Year else GameInfoValueListEditor.Strings[3]:=GameInfoValueListEditor.Strings.Names[3]+'=';
-    If Game.Language<>'' then ValueFromIndex[4]:=GetCustomLanguageName(Game.Language) else GameInfoValueListEditor.Strings[4]:=GameInfoValueListEditor.Strings.Names[4]+'=';
-    If Game.WWW[1]<>'' then ValueFromIndex[5]:=Game.WWW[1] else GameInfoValueListEditor.Strings[5]:=GameInfoValueListEditor.Strings.Names[5]+'=';
-    If Game.License<>'' then ValueFromIndex[6]:=GetCustomLicenseName(Game.License) else GameInfoValueListEditor.Strings[6]:=GameInfoValueListEditor.Strings.Names[6]+'=';
+    If Game.GameTitle<>'' then ValueFromIndex[0]:=Game.GameTitle else GameInfoValueListEditor.Strings[0]:=GameInfoValueListEditor.Strings.Names[0]+'=';
+    If Game.Genre<>'' then ValueFromIndex[1]:=GetCustomGenreName(Game.Genre) else GameInfoValueListEditor.Strings[1]:=GameInfoValueListEditor.Strings.Names[1]+'=';
+    If Game.Developer<>'' then ValueFromIndex[2]:=Game.Developer else GameInfoValueListEditor.Strings[2]:=GameInfoValueListEditor.Strings.Names[2]+'=';
+    If Game.Publisher<>'' then ValueFromIndex[3]:=Game.Publisher else GameInfoValueListEditor.Strings[3]:=GameInfoValueListEditor.Strings.Names[3]+'=';
+    If Game.Year<>'' then ValueFromIndex[4]:=Game.Year else GameInfoValueListEditor.Strings[4]:=GameInfoValueListEditor.Strings.Names[4]+'=';
+    If Game.Language<>'' then ValueFromIndex[5]:=GetCustomLanguageName(Game.Language) else GameInfoValueListEditor.Strings[5]:=GameInfoValueListEditor.Strings.Names[5]+'=';
+    If Game.WWW[1]<>'' then ValueFromIndex[6]:=Game.WWW[1] else GameInfoValueListEditor.Strings[6]:=GameInfoValueListEditor.Strings.Names[6]+'=';
+    If Game.License<>'' then ValueFromIndex[7]:=GetCustomLicenseName(Game.License) else GameInfoValueListEditor.Strings[7]:=GameInfoValueListEditor.Strings.Names[7]+'=';
   end;
   FavouriteCheckBox.Checked:=Game.Favorite;
   For I:=1 to 9 do begin WWWNames.Add(Game.WWWName[I]); WWWLinks.Add(Game.WWW[I]); end;
@@ -242,13 +247,14 @@ Var St : TStringList;
     S,T,License : String;
 begin
   with GameInfoValueListEditor.Strings do begin
-    Game.Genre:=GetEnglishGenreName(ValueFromIndex[0]);
-    Game.Developer:=ValueFromIndex[1];
-    Game.Publisher:=ValueFromIndex[2];
-    Game.Year:=ValueFromIndex[3];
-    Game.Language:=GetEnglishLanguageName(ValueFromIndex[4]);
-    Game.WWW[1]:=ValueFromIndex[5];
-    License:=GetEnglishLicenseName(ValueFromIndex[6]);
+    Game.GameTitle:=ValueFromIndex[0];
+    Game.Genre:=GetEnglishGenreName(ValueFromIndex[1]);
+    Game.Developer:=ValueFromIndex[2];
+    Game.Publisher:=ValueFromIndex[3];
+    Game.Year:=ValueFromIndex[4];
+    Game.Language:=GetEnglishLanguageName(ValueFromIndex[5]);
+    Game.WWW[1]:=ValueFromIndex[6];
+    License:=GetEnglishLicenseName(ValueFromIndex[7]);
   end;
   Game.Favorite:=FavouriteCheckBox.Checked;
   If WWWNames.Count>0 then Game.WWWName[1]:=WWWNames[0] else Game.WWWName[1]:='';
@@ -373,9 +379,9 @@ end;
 
 procedure TModernProfileEditorGameInfoFrame.GameInfoValueListEditorEditButtonClick(Sender: TObject);
 begin
-  WWWLinks[0]:=GameInfoValueListEditor.Strings.ValueFromIndex[5];
+  WWWLinks[0]:=GameInfoValueListEditor.Strings.ValueFromIndex[6];
   ShowLinkFileEditDialog(self,WWWNames,WWWLinks,False,True,-1);
-  If WWWLinks[0]<>'' then GameInfoValueListEditor.Strings.ValueFromIndex[5]:=WWWLinks[0];
+  If WWWLinks[0]<>'' then GameInfoValueListEditor.Strings.ValueFromIndex[6]:=WWWLinks[0];
 end;
 
 end.

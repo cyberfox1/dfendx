@@ -345,6 +345,17 @@ begin
   AddStringRec(60,'MIDIDeviceX','value',DefaultValuesMIDIDeviceX);
   AddStringRec(61,'MT32ModelStaging','value',DefaultValuesMT32ModelStaging);
   AddStringRec(62,'MT32ModelX','value',DefaultValuesMT32ModelX);
+  AddStringRec(86,'SoundCanvasModelStaging','value',DefaultValuesSoundCanvasModelStaging);
+  AddStringRec(87,'DeinterlacingStaging','value',DefaultValuesDeinterlacingStaging);
+  AddStringRec(88,'DeditheringStaging','value',DefaultValuesDeditheringStaging);
+  AddStringRec(89,'CrtColorProfileStaging','value',DefaultValuesCrtColorProfileStaging);
+  AddStringRec(90,'ColorSpaceStaging','value',DefaultValuesColorSpaceStaging);
+  AddStringRec(91,'IntegerScalingStaging','value',DefaultValuesIntegerScalingStaging);
+  AddStringRec(92,'ColorTemperatureStaging','value',DefaultValuesColorTemperatureStaging);
+  AddStringRec(93,'MouseDriverModelStaging','value',DefaultValuesMouseDriverModelStaging);
+  AddStringRec(94,'MouseMoveThresholdStaging','value',DefaultValuesMouseMoveThresholdStaging);
+  AddStringRec(95,'DiskSpeedStaging','value',DefaultValuesDiskSpeedStaging);
+  AddStringRec(96,'DiskNoiseStaging','value',DefaultValuesDiskNoiseStaging);
   AddStringRec(63,'vsyncPure','value',DefaultValueVSyncPure);
   AddStringRec(64,'scalePure','value',DefaultValueScalePure);
   AddStringRec(65,'shaderPure','value',DefaultValueShaderPure);

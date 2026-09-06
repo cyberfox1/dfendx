@@ -756,6 +756,9 @@ end;
 Function VersionToInt(Version : String) : Integer;
 Var I,J : Integer;
 begin
+  I:=0;
+  For J:=1 to length(Version) do If Version[J]='.' then inc(I);
+  If I=1 then Version:=Version+'.0';
   result:=0;
   I:=Pos('.',Version);
   while I>0 do begin

@@ -971,6 +971,10 @@ begin
       If Game.GetValidMidiGain(I) then
         St.Add('mixer MT32 '+IntToStr(I)+' /NOSHOW');
     end;
+    If Game.IsNewStaging and Game.MIDIDeviceIs('soundcanvas') then begin
+      If Game.GetValidMidiGain(I) then
+        St.Add('mixer SOUNDCANVAS '+IntToStr(I)+' /NOSHOW');
+    end;
   end;
 
   { Setting num, caps and scroll lock and CuteMouse }
@@ -1104,18 +1108,11 @@ begin
 
   GenerateSDLConf(Game,result,DOSBoxNr,BuildForArchivePackage);
 
-  If IsStaging then begin
-    result.Add('');
-    result.Add('[mouse]');
-    result.Add('mouse_sensitivity='+IntToStr(Game.MouseSensitivity));
-    { Same Auto lock checkbox: on → onclick, off → seamless. }
-    If Game.AutoLockMouse
-      then result.Add('mouse_capture=onclick')
-      else result.Add('mouse_capture=seamless');
-  end;
+  GenerateMouseConf(Game,result);
 
   SpeedTestInfo('Build [dosbox] section of DOSBox conf file');
   GenerateCoreDOSBoxConf(Game,result,DOSBoxNr,DOSBoxVersion,BuildForArchivePackage,DeleteOnExit);
+  GenerateDiskNoiseConf(Game,result);
 
   If IsStaging then begin
     CapturePath:=UnmapDrive(MakeAbsPath(Game.CaptureFolder,PrgSetup.BaseDir),ptScreenshot);
@@ -1203,6 +1200,7 @@ begin
 
   SpeedTestInfo('Add custom settings to DOSBox conf file');
 
+  GenerateWebserverConf(Game,result,DOSBoxNr);
   AppendCustomSettingsToConf(result,PrgSetup.DOSBoxSettings[DOSBoxNr].CustomSettings);
   AppendCustomSettingsToConf(result,Game.CustomSettings);
 end;

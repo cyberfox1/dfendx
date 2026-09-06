@@ -4,11 +4,13 @@ interface
 uses Classes, GameDBUnit;
 
 Procedure GenerateGraphicsConf(const Game: TGame; const Dest: TStrings);
+Procedure GenerateMouseConf(const Game: TGame; const Dest: TStrings);
 Procedure GenerateMidiConf(const Game: TGame; const Dest: TStrings; const DOSBoxVersion: Double; const IsStaging, IsOldStaging: Boolean);
 Procedure GenerateSoundDeviceConf(const Game: TGame; const Dest: TStrings; const DOSBoxVersion: Double);
 Procedure GenerateInnovaConf(const Game: TGame; const Dest: TStrings; const IsStaging, IsOldStaging: Boolean);
 Procedure GenerateSDLConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer; const BuildForArchivePackage: Boolean);
 Procedure GenerateCoreDOSBoxConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer; const DOSBoxVersion: Double; const BuildForArchivePackage: Boolean; const DeleteOnExit: TStringList);
+Procedure GenerateDiskNoiseConf(const Game: TGame; const Dest: TStrings);
 Procedure GenerateGlideConf(const Game: TGame; const Dest: TStrings);
 Procedure GeneratePureGlideCfg(const Game: TGame; const Cfg: TStrings);
 Procedure GenerateNetworkConf(const Game: TGame; const Dest: TStrings);
@@ -17,6 +19,7 @@ Procedure GenerateSpecialMachineConf(const Game: TGame; const Dest: TStrings);
 Procedure GenerateCPUConf(const Game: TGame; const Dest: TStrings; const DOSBoxVersion: Double);
 Procedure GenerateAutoExecKeyboardConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer);
 Procedure GenerateAutoExecDOSVerConf(const Game: TGame; const Dest: TStrings);
+Procedure GenerateWebserverConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer);
 
 implementation
 
@@ -25,6 +28,7 @@ uses SysUtils, Windows, PrgSetupUnit, PrgConsts, CommonHelpers, CommonTools, Dos
 Procedure GenerateCoreMidiConf(const Game: TGame; const Dest: TStrings; const IsStaging: Boolean); forward;
 Procedure GenerateFluidMidiConf(const Game: TGame; const Dest: TStrings; const IsStaging, IsOldStaging: Boolean); forward;
 Procedure GenerateMT32MidiConf(const Game: TGame; const Dest: TStrings; const IsStaging: Boolean); forward;
+Procedure GenerateSoundCanvasMidiConf(const Game: TGame; const Dest: TStrings); forward;
 
 Function ProfileShaderSelected(const Game: TGame): Boolean;
 Var S: String;
@@ -71,6 +75,27 @@ begin
     end;
   end;
 
+  If Game.IsNewStaging then begin
+    S:=Trim(Game.Deinterlacing);
+    If S<>'' then Dest.Add('deinterlacing='+S);
+    S:=Trim(Game.Dedithering);
+    If S<>'' then Dest.Add('dedithering='+S);
+    S:=Trim(Game.CrtColorProfile);
+    If S<>'' then Dest.Add('crt_color_profile='+S);
+    S:=Trim(Game.ColorSpace);
+    If S<>'' then Dest.Add('color_space='+S);
+    S:=Trim(Game.IntegerScaling);
+    If S<>'' then Dest.Add('integer_scaling='+S);
+    Dest.Add('image_adjustments='+BoolToStr(Game.ImageAdjustments));
+    If Game.ImageAdjustments then begin
+      Dest.Add('brightness='+IntToStr(Game.ImageBrightness));
+      Dest.Add('contrast='+IntToStr(Game.ImageContrast));
+      Dest.Add('saturation='+IntToStr(Game.ImageSaturation));
+      S:=Trim(Game.ImageColorTemperature);
+      If S<>'' then Dest.Add('color_temperature='+S);
+    end;
+  end;
+
   If Game.IsDBX then begin
     S:=Trim(Game.VSync);
     If S<>'' then begin
@@ -86,6 +111,30 @@ begin
     Dest.Add('');
     Dest.Add('[video]');
     Dest.Add('vmemsize='+IntToStr(I));
+  end;
+end;
+
+Procedure GenerateMouseConf(const Game: TGame; const Dest: TStrings);
+Var S: String;
+begin
+  If Game.IsStaging then begin
+    Dest.Add('');
+    Dest.Add('[mouse]');
+    Dest.Add('mouse_sensitivity='+IntToStr(Game.MouseSensitivity));
+    If Game.AutoLockMouse
+      then Dest.Add('mouse_capture=onclick')
+      else Dest.Add('mouse_capture=seamless');
+    If Game.IsNewStaging then begin
+      S:=Trim(Game.MouseDriverModel);
+      If S<>'' then Dest.Add('builtin_dos_mouse_driver_model='+S);
+      S:=Trim(Game.MouseMoveThreshold);
+      If S<>'' then Dest.Add('builtin_dos_mouse_driver_move_threshold='+S);
+      S:=Trim(Game.MouseDriverOptions);
+      If S<>'' then Dest.Add('builtin_dos_mouse_driver_options='+S);
+    end;
+  end else begin
+    Dest.Add('autolock='+BoolToStr(Game.AutoLockMouse));
+    Dest.Add('sensitivity='+IntToStr(Game.MouseSensitivity));
   end;
 end;
 
@@ -179,6 +228,28 @@ begin
   end;
 end;
 
+Procedure GenerateSoundCanvasMidiConf(const Game: TGame; const Dest: TStrings);
+Var S: String;
+begin
+  If Game.IsStaging and (not Game.IsOldStaging) and Game.MIDIDeviceIs('soundcanvas') then begin
+    Dest.Add('');
+    Dest.Add('[soundcanvas]');
+    S:=Trim(Game.SoundCanvasModel);
+    If S='' then S:='auto';
+    Dest.Add('soundcanvas_model='+S);
+    S:=Trim(Game.SoundCanvasRomDir);
+    If S<>'' then begin
+      S:=MakeAbsPath(S,PrgSetup.BaseDir);
+      S:=StringReplace(S,'\','/',[rfReplaceAll]);
+      Dest.Add('soundcanvas_rom_dir='+S);
+    end;
+    If Game.SoundCanvasFilter then
+      Dest.Add('soundcanvas_filter=on')
+    else
+      Dest.Add('soundcanvas_filter=off');
+  end;
+end;
+
 Procedure GenerateMidiConf(const Game: TGame; const Dest: TStrings; const DOSBoxVersion: Double; const IsStaging, IsOldStaging: Boolean);
 begin
   Dest.Add('');
@@ -199,6 +270,7 @@ begin
 
   GenerateFluidMidiConf(Game,Dest,IsStaging,IsOldStaging);
   GenerateMT32MidiConf(Game,Dest,IsStaging);
+  GenerateSoundCanvasMidiConf(Game,Dest);
 end;
 
 Procedure GenerateSoundDeviceConf(const Game: TGame; const Dest: TStrings; const DOSBoxVersion: Double);
@@ -356,12 +428,6 @@ begin
   else If Game.DosBoxKind=dbkX then
     Dest.Add('windowposition=centered');
   Dest.Add('output='+OutputVal);
-  { Staging: autolock is invalid; mapped to [mouse] mouse_capture below. }
-  If not Game.IsStaging then
-    Dest.Add('autolock='+BoolToStr(Game.AutoLockMouse));
-  { Staging: sensitivity moved to [mouse] mouse_sensitivity. }
-  If not Game.IsStaging then
-    Dest.Add('sensitivity='+IntToStr(Game.MouseSensitivity));
   { Staging (any): usescancodes invalid. }
   If not Game.IsStaging then
     Dest.Add('usescancodes='+BoolToStr(Game.UseScanCodes));
@@ -493,7 +559,26 @@ begin
   If Game.IsNewStaging then begin
     S:=Trim(Game.DosRefreshRate);
     If S<>'' then Dest.Add('dos_rate='+S);
+    S:=Trim(Game.HardDiskSpeed);
+    If S<>'' then Dest.Add('hard_disk_speed='+S);
+    S:=Trim(Game.FloppyDiskSpeed);
+    If S<>'' then Dest.Add('floppy_disk_speed='+S);
   end;
+end;
+
+Procedure GenerateDiskNoiseConf(const Game: TGame; const Dest: TStrings);
+Var S: String;
+begin
+  If not Game.IsNewStaging then exit;
+  S:=Trim(Game.HardDiskNoise);
+  If S='' then S:=Trim(Game.FloppyDiskNoise);
+  If S='' then exit;
+  Dest.Add('');
+  Dest.Add('[disknoise]');
+  S:=Trim(Game.HardDiskNoise);
+  If S<>'' then Dest.Add('hard_disk_noise='+S);
+  S:=Trim(Game.FloppyDiskNoise);
+  If S<>'' then Dest.Add('floppy_disk_noise='+S);
 end;
 
 Function NormalizeGlideEmulation(const Game: TGame): String;
@@ -829,6 +914,15 @@ begin
       Dest.Add('ver set '+S+' '+T);
     end;
   end;
+end;
+
+Procedure GenerateWebserverConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer);
+begin
+  If not Game.IsNewStaging then exit;
+  If not PrgSetup.DOSBoxSettings[DOSBoxNr].WebserverEnabled then exit;
+  Dest.Add('');
+  Dest.Add('[webserver]');
+  Dest.Add('webserver_enabled='+BoolToStr(True));
 end;
 
 end.

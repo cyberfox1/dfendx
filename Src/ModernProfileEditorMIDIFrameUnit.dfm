@@ -178,12 +178,12 @@ object ModernProfileEditorMIDIFrame: TModernProfileEditorMIDIFrame
     Left = 24
     Top = 406
     Width = 489
-    Height = 125
+    Height = 123
     Caption = 'FluidSynth Settings'
     TabOrder = 6
     DesignSize = (
       489
-      125)
+      123)
     object BtnFluidSynthPath: TSpeedButton
       Left = 427
       Top = 86
@@ -244,5 +244,14 @@ object ModernProfileEditorMIDIFrame: TModernProfileEditorMIDIFrame
       TabOrder = 2
       TickStyle = tsManual
     end
+  end
+  object SoundCanvasFilterCheckBox: TCheckBox
+    Left = 24
+    Top = 542
+    Width = 250
+    Height = 17
+    Caption = 'SC-55 filter'
+    TabOrder = 7
+    Visible = False
   end
 end

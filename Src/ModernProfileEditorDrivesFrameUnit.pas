@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, StdCtrls, Buttons, ComCtrls, GameDBUnit, ModernProfileEditorFormUnit,
-  Menus, ImgList;
+  Menus, ImgList, System.ImageList;
 
 type
   TModernProfileEditorDrivesFrame = class(TFrame, IModernProfileEditorFrame)
@@ -17,6 +17,16 @@ type
     MountingDeleteAllButton: TBitBtn;
     MountingAutoCreateButton: TBitBtn;
     SecureModeCheckBox: TCheckBox;
+    HardDiskOptionsGroupBox: TGroupBox;
+    FloppyOptionsGroupBox: TGroupBox;
+    HardDiskSpeedLabel: TLabel;
+    FloppyDiskSpeedLabel: TLabel;
+    HardDiskNoiseLabel: TLabel;
+    FloppyDiskNoiseLabel: TLabel;
+    HardDiskSpeedComboBox: TComboBox;
+    FloppyDiskSpeedComboBox: TComboBox;
+    HardDiskNoiseComboBox: TComboBox;
+    FloppyDiskNoiseComboBox: TComboBox;
     PopupMenu: TPopupMenu;
     PopupAdd: TMenuItem;
     PopupEdit: TMenuItem;
@@ -33,8 +43,15 @@ type
     ProfileExe, ProfileSetup, ProfileName : PString;
     FGetFrame : TGetFrameFunction;
     GameDB : TGameDB;
+    FDiskSpeedConfOpt : String;
+    FDiskNoiseConfOpt : String;
     Procedure LoadMountingList;
     function CanReachFile(const FileName: String): Boolean;
+    function IsNewStaging: Boolean;
+    procedure SelectDiskCombo(Combo: TComboBox; const GameValue: String);
+    procedure ApplyKindEnable;
+    procedure ShowFrame(Sender: TObject);
+    procedure Invalidate(Sender: TObject);
   public
     { Public-Deklarationen }
     Constructor Create(AOwner : TComponent); override;
@@ -72,6 +89,10 @@ begin
   NoFlicker(MountingAutoCreateButton);
   NoFlicker(AutoMountCheckBox);
   NoFlicker(SecureModeCheckBox);
+  NoFlicker(HardDiskSpeedComboBox);
+  NoFlicker(FloppyDiskSpeedComboBox);
+  NoFlicker(HardDiskNoiseComboBox);
+  NoFlicker(FloppyDiskNoiseComboBox);
 
   MountingAddButton.Caption:=LanguageSetup.ProfileEditorMountingAdd;
   MountingEditButton.Caption:=LanguageSetup.ProfileEditorMountingEdit;
@@ -81,6 +102,20 @@ begin
   InitMountingListView(MountingListView);
   AutoMountCheckBox.Caption:=LanguageSetup.ProfileEditorMountingAutoMountCDs;
   SecureModeCheckBox.Caption:=LanguageSetup.ProfileEditorMountingSecureMode;
+  HardDiskOptionsGroupBox.Caption:=LanguageSetup.ProfileEditorMountingHardDiskOptions;
+  FloppyOptionsGroupBox.Caption:=LanguageSetup.ProfileEditorMountingFloppyOptions;
+  HardDiskSpeedLabel.Caption:=LanguageSetup.ProfileEditorMountingHardDiskSpeed;
+  FloppyDiskSpeedLabel.Caption:=LanguageSetup.ProfileEditorMountingFloppyDiskSpeed;
+  HardDiskNoiseLabel.Caption:=LanguageSetup.ProfileEditorMountingHardDiskNoise;
+  FloppyDiskNoiseLabel.Caption:=LanguageSetup.ProfileEditorMountingFloppyDiskNoise;
+  FDiskSpeedConfOpt:=InitData.GameDB.ConfOpt.DiskSpeedStaging;
+  FDiskNoiseConfOpt:=InitData.GameDB.ConfOpt.DiskNoiseStaging;
+  RebuildComboFromConfOpt(HardDiskSpeedComboBox,FDiskSpeedConfOpt,'');
+  RebuildComboFromConfOpt(FloppyDiskSpeedComboBox,FDiskSpeedConfOpt,'');
+  RebuildComboFromConfOpt(HardDiskNoiseComboBox,FDiskNoiseConfOpt,'');
+  RebuildComboFromConfOpt(FloppyDiskNoiseComboBox,FDiskNoiseConfOpt,'');
+  InitData.OnShowFrame:=ShowFrame;
+  InitData.OnInvalidate:=Invalidate;
   UserIconLoader.DialogImage(DI_Add,MountingAddButton);
   UserIconLoader.DialogImage(DI_Edit,MountingEditButton);
   UserIconLoader.DialogImage(DI_Delete,MountingDelButton);
@@ -115,6 +150,11 @@ begin
   LoadMountingList;
   AutoMountCheckBox.Checked:=Game.AutoMountCDs;
   SecureModeCheckBox.Checked:=Game.SecureMode;
+  SelectDiskCombo(HardDiskSpeedComboBox,Game.HardDiskSpeed);
+  SelectDiskCombo(FloppyDiskSpeedComboBox,Game.FloppyDiskSpeed);
+  SelectDiskCombo(HardDiskNoiseComboBox,Game.HardDiskNoise);
+  SelectDiskCombo(FloppyDiskNoiseComboBox,Game.FloppyDiskNoise);
+  ApplyKindEnable;
 end;
 
 procedure TModernProfileEditorDrivesFrame.LoadMountingList;
@@ -241,6 +281,73 @@ begin
     If Mounting.Count>I then Game.Mount[I]:=Mounting[I] else Game.Mount[I]:='';
   Game.AutoMountCDs:=AutoMountCheckBox.Checked;
   Game.SecureMode:=SecureModeCheckBox.Checked;
+  if HardDiskSpeedComboBox.ItemIndex>=0 then
+    Game.HardDiskSpeed:=Trim(HardDiskSpeedComboBox.Text);
+  if FloppyDiskSpeedComboBox.ItemIndex>=0 then
+    Game.FloppyDiskSpeed:=Trim(FloppyDiskSpeedComboBox.Text);
+  if HardDiskNoiseComboBox.ItemIndex>=0 then
+    Game.HardDiskNoise:=Trim(HardDiskNoiseComboBox.Text);
+  if FloppyDiskNoiseComboBox.ItemIndex>=0 then
+    Game.FloppyDiskNoise:=Trim(FloppyDiskNoiseComboBox.Text);
+end;
+
+procedure TModernProfileEditorDrivesFrame.SelectDiskCombo(Combo: TComboBox; const GameValue: String);
+begin
+  if ComboHasValue(Combo,GameValue) then
+    SelectComboValue(Combo,GameValue)
+  else
+    SetComboNoSelect(Combo);
+end;
+
+function TModernProfileEditorDrivesFrame.IsNewStaging: Boolean;
+begin
+  Result:=(FTempGame<>nil) and FTempGame.IsNewStaging;
+end;
+
+procedure TModernProfileEditorDrivesFrame.ApplyKindEnable;
+var
+  OnNew: Boolean;
+  CapColor: TColor;
+begin
+  OnNew:=IsNewStaging;
+  if OnNew then CapColor:=clWindowText else CapColor:=clGrayText;
+  HardDiskOptionsGroupBox.Enabled:=OnNew;
+  HardDiskOptionsGroupBox.Font.Color:=CapColor;
+  FloppyOptionsGroupBox.Enabled:=OnNew;
+  FloppyOptionsGroupBox.Font.Color:=CapColor;
+  HardDiskSpeedLabel.Enabled:=OnNew;
+  HardDiskSpeedComboBox.Enabled:=OnNew;
+  FloppyDiskSpeedLabel.Enabled:=OnNew;
+  FloppyDiskSpeedComboBox.Enabled:=OnNew;
+  HardDiskNoiseLabel.Enabled:=OnNew;
+  HardDiskNoiseComboBox.Enabled:=OnNew;
+  FloppyDiskNoiseLabel.Enabled:=OnNew;
+  FloppyDiskNoiseComboBox.Enabled:=OnNew;
+  if not OnNew then begin
+    SetComboNoSelect(HardDiskSpeedComboBox);
+    SetComboNoSelect(FloppyDiskSpeedComboBox);
+    SetComboNoSelect(HardDiskNoiseComboBox);
+    SetComboNoSelect(FloppyDiskNoiseComboBox);
+  end else if FTempGame<>nil then begin
+    if HardDiskSpeedComboBox.ItemIndex<0 then
+      SelectDiskCombo(HardDiskSpeedComboBox,FTempGame.HardDiskSpeed);
+    if FloppyDiskSpeedComboBox.ItemIndex<0 then
+      SelectDiskCombo(FloppyDiskSpeedComboBox,FTempGame.FloppyDiskSpeed);
+    if HardDiskNoiseComboBox.ItemIndex<0 then
+      SelectDiskCombo(HardDiskNoiseComboBox,FTempGame.HardDiskNoise);
+    if FloppyDiskNoiseComboBox.ItemIndex<0 then
+      SelectDiskCombo(FloppyDiskNoiseComboBox,FTempGame.FloppyDiskNoise);
+  end;
+end;
+
+procedure TModernProfileEditorDrivesFrame.ShowFrame(Sender: TObject);
+begin
+  ApplyKindEnable;
+end;
+
+procedure TModernProfileEditorDrivesFrame.Invalidate(Sender: TObject);
+begin
+  ApplyKindEnable;
 end;
 
 Destructor TModernProfileEditorDrivesFrame.Destroy;

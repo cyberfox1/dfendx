@@ -20,7 +20,7 @@ object ModernProfileEditorDrivesFrame: TModernProfileEditorDrivesFrame
     Left = 12
     Top = 17
     Width = 572
-    Height = 416
+    Height = 340
     Anchors = [akLeft, akTop, akRight, akBottom]
     Columns = <>
     ReadOnly = True
@@ -32,13 +32,11 @@ object ModernProfileEditorDrivesFrame: TModernProfileEditorDrivesFrame
   end
   object MountingAddButton: TBitBtn
     Left = 12
-    Top = 439
+    Top = 365
     Width = 98
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Add...'
-    TabOrder = 2
-    OnClick = ButtonWork
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000130B0000130B00001000000000000000000000000000
@@ -53,17 +51,17 @@ object ModernProfileEditorDrivesFrame: TModernProfileEditorDrivesFrame
       B3333337FFFF77377FF333B000000333BB33337777777F3377FF3BB3333BB333
       3BB33773333773333773B333333B3333333B7333333733333337}
     NumGlyphs = 2
+    TabOrder = 2
+    OnClick = ButtonWork
   end
   object MountingEditButton: TBitBtn
     Tag = 1
     Left = 116
-    Top = 439
+    Top = 365
     Width = 98
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Bearbeiten...'
-    TabOrder = 3
-    OnClick = ButtonWork
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000120B0000120B00001000000000000000000000000000
@@ -78,17 +76,17 @@ object ModernProfileEditorDrivesFrame: TModernProfileEditorDrivesFrame
       0FF03333737F37737F373330B00FFFFF0F033337F77F33337F733309030FFFFF
       00333377737FFFFF773333303300000003333337337777777333}
     NumGlyphs = 2
+    TabOrder = 3
+    OnClick = ButtonWork
   end
   object MountingDelButton: TBitBtn
     Tag = 2
     Left = 220
-    Top = 439
+    Top = 365
     Width = 98
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Delete'
-    TabOrder = 4
-    OnClick = ButtonWork
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000120B0000120B00001000000000000000000000000000
@@ -103,11 +101,13 @@ object ModernProfileEditorDrivesFrame: TModernProfileEditorDrivesFrame
       BBB35555F55555575F555550555555550BBB55575555555575F5555555555555
       50BB555555555555575F555555555555550B5555555555555575}
     NumGlyphs = 2
+    TabOrder = 4
+    OnClick = ButtonWork
   end
   object MountingDeleteAllButton: TBitBtn
     Tag = 3
     Left = 324
-    Top = 439
+    Top = 365
     Width = 98
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -118,13 +118,91 @@ object ModernProfileEditorDrivesFrame: TModernProfileEditorDrivesFrame
   object MountingAutoCreateButton: TBitBtn
     Tag = 4
     Left = 428
-    Top = 439
-    Width = 133
+    Top = 365
+    Width = 128
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Autom. erstellen'
     TabOrder = 6
     OnClick = ButtonWork
+  end
+  object HardDiskOptionsGroupBox: TGroupBox
+    Left = 12
+    Top = 396
+    Width = 269
+    Height = 70
+    Anchors = [akLeft, akBottom]
+    Caption = 'HardDiskOptionsGroupBox'
+    TabOrder = 8
+    object HardDiskSpeedLabel: TLabel
+      Left = 12
+      Top = 18
+      Width = 108
+      Height = 15
+      Caption = 'HardDiskSpeedLabel'
+    end
+    object HardDiskNoiseLabel: TLabel
+      Left = 140
+      Top = 18
+      Width = 106
+      Height = 15
+      Caption = 'HardDiskNoiseLabel'
+    end
+    object HardDiskSpeedComboBox: TComboBox
+      Left = 12
+      Top = 36
+      Width = 120
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 0
+    end
+    object HardDiskNoiseComboBox: TComboBox
+      Left = 140
+      Top = 36
+      Width = 120
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 1
+    end
+  end
+  object FloppyOptionsGroupBox: TGroupBox
+    Left = 287
+    Top = 396
+    Width = 269
+    Height = 70
+    Anchors = [akLeft, akBottom]
+    Caption = 'FloppyOptionsGroupBox'
+    TabOrder = 9
+    object FloppyDiskSpeedLabel: TLabel
+      Left = 12
+      Top = 18
+      Width = 118
+      Height = 15
+      Caption = 'FloppyDiskSpeedLabel'
+    end
+    object FloppyDiskNoiseLabel: TLabel
+      Left = 140
+      Top = 18
+      Width = 116
+      Height = 15
+      Caption = 'FloppyDiskNoiseLabel'
+    end
+    object FloppyDiskSpeedComboBox: TComboBox
+      Left = 12
+      Top = 36
+      Width = 120
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 0
+    end
+    object FloppyDiskNoiseComboBox: TComboBox
+      Left = 140
+      Top = 36
+      Width = 120
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 1
+    end
   end
   object SecureModeCheckBox: TCheckBox
     Left = 12
@@ -164,7 +242,7 @@ object ModernProfileEditorDrivesFrame: TModernProfileEditorDrivesFrame
     Left = 56
     Top = 24
     Bitmap = {
-      494C010103000400100010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000400040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       00000000000000000000000000000000000000FFFF0000000000000000000000

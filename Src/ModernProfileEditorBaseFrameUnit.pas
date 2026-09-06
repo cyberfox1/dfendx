@@ -199,6 +199,7 @@ end;
 procedure TModernProfileEditorBaseFrame.SetGame(const Game: TGame; const LoadFromTemplate : Boolean);
 Var S : String;
     I : Integer;
+    OldChange : TNotifyEvent;
 begin
   FLoadFromTemplate:=LoadFromTemplate and (Game<>nil);
 
@@ -242,6 +243,8 @@ begin
     If ScummVMGamesList.Count=0 then ScummVMGamesList.LoadListFromScummVM(True);
     FAllScummVMGames.Clear;
     FAllScummVMGames.AddStrings(ScummVMGamesList.DescriptionList);
+    OldChange:=GameComboBox.OnChange;
+    GameComboBox.OnChange:=nil;
     GameComboBox.Items.BeginUpdate;
     try
       GameComboBox.Items.Clear;
@@ -258,6 +261,7 @@ begin
       GameComboBox.ItemIndex:=GameComboBox.Items.IndexOf(ScummVMGamesList.DescriptionList[I]);
       break;
     end;
+    GameComboBox.OnChange:=OldChange;
     GameEdit.Text:=Game.ScummVMPath;
     GameZipEdit.Text:=Trim(Game.ScummVMZip);
     GameZipCheckBox.Checked:=(GameZipEdit.Text<>'');
@@ -310,7 +314,6 @@ begin
     SetupExeGroup.Visible:=False;
     ExtraExeFilesButton.Visible:=False;
     GameGroup.Visible:=True;
-    GameComboBoxChange(self);
     IgnoreWindowsWarningsCheckBox.Visible:=False;
     TurnOffDOSBoxFailedWarningCheckBox.Visible:=False;
     RunAsAdminCheckBox.Visible:=False;
@@ -359,11 +362,14 @@ end;
 procedure TModernProfileEditorBaseFrame.FilterGameCombo;
 Var Filter, Item, Keep : String;
     I, OldSelStart, OldSelLength : Integer;
+    OldChange : TNotifyEvent;
 begin
   Keep:=GameComboBox.Text;
   OldSelStart:=GameComboBox.SelStart;
   OldSelLength:=GameComboBox.SelLength;
   Filter:=Trim(ExtUpperCase(Keep));
+  OldChange:=GameComboBox.OnChange;
+  GameComboBox.OnChange:=nil;
   FFilteringGames:=True;
   try
     GameComboBox.Items.BeginUpdate;
@@ -385,6 +391,7 @@ begin
     GameComboBox.SelStart:=OldSelStart;
     GameComboBox.SelLength:=OldSelLength;
   finally
+    GameComboBox.OnChange:=OldChange;
     FFilteringGames:=False;
   end;
 end;
@@ -420,6 +427,7 @@ begin
     if Trim(GameComboBox.Text)='' then
       FilterGameCombo;
     if FAllScummVMGames.IndexOf(GameComboBox.Text)>=0 then begin
+      TModernProfileEditorForm(Owner).SetProgramInformationTitle(GameComboBox.Text);
       GameId:=ScummVMGamesList.NameFromDescription(GameComboBox.Text);
       if GameId<>'' then
         FOnProfileNameChange(Sender,ProfileNameEdit.Text,ProfileExe^,ProfileSetup^,GameId,ProfileScummVMPath^,ProfileCaptureDir^);

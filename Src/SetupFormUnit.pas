@@ -175,11 +175,7 @@ begin
     omTreeList : Tree.Selected:=FindNodeFromFrame(TreeListFrame);
     omToolbar  : Tree.Selected:=FindNodeFromFrame(ToolbarFrame);
     omIconSet  : Tree.Selected:=FindNodeFromFrame(IconSetFrame);
-    omUpdate   : begin
-                   { Update page hidden — fall back to first node. }
-                   Tree.Selected:=FindNodeFromFrame(UpdateFrame);
-                   If Tree.Selected=nil then Tree.Selected:=Tree.Items[0];
-                 end;
+    omUpdate   : Tree.Selected:=FindNodeFromFrame(UpdateFrame);
     else         Tree.Selected:=Tree.Items[0];
   end;
   If Tree.Selected<>nil then Tree.Selected.MakeVisible;
@@ -279,9 +275,7 @@ begin
   F:=TSetupFrameWindowsGames.Create(self); AddTreeNode(Root,F,TSetupFrameWindowsGames(F),True,8,False);
 
   F:=TSetupFrameService.Create(self); AddTreeNode(nil,F,TSetupFrameService(F),False,7,True); Root:=F;
-  { Program updates UI disabled for now — frame still created for omUpdate/API, hidden from tree. }
   F:=TSetupFrameUpdate.Create(self); AddTreeNode(Root,F,TSetupFrameUpdate(F),False,14); UpdateFrame:=F;
-  Frames[High(Frames)].HideInTree:=True;
 end;
 
 Procedure TSetupForm.BeforeChangeLanguage;

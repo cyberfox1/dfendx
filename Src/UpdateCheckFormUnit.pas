@@ -78,11 +78,7 @@ begin
   CheckBoxPackages.Font.Style:=[fsBold];
   CheckBoxCheats.Font.Style:=[fsBold];
 
-  { Program updates intentionally disabled for DFendX; keep other update kinds. }
-  CheckBoxProgram.Checked:=False;
-  CheckBoxProgram.Enabled:=False;
-
-  SetStatus(StatusLabelProgram,LanguageSetup.UpdateCheckDialogStatusAborted,clGrayText);
+  SetStatus(StatusLabelProgram,LanguageSetup.UpdateCheckDialogStatusNotYetChecked,clGrayText);
   SetStatus(StatusLabelPackages,LanguageSetup.UpdateCheckDialogStatusNotYetChecked,clGrayText);
   SetStatus(StatusLabelCheats,LanguageSetup.UpdateCheckDialogStatusNotYetChecked,clGrayText);
 
@@ -132,8 +128,12 @@ end;
 
 procedure TUpdateCheckForm.UpdateProgram;
 begin
-  { Program update path always skipped (no version check / installer download). }
-  SetStatus(StatusLabelProgram,LanguageSetup.UpdateCheckDialogStatusAborted,clGrayText);
+  SetStatus(StatusLabelProgram,LanguageSetup.UpdateCheckDialogStatusSearching,clDarkYellow);
+  Case RunUpdateCheck(self,True,False,True) of
+    urNoUpdatesAvailable : SetStatus(StatusLabelProgram,LanguageSetup.UpdateCheckDialogStatusNoUpdates,clGreen);
+    urUpdateAvailable : SetStatus(StatusLabelProgram,LanguageSetup.UpdateCheckDialogStatusProgramNewVersionAvailable,clDarkYellow);
+    urUpdateInstallCanceled : SetStatus(StatusLabelProgram,LanguageSetup.UpdateCheckDialogStatusAborted,clRed);
+  end;
   BringWindowToTop(Handle);
 end;
 
@@ -177,9 +177,6 @@ end;
 
 Procedure RunProgramStartSilentUpdateCheck(const AForm : TForm; const ForceCheck : Boolean);
 begin
-  { Updates disabled for now — silent no-op. }
-  exit;
-
   If ForceCheck then begin
     RunUpdateCheck(AForm,True,True);
   end else begin

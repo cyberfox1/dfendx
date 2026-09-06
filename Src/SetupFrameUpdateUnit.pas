@@ -9,7 +9,6 @@ uses
 
 type
   TSetupFrameUpdate = class(TFrame, ISetupFrame)
-    UpdateCheckBox: TCheckBox;
     PackagesLabel: TLabel;
     PackagesComboBox: TComboBox;
     UpdateButton: TBitBtn;
@@ -54,8 +53,6 @@ end;
 
 procedure TSetupFrameUpdate.InitGUIAndLoadSetup(var InitData: TInitData);
 begin
-  UpdateCheckBox.Checked:=PrgSetup.VersionSpecificUpdateCheck;
-
   UserIconLoader.DialogImage(DI_Update,UpdateButton);
 
   ProgramUpdateComboBox.Items.Clear;
@@ -82,7 +79,6 @@ end;
 procedure TSetupFrameUpdate.LoadLanguage;
 Var I : Integer;
 begin
-  UpdateCheckBox.Caption:=LanguageSetup.SetupFormUpdateVersionSpecific;
   UpdateButton.Caption:=LanguageSetup.SetupFormUpdateButton;
 
   TForm(Owner).Canvas.Font:=UpdateButton.Font;
@@ -137,8 +133,6 @@ end;
 
 procedure TSetupFrameUpdate.RestoreDefaults;
 begin
-  UpdateCheckBox.Checked:=True;
-
   ProgramUpdateComboBox.ItemIndex:=0;
   PackagesComboBox.ItemIndex:=0;
   CheatsComboBox.ItemIndex:=0;
@@ -146,8 +140,6 @@ end;
 
 procedure TSetupFrameUpdate.SaveSetup;
 begin
-  PrgSetup.VersionSpecificUpdateCheck:=UpdateCheckBox.Checked;
-
   PrgSetup.CheckForUpdates:=ProgramUpdateComboBox.ItemIndex;
   PrgSetup.PackageListsCheckForUpdates:=PackagesComboBox.ItemIndex;
   PrgSetup.CheatsDBCheckForUpdates:=CheatsComboBox.ItemIndex;

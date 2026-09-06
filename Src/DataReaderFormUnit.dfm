@@ -1,13 +1,11 @@
 object DataReaderForm: TDataReaderForm
   Left = 0
   Top = 0
-  BorderIcons = [biSystemMenu, biMaximize]
+  BorderStyle = bsDialog
   Caption = 'DataReaderForm'
   ClientHeight = 494
   ClientWidth = 592
   Color = clBtnFace
-  Constraints.MinHeight = 532
-  Constraints.MinWidth = 600
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -126,9 +124,9 @@ object DataReaderForm: TDataReaderForm
     object NameLabel: TLabel
       Left = 32
       Top = 42
-      Width = 54
+      Width = 52
       Height = 13
-      Caption = 'GenreLabel'
+      Caption = 'NameLabel'
     end
     object GenreCheckBox: TCheckBox
       Left = 16
@@ -189,10 +187,10 @@ object DataReaderForm: TDataReaderForm
     object NameCheckBox: TCheckBox
       Left = 16
       Top = 24
-      Width = 321
+      Width = 90
       Height = 17
       Anchors = [akLeft, akTop, akRight]
-      Caption = 'Game name'
+      Caption = 'Profile Name'
       Checked = True
       State = cbChecked
       TabOrder = 0
@@ -216,6 +214,17 @@ object DataReaderForm: TDataReaderForm
       ParentShowHint = False
       ShowHint = True
       TabOrder = 7
+    end
+    object TitleCheckBox: TCheckBox
+      Left = 152
+      Top = 24
+      Width = 90
+      Height = 17
+      Anchors = [akLeft, akTop, akRight]
+      Caption = 'Game Title'
+      Checked = True
+      State = cbChecked
+      TabOrder = 8
     end
   end
   object InsertButton: TBitBtn

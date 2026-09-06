@@ -15,11 +15,10 @@ type
     FGenreNames: TStringList;      { id -> name }
     FDeveloperNames: TStringList;
     FPublisherNames: TStringList;
-    FLookupsLoaded: Boolean;
     function APIKey: String;
     function APIGet(const PathAndQuery: String; out Body: String): Boolean;
-    function EnsureLookups: Boolean;
     function LoadIdNameMap(const Path: String; const DataKey: String; Map: TStringList): Boolean;
+    procedure EnsureIdsLoaded(const ByIdPath, DataKey: String; const Arr: TJSONArray; Map: TStringList);
     function ResolveIds(const Arr: TJSONArray; Map: TStringList): String;
     function YearFromReleaseDate(const S: String): String;
   public
@@ -34,7 +33,7 @@ type
 implementation
 
 uses
-  SysUtils, Windows, Math,
+  SysUtils, Windows,
   PrgSetupUnit, DataReaderToolsUnit, LoggingUnit, HTTPDownloadHelpers;
 
 const
@@ -47,18 +46,18 @@ var
 
 procedure WaitTGDBRateLimit;
 var
-  NowTick, Elapsed: UInt64;
+  PT, CT, Elapsed: UInt64;
 begin
-  if TGDBLastCalledAt = 0 then Exit;
-  while True do begin
-    NowTick := GetTickCount64;
-    if NowTick >= TGDBLastCalledAt then
-      Elapsed := NowTick - TGDBLastCalledAt
-    else
-      Elapsed := High(UInt64) - TGDBLastCalledAt + NowTick + 1;
-    if Elapsed >= 1000 then Break;
-    Sleep(Min(50, Integer(1000 - Elapsed)));
-  end;
+  PT := TGDBLastCalledAt;
+  CT := GetTickCount64;
+  TGDBLastCalledAt := CT;
+  if PT = 0 then Exit;
+  if CT >= PT then
+    Elapsed := CT - PT
+  else
+    Elapsed := High(UInt64) - PT + CT + 1;
+  if Elapsed < 1000 then
+    Sleep(1000 - Elapsed);
 end;
 
 { TTheGamesDBDataReader }
@@ -75,7 +74,6 @@ begin
   FGenreNames.NameValueSeparator := '=';
   FDeveloperNames.NameValueSeparator := '=';
   FPublisherNames.NameValueSeparator := '=';
-  FLookupsLoaded := False;
 end;
 
 destructor TTheGamesDBDataReader.Destroy;
@@ -105,8 +103,6 @@ begin
     Exit;
   end;
 
-  WaitTGDBRateLimit;
-
   URL := TGDBAPIBase + PathAndQuery;
   Q := TStringList.Create;
   try
@@ -114,13 +110,11 @@ begin
     try
       Result := THTTPDownloadHelper.HTTPRequestToString('GET', URL, Q,
         PrgSetup.HTTPUserAgent, '', 30000, 60000, Body, Status);
-      TGDBLastCalledAt := GetTickCount64;
       if not Result then
         LogInfo('TGDB.APIGet: request failed url=' + URL + ' status=' + IntToStr(Status));
       Result := Result and (Body <> '');
     except
       on E: Exception do begin
-        TGDBLastCalledAt := GetTickCount64;
         LogInfo('TGDB.APIGet: exception ' + E.Message);
         Result := False;
       end;
@@ -135,12 +129,12 @@ var
   Body: String;
   Root, DataObj, MapObj, Item: TJSONObject;
   Pair: TJSONPair;
-  I: Integer;
+  I, Added: Integer;
   IdStr, NameStr: String;
   V: TJSONValue;
 begin
   Result := False;
-  Map.Clear;
+  Added := 0;
   if not APIGet(Path, Body) then Exit;
   Root := TJSONObject.ParseJSONValue(Body) as TJSONObject;
   if Root = nil then Exit;
@@ -160,29 +154,34 @@ begin
         V := Item.Values['name'];
         if V <> nil then NameStr := V.Value;
         if IdStr = '' then IdStr := Pair.JsonString.Value;
-        if (IdStr <> '') and (NameStr <> '') then
+        if (IdStr <> '') and (NameStr <> '') then begin
           Map.Values[IdStr] := NameStr;
+          Inc(Added);
+        end;
       end;
     end;
-    Result := Map.Count > 0;
+    Result := Added > 0;
   finally
     Root.Free;
   end;
 end;
 
-function TTheGamesDBDataReader.EnsureLookups: Boolean;
+procedure TTheGamesDBDataReader.EnsureIdsLoaded(const ByIdPath, DataKey: String; const Arr: TJSONArray; Map: TStringList);
+var
+  I: Integer;
+  IdStr, Missing: String;
 begin
-  if FLookupsLoaded then begin
-    Result := True;
-    Exit;
+  if (Arr = nil) or (Arr.Count = 0) then Exit;
+  Missing := '';
+  for I := 0 to Arr.Count - 1 do begin
+    IdStr := Trim(Arr.Items[I].Value);
+    if IdStr = '' then Continue;
+    if Map.Values[IdStr] <> '' then Continue;
+    if Missing <> '' then Missing := Missing + ',';
+    Missing := Missing + IdStr;
   end;
-  Result := False;
-  { Best-effort: continue even if one table fails. }
-  LoadIdNameMap('/v1/Genres', 'genres', FGenreNames);
-  LoadIdNameMap('/v1/Developers', 'developers', FDeveloperNames);
-  LoadIdNameMap('/v1/Publishers', 'publishers', FPublisherNames);
-  FLookupsLoaded := True;
-  Result := True;
+  if Missing = '' then Exit;
+  LoadIdNameMap(ByIdPath+'?id='+Missing, DataKey, Map);
 end;
 
 function TTheGamesDBDataReader.ResolveIds(const Arr: TJSONArray; Map: TStringList): String;
@@ -246,6 +245,8 @@ begin
     Exit;
   end;
 
+  WaitTGDBRateLimit;
+
   Path := '/v1.1/Games/ByGameName?name=' + EncodeName(ASearchString) +
     '&fields=overview,genres,developers,publishers,platform';
   if not PrgSetup.DataReaderAllPlatforms then
@@ -303,7 +304,7 @@ begin
   if Id = '' then Exit;
   if APIKey = '' then Exit;
 
-  EnsureLookups;
+  WaitTGDBRateLimit;
 
   Path := '/v1/Games/ByGameID?id=' + EncodeName(Id) +
     '&fields=overview,genres,developers,publishers,platform';
@@ -326,16 +327,22 @@ begin
     if V <> nil then Year := YearFromReleaseDate(V.Value);
 
     V := GameObj.Values['genres'];
-    if V is TJSONArray then
+    if V is TJSONArray then begin
+      EnsureIdsLoaded('/v1/Genres/ByGenreID','genres',TJSONArray(V),FGenreNames);
       Genre := ResolveIds(TJSONArray(V), FGenreNames);
+    end;
 
     V := GameObj.Values['developers'];
-    if V is TJSONArray then
+    if V is TJSONArray then begin
+      EnsureIdsLoaded('/v1/Developers/ByDeveloperID','developers',TJSONArray(V),FDeveloperNames);
       Developer := ResolveIds(TJSONArray(V), FDeveloperNames);
+    end;
 
     V := GameObj.Values['publishers'];
-    if V is TJSONArray then
+    if V is TJSONArray then begin
+      EnsureIdsLoaded('/v1/Publishers/ByPublisherID','publishers',TJSONArray(V),FPublisherNames);
       Publisher := ResolveIds(TJSONArray(V), FPublisherNames);
+    end;
 
     { ImagePageURL empty until cover phase. }
     Meta := TGameMetadata.Create(Genre, Developer, Publisher, Year, Notes, '');

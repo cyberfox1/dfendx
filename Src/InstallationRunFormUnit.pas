@@ -339,7 +339,23 @@ begin
         St.AddStrings(St2);
         St.Add('cls');
         If FileToStart='' then begin
-          SplitText(St,LanguageSetup.InstallationSupportRunNoGameFile);
+          If ((InstallType=itCDImage) or (InstallType=itFloppyImage)) and (not SecondTry) then begin
+            St.Add('if exist INSTALL.BAT goto doInstall');
+            St.Add('if exist INSTALL.EXE goto doInstall');
+            St.Add('if exist INSTALL.COM goto doInstall');
+            St.Add('if exist SETUP.BAT goto doSetup');
+            St.Add('if exist SETUP.EXE goto doSetup');
+            St.Add('if exist SETUP.COM goto doSetup');
+            St.Add('goto dfxinstdone');
+            St.Add(':doInstall');
+            St.Add('INSTALL');
+            St.Add('goto dfxinstdone');
+            St.Add(':doSetup');
+            St.Add('SETUP');
+            St.Add('goto dfxinstdone');
+            St.Add(':dfxinstdone');
+          end else
+            SplitText(St,LanguageSetup.InstallationSupportRunNoGameFile);
         end else begin
           SplitText(St,LanguageSetup.InstallationSupportRunStartGameFile1);
           St.Add('echo.');

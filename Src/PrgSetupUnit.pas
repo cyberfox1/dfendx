@@ -18,7 +18,7 @@ omPortable=like omPrgDir, but DosBoxDir, BaseDir, GameDir and DataDir are stored
 Type TDOSBoxData=record
   Name, DosBoxDir, DosBoxMapperFile, DosBoxLanguage, SDLVideodriver, CommandLineParameters, CustomSettings : String;
   KeyboardLayout, Codepage : String;
-  HideDosBoxConsole, CenterDOSBoxWindow, DisableScreensaver, WaitOnError : Boolean;
+  HideDosBoxConsole, CenterDOSBoxWindow, DisableScreensaver, WaitOnError, WebserverEnabled : Boolean;
 end;
 
 Type TDOSBoxSetting=class
@@ -27,7 +27,7 @@ Type TDOSBoxSetting=class
     FNr : Integer;
     FName, FDosBoxDir, FDosBoxMapperFile, FDosBoxLanguage, FSDLVideodriver, FCommandLineParameters, FCustomSettings : String;
     FKeyboardLayout, FCodepage : String;
-    FHideDosBoxConsole, FCenterDOSBoxWindow, FDisableScreensaver, FWaitOnError : Boolean;
+    FHideDosBoxConsole, FCenterDOSBoxWindow, FDisableScreensaver, FWaitOnError, FWebserverEnabled : Boolean;
     FDosBoxKind : TDOSBoxKind;
     FDosBoxVersion : String;
     Procedure ReadSettings;
@@ -61,6 +61,7 @@ Type TDOSBoxSetting=class
     property CenterDOSBoxWindow : Boolean read FCenterDOSBoxWindow write FCenterDOSBoxWindow;
     property DisableScreensaver : Boolean read FDisableScreensaver write FDisableScreensaver;
     property WaitOnError : Boolean read FWaitOnError write FWaitOnError;
+    property WebserverEnabled : Boolean read FWebserverEnabled write FWebserverEnabled;
 
     property DosBoxKind : TDOSBoxKind read FDosBoxKind;
     { Normalized install version (e.g. 0.83.0.0); empty if unknown / not calculable. }
@@ -204,6 +205,7 @@ Type TPrgSetup=class(TBasePrgSetup)
     property TheGamesDBAPIKey : String index 51 read GetString write SetString;
     { Log verbosity INI string: OFF|INFO|WARNING|CRITICAL (see LogLevel* consts / TLogLevel). }
     property LogLevel : String index 52 read GetString write SetString;
+    property LastNotifiedUpdateVersion : String index 53 read GetString write SetString;
 
     property LinuxRemap[DriveLetter : Char] : String read GetDriveLetter write SetDriveLetter;
 
@@ -233,7 +235,6 @@ Type TPrgSetup=class(TBasePrgSetup)
     property AllowMultiFloppyImagesMount : Boolean index 14 read GetBoolean write SetBoolean;
     property AllowPhysFSUsage : Boolean index 15 read GetBoolean write SetBoolean;
     property AllowTextModeLineChange : Boolean index 16 read GetBoolean write SetBoolean;
-    property VersionSpecificUpdateCheck : Boolean index 17 read GetBoolean write SetBoolean;
     property UseShortFolderNames : Boolean index 18 read GetBoolean write SetBoolean;
     property AlwaysSetScreenshotFolderAutomatically : Boolean index 19 read GetBoolean write SetBoolean;
     property ShowXMLExportMenuItem : Boolean index 20 read GetBoolean write SetBoolean;
@@ -378,6 +379,7 @@ uses Windows, ShlObj, Forms, Math, CommonHelpers, CommonTools, Dialogs,
 constructor TDOSBoxSetting.Create(const APrgSetup: TBasePrgSetup; const ANr: Integer);
 begin
   inherited Create;
+  FWebserverEnabled:=False;
   FPrgSetup:=APrgSetup;
   If not (Self is TEphemeralDOSBoxInstall) then begin
     FNr:=ANr;
@@ -416,6 +418,7 @@ begin
   FCenterDOSBoxWindow:=FPrgSetup.MemIni.ReadBool(Section,'CenterDOSBoxWindow',False);
   FDisableScreensaver:=FPrgSetup.MemIni.ReadBool(Section,'DisableScreensaver',False);
   FWaitOnError:=FPrgSetup.MemIni.ReadBool(Section,'WaitOnError',True);
+  FWebserverEnabled:=FPrgSetup.MemIni.ReadBool(Section,'WebserverEnabled',False);
 
   UpdateDosBoxKind;
 end;
@@ -441,6 +444,7 @@ begin
   FPrgSetup.MemIni.WriteBool(Section,'CenterDOSBoxWindow',FCenterDOSBoxWindow);
   FPrgSetup.MemIni.WriteBool(Section,'DisableScreensaver',FDisableScreensaver);
   FPrgSetup.MemIni.WriteBool(Section,'WaitOnError',FWaitOnError);
+  FPrgSetup.MemIni.WriteBool(Section,'WebserverEnabled',FWebserverEnabled);
 
   FPrgSetup.UpdateFile;
 end;
@@ -818,6 +822,7 @@ begin
   AddStringRec(50,'ProgramSets','ExoDOSVersion','');
   AddStringRec(51,'ProgramSets','TheGamesDBAPIKey','');
   AddStringRec(52,'ProgramSets','LogLevel',LogLevelOff);
+  AddStringRec(53,'ProgramSets','LastNotifiedUpdateVersion','');
 
   For I:=0 to 25 do AddStringRec(450+I,'WineSupport',chr(ord('A')+I),'');
 
@@ -849,7 +854,6 @@ begin
   AddBooleanRec(14,'ProgramSets','AllowMultiFloppyImagesMount',False);
   AddBooleanRec(15,'ProgramSets','AllowPhysFSUsage',False);
   AddBooleanRec(16,'ProgramSets','AllowTextModeLineChange',False);
-  AddBooleanRec(17,'ProgramSets','VersionSpecificUpdateCheck',True);
   AddBooleanRec(18,'ProgramSets','UseShortFolderNames',True);
   AddBooleanRec(19,'ProgramSets','AlwaysSetScreenshotFolderAutomatically',True);
   AddBooleanRec(20,'ProgramSets','ShowXMLExportMenuItem',False);
@@ -1192,6 +1196,7 @@ begin
   DOSBoxData.CenterDOSBoxWindow:=DOSBoxSetting.CenterDOSBoxWindow;
   DOSBoxData.DisableScreensaver:=DOSBoxSetting.DisableScreensaver;
   DOSBoxData.WaitOnError:=DOSBoxSetting.WaitOnError;
+  DOSBoxData.WebserverEnabled:=DOSBoxSetting.WebserverEnabled;
 end;
 
 Function DOSBoxDataToDOSBoxSetting(const DOSBoxData : TDOSBoxData; const DOSBoxSetting : TDOSBoxSetting) : String;
@@ -1211,6 +1216,7 @@ begin
   DOSBoxSetting.CenterDOSBoxWindow:=DOSBoxData.CenterDOSBoxWindow;
   DOSBoxSetting.DisableScreensaver:=DOSBoxData.DisableScreensaver;
   DOSBoxSetting.WaitOnError:=DOSBoxData.WaitOnError;
+  DOSBoxSetting.WebserverEnabled:=DOSBoxData.WebserverEnabled;
   if DirChanged then
     Result:=DOSBoxData.Name
   else
@@ -1233,6 +1239,7 @@ begin
     CenterDOSBoxWindow:=False;
     DisableScreensaver:=False;
     WaitOnError:=True;
+    WebserverEnabled:=False;
   end;
 end;
 

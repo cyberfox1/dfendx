@@ -41,6 +41,11 @@ for %%F in ("Install\IconSources\DOSBoxKind\*.png") do (
 
 REM Modern UI ICOs
 if exist "Install\IconSources\Modern\*" copy /y "Install\IconSources\Modern\*" "IconSets\Modern\" >nul
+if exist "IconSets\Modern\scummvm.gif" (
+  echo Building ICO from scummvm.gif
+  magick "IconSets\Modern\scummvm.gif" -background white -alpha remove -alpha off -define icon:auto-resize=256,128,64,48,32,16 "IconSets\Modern\scummvm.ico"
+  if errorlevel 1 exit /b 1
+)
 
 REM Glide logo for profile editor TImage (pre-sized PNG in Install\Images)
 if exist "Install\Images\glide.png" copy /y "Install\Images\glide.png" "IconSets\Modern\glide.png" >nul

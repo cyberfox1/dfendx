@@ -46,14 +46,14 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
   end
   object lblPresMode: TLabel
     Left = 281
-    Top = 179
+    Top = 181
     Width = 100
     Height = 15
     Caption = 'Presentation Mode'
   end
   object lblHostRate: TLabel
     Left = 316
-    Top = 206
+    Top = 208
     Width = 65
     Height = 15
     Caption = 'Refresh Rate'

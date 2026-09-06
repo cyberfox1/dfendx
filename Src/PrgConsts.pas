@@ -107,6 +107,8 @@ const DosBoxFileName='DOSBOX.EXE';
       NSIInstallerHelpFile='DFendX DataInstaller.nsi';
 
       DFRHomepage='https:/'+'/github.com/cyberfox1/dfendx/';
+      GitHubUpdateOwner='cyberfox1';
+      GitHubUpdateRepo='dfendx';
 
       OggEncPrgFile='oggenc2.exe';
       LamePrgFile='lame.exe';

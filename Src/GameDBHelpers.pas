@@ -87,6 +87,17 @@ Type TConfOptH=class(TBasePrgSetup)
     { MT-32 model conf values: Staging [mt32] model / DOSBox-X mt32.model }
     property MT32ModelStaging : String index 61 read GetString write SetString;
     property MT32ModelX : String index 62 read GetString write SetString;
+    property SoundCanvasModelStaging : String index 86 read GetString write SetString;
+    property DeinterlacingStaging : String index 87 read GetString write SetString;
+    property DeditheringStaging : String index 88 read GetString write SetString;
+    property CrtColorProfileStaging : String index 89 read GetString write SetString;
+    property ColorSpaceStaging : String index 90 read GetString write SetString;
+    property IntegerScalingStaging : String index 91 read GetString write SetString;
+    property ColorTemperatureStaging : String index 92 read GetString write SetString;
+    property MouseDriverModelStaging : String index 93 read GetString write SetString;
+    property MouseMoveThresholdStaging : String index 94 read GetString write SetString;
+    property DiskSpeedStaging : String index 95 read GetString write SetString;
+    property DiskNoiseStaging : String index 96 read GetString write SetString;
     property PresentationModeStaging : String index 76 read GetString write SetString;
     property DosRateStaging : String index 77 read GetString write SetString;
     property ScummVMGfxMode : String index 78 read GetString write SetString;
@@ -100,6 +111,7 @@ Type TConfOptH=class(TBasePrgSetup)
 end;
 
 const NR_Name=1;
+      NR_GameTitle=2;
 
       NR_Icon=11;
       NR_GameExe=12;
@@ -261,6 +273,23 @@ const NR_Name=1;
       NR_PureVolumeBoost=319;
       NR_PresentationMode=320;
       NR_DosRefreshRate=321;
+      NR_Deinterlacing=322;
+      NR_Dedithering=323;
+      NR_CrtColorProfile=324;
+      NR_ColorSpace=325;
+      NR_ImageAdjustments=326;
+      NR_ImageBrightness=327;
+      NR_ImageContrast=328;
+      NR_ImageSaturation=329;
+      NR_ImageColorTemperature=330;
+      NR_IntegerScaling=392;
+      NR_MouseDriverModel=393;
+      NR_MouseMoveThreshold=394;
+      NR_MouseDriverOptions=395;
+      NR_HardDiskSpeed=396;
+      NR_FloppyDiskSpeed=397;
+      NR_HardDiskNoise=398;
+      NR_FloppyDiskNoise=399;
 
       NR_SBType=331;
       NR_SBBase=332;
@@ -285,6 +314,9 @@ const NR_Name=1;
       NR_MIDIMT32Level=376;
       NR_MIDIMT32RomDir=377;
       NR_MIDIMT32Model=378;
+      NR_SoundCanvasRomDir=379;
+      NR_SoundCanvasModel=380;
+      NR_SoundCanvasFilter=391;
       NR_SpeakerPC=381;
       NR_SpeakerRate=382;
       NR_SpeakerTandy=383;
@@ -443,10 +475,12 @@ Type TGameDBH=class;
     Procedure AssignFromButKeepScummVMSettings(const AGame : TGameH);
     function MIDIDeviceIs(const Device: String): Boolean;
     function isGlideEnabled: Boolean;
+    function ResolveGameTitle: String;
 
     property GameDB : TGameDBH read FGameDB write FGameDB;
 
     property Name : String index NR_Name read GetString write SetString;
+    property GameTitle : String index NR_GameTitle read GetString write SetString;
 
     property Icon : String index NR_Icon read GetString write SetString;
     property GameExe : String index NR_GameExe read GetString write SetString;
@@ -494,6 +528,13 @@ Type TGameDBH=class;
     property UseScanCodesOld : Boolean index NR_UseScanCodesOld read GetBoolean write SetBoolean;
     property UseScanCodes : Boolean index NR_UseScanCodes read GetBoolean write SetBoolean;
     property MouseSensitivity : Integer index NR_MouseSensitivity read GetInteger write SetInteger;
+    property MouseDriverModel : String index NR_MouseDriverModel read GetString write SetString;
+    property MouseMoveThreshold : String index NR_MouseMoveThreshold read GetString write SetString;
+    property MouseDriverOptions : String index NR_MouseDriverOptions read GetString write SetString;
+    property HardDiskSpeed : String index NR_HardDiskSpeed read GetString write SetString;
+    property FloppyDiskSpeed : String index NR_FloppyDiskSpeed read GetString write SetString;
+    property HardDiskNoise : String index NR_HardDiskNoise read GetString write SetString;
+    property FloppyDiskNoise : String index NR_FloppyDiskNoise read GetString write SetString;
     property Render : String index NR_Render read GetString write SetString;
     property WindowResolution : String index NR_WindowResolution read GetString write SetString;
     property FullscreenResolution : String index NR_FullscreenResolution read GetString write SetString;
@@ -552,6 +593,16 @@ Type TGameDBH=class;
     property VSync : String index NR_VSync read GetString write SetString;
     property PresentationMode : String index NR_PresentationMode read GetString write SetString;
     property DosRefreshRate : String index NR_DosRefreshRate read GetString write SetString;
+    property Deinterlacing : String index NR_Deinterlacing read GetString write SetString;
+    property Dedithering : String index NR_Dedithering read GetString write SetString;
+    property CrtColorProfile : String index NR_CrtColorProfile read GetString write SetString;
+    property ColorSpace : String index NR_ColorSpace read GetString write SetString;
+    property ImageAdjustments : Boolean index NR_ImageAdjustments read GetBoolean write SetBoolean;
+    property ImageBrightness : Integer index NR_ImageBrightness read GetInteger write SetInteger;
+    property ImageContrast : Integer index NR_ImageContrast read GetInteger write SetInteger;
+    property ImageSaturation : Integer index NR_ImageSaturation read GetInteger write SetInteger;
+    property ImageColorTemperature : String index NR_ImageColorTemperature read GetString write SetString;
+    property IntegerScaling : String index NR_IntegerScaling read GetString write SetString;
     { Staging/X FluidSynth SoundFont path. Empty = unset / omit from conf. }
     property FluidSoundFont : String index NR_FluidSoundFont read GetString write SetString;
     { Staging/X FluidSynth gain percent as string "1".."800". Empty = unset / omit. }
@@ -627,6 +678,9 @@ Type TGameDBH=class;
     property MIDIMT32Level : String index NR_MIDIMT32Level read GetString write SetString;
     property MIDIMT32RomDir : String index NR_MIDIMT32RomDir read GetString write SetString;
     property MIDIMT32Model : String index NR_MIDIMT32Model read GetString write SetString;
+    property SoundCanvasRomDir : String index NR_SoundCanvasRomDir read GetString write SetString;
+    property SoundCanvasModel : String index NR_SoundCanvasModel read GetString write SetString;
+    property SoundCanvasFilter : Boolean index NR_SoundCanvasFilter read GetBoolean write SetBoolean;
     property SpeakerPC : Boolean index NR_SpeakerPC read GetBoolean write SetBoolean;
     property SpeakerRate : Integer index NR_SpeakerRate read GetInteger write SetInteger;
     property SpeakerTandy : String index NR_SpeakerTandy read GetString write SetString;
@@ -894,6 +948,17 @@ begin
   AddStringRec(60,'MIDIDeviceX','value',DefaultValuesMIDIDeviceX);
   AddStringRec(61,'MT32ModelStaging','value',DefaultValuesMT32ModelStaging);
   AddStringRec(62,'MT32ModelX','value',DefaultValuesMT32ModelX);
+  AddStringRec(86,'SoundCanvasModelStaging','value',DefaultValuesSoundCanvasModelStaging);
+  AddStringRec(87,'DeinterlacingStaging','value',DefaultValuesDeinterlacingStaging);
+  AddStringRec(88,'DeditheringStaging','value',DefaultValuesDeditheringStaging);
+  AddStringRec(89,'CrtColorProfileStaging','value',DefaultValuesCrtColorProfileStaging);
+  AddStringRec(90,'ColorSpaceStaging','value',DefaultValuesColorSpaceStaging);
+  AddStringRec(91,'IntegerScalingStaging','value',DefaultValuesIntegerScalingStaging);
+  AddStringRec(92,'ColorTemperatureStaging','value',DefaultValuesColorTemperatureStaging);
+  AddStringRec(93,'MouseDriverModelStaging','value',DefaultValuesMouseDriverModelStaging);
+  AddStringRec(94,'MouseMoveThresholdStaging','value',DefaultValuesMouseMoveThresholdStaging);
+  AddStringRec(95,'DiskSpeedStaging','value',DefaultValuesDiskSpeedStaging);
+  AddStringRec(96,'DiskNoiseStaging','value',DefaultValuesDiskNoiseStaging);
   AddStringRec(63,'vsyncPure','value',DefaultValueVSyncPure);
   AddStringRec(64,'scalePure','value',DefaultValueScalePure);
   AddStringRec(65,'shaderPure','value',DefaultValueShaderPure);
@@ -963,6 +1028,7 @@ begin
   FastAddRecStart;
 
   AddStringRec(NR_Name,'ExtraInfo','Name',S);
+  AddStringRec(NR_GameTitle,'ExtraInfo','GameTitle','');
 
   AddStringRec(NR_Icon,'ExtraInfo','Icon','');
   AddStringRec(NR_GameExe,'Extra','Exe','');
@@ -1027,6 +1093,13 @@ begin
   AddBooleanRec(NR_UseScanCodesOld,'sdl','usecancodes',True);
   AddBooleanRec(NR_UseScanCodes,'sdl','usescancodes',True);
   AddIntegerRec(NR_MouseSensitivity,'sdl','sensitivity',100);
+  AddStringRec(NR_MouseDriverModel,'mouse','builtin_dos_mouse_driver_model','');
+  AddStringRec(NR_MouseMoveThreshold,'mouse','builtin_dos_mouse_driver_move_threshold','');
+  AddStringRec(NR_MouseDriverOptions,'mouse','builtin_dos_mouse_driver_options','');
+  AddStringRec(NR_HardDiskSpeed,'dosbox','hard_disk_speed','');
+  AddStringRec(NR_FloppyDiskSpeed,'dosbox','floppy_disk_speed','');
+  AddStringRec(NR_HardDiskNoise,'disknoise','hard_disk_noise','');
+  AddStringRec(NR_FloppyDiskNoise,'disknoise','floppy_disk_noise','');
   AddStringRec(NR_Render,'sdl','output','surface');
   AddStringRec(NR_WindowResolution,'sdl','windowresolution','original');
   AddStringRec(NR_FullscreenResolution,'sdl','fullresolution','original');
@@ -1082,6 +1155,16 @@ begin
   AddStringRec(NR_VSync,'render','vsync','');
   AddStringRec(NR_PresentationMode,'sdl','presentation_mode','');
   AddStringRec(NR_DosRefreshRate,'dosbox','DosRefreshRate','');
+  AddStringRec(NR_Deinterlacing,'render','deinterlacing','');
+  AddStringRec(NR_Dedithering,'render','dedithering','');
+  AddStringRec(NR_CrtColorProfile,'render','crt_color_profile','');
+  AddStringRec(NR_ColorSpace,'render','color_space','');
+  AddBooleanRec(NR_ImageAdjustments,'render','image_adjustments',False);
+  AddIntegerRec(NR_ImageBrightness,'render','brightness',45);
+  AddIntegerRec(NR_ImageContrast,'render','contrast',65);
+  AddIntegerRec(NR_ImageSaturation,'render','saturation',0);
+  AddStringRec(NR_ImageColorTemperature,'render','color_temperature','auto');
+  AddStringRec(NR_IntegerScaling,'render','integer_scaling','');
   AddStringRec(NR_FluidSoundFont,'midi','FluidSoundFont','');
   AddStringRec(NR_MIDIDeviceGainValue,'midi','MIDIDeviceGainValue','');
   AddStringRec(NR_PureVolumeBoost,'mixer','PureVolumeBoost','');
@@ -1151,6 +1234,9 @@ begin
   AddStringRec(NR_MIDIMT32Level,'midi','MT32Level','3');
   AddStringRec(NR_MIDIMT32RomDir,'midi','MT32RomDir','');
   AddStringRec(NR_MIDIMT32Model,'midi','MT32Model','auto');
+  AddStringRec(NR_SoundCanvasRomDir,'midi','SoundCanvasRomDir','');
+  AddStringRec(NR_SoundCanvasModel,'midi','SoundCanvasModel','auto');
+  AddBooleanRec(NR_SoundCanvasFilter,'midi','SoundCanvasFilter',True);
   AddBooleanRec(NR_SpeakerPC,'speaker','pcspeaker',true);
   AddIntegerRec(NR_SpeakerRate,'speaker','pcrate',44100);
   AddStringRec(NR_SpeakerTandy,'speaker','tandy','auto');
@@ -1484,6 +1570,12 @@ begin
   If not GlideEnabled then begin Result:=False; exit; end;
   S:=Trim(ExtUpperCase(GlideEmulation));
   Result:=(S='TRUE') or (S='1') or (S='ON') or (S='EMU');
+end;
+
+function TGameH.ResolveGameTitle: String;
+begin
+  result:=Trim(GameTitle);
+  if result='' then result:=Name;
 end;
 
 { TGameDBH }

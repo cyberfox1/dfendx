@@ -265,6 +265,10 @@
             <Form>ModernProfileEditorGraphicsFrame</Form>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
+        <DCCReference Include="ModernProfileEditorImageQualityFrameUnit.pas">
+            <Form>ModernProfileEditorImageQualityFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <DCCReference Include="ModernProfileEditorGlideFrameUnit.pas">
             <Form>ModernProfileEditorGlideFrame</Form>
             <DesignClass>TFrame</DesignClass>
@@ -778,6 +782,9 @@
             <Form>CheatSearchForm</Form>
         </DCCReference>
         <DCCReference Include="ProgramUpdateCheckUnit.pas"/>
+        <DCCReference Include="UpdateAvailableFormUnit.pas">
+            <Form>UpdateAvailableForm</Form>
+        </DCCReference>
         <DCCReference Include="UpdateCheckFormUnit.pas">
             <Form>UpdateCheckForm</Form>
         </DCCReference>

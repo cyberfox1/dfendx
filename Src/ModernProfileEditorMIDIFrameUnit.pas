@@ -33,6 +33,7 @@ type
     MT32ModelComboBox: TComboBox;
     MT32ModelLabel: TLabel;
     MT32LevelLabel: TLabel;
+    SoundCanvasFilterCheckBox: TCheckBox;
     procedure MIDISelectButtonClick(Sender: TObject);
     procedure MIDISelectListBoxClick(Sender: TObject);
     procedure DeviceComboBoxChange(Sender: TObject); overload;
@@ -41,6 +42,7 @@ type
     procedure FluidSynthPathBoxChange(Sender: TObject);
   private
     FLoadedMT32Model: String;
+    FLoadedSoundCanvasModel: String;
     FUpdatingFluidGainUI: Boolean;
     FGame: TGame;
     FTempGame: TGame;
@@ -51,6 +53,7 @@ type
     FMIDIDevicePureConfOpt: String;
     FMT32ModelStagingConfOpt: String;
     FMT32ModelXConfOpt: String;
+    FSoundCanvasModelStagingConfOpt: String;
     LastMIDIDevice: String;
     procedure DeviceComboBoxChange(Sender: TObject; UpdatePath: Boolean); overload;
     procedure ApplyFluidSynthPathVisibility;
@@ -144,19 +147,24 @@ Var Kind: TDOSBoxKind;
     S, Want: String;
     St: TStringList;
     I: Integer;
-    ReverbOK, ModelOK: Boolean;
+    ReverbOK, ModelOK, IsSC: Boolean;
 begin
   Kind:=GetSelectedDosBoxKind;
-  ReverbOK:=Kind in [dbkStandard,dbkX];
+  IsSC:=SameText(Trim(LastMIDIDevice),'soundcanvas') or SameText(Trim(DeviceComboBox.Text),'soundcanvas');
+  ReverbOK:=(not IsSC) and (Kind in [dbkStandard,dbkX]);
   ModelOK:=Kind in [dbkStaging,dbkX,dbkPure];
-  Case Kind of
+  If IsSC then
+    S:=FSoundCanvasModelStagingConfOpt
+  else Case Kind of
     dbkStaging: S:=FMT32ModelStagingConfOpt;
     dbkX:       S:=FMT32ModelXConfOpt;
     else        S:='';
   end;
 
   Want:=Trim(MT32ModelComboBox.Text);
-  If Want='' then Want:=FLoadedMT32Model;
+  If Want='' then begin
+    If IsSC then Want:=FLoadedSoundCanvasModel else Want:=FLoadedMT32Model;
+  end;
   If Want='' then Want:='auto';
 
   MT32ModelComboBox.Items.Clear;
@@ -179,6 +187,12 @@ begin
   if ModelOK then
     for I:=0 to MT32ModelComboBox.Items.Count-1 do
       if SameText(Trim(MT32ModelComboBox.Items[I]),Want) then begin
+        MT32ModelComboBox.ItemIndex:=I;
+        break;
+      end;
+  if IsSC and (MT32ModelComboBox.ItemIndex<0) then
+    for I:=0 to MT32ModelComboBox.Items.Count-1 do
+      if SameText(Trim(MT32ModelComboBox.Items[I]),FLoadedSoundCanvasModel) then begin
         MT32ModelComboBox.ItemIndex:=I;
         break;
       end;
@@ -308,13 +322,15 @@ begin
 end;
 
 procedure TModernProfileEditorMIDIFrame.ApplyFluidSynthPathVisibility;
-Var IsFS, IsMT: Boolean;
+Var IsFS, IsMT, IsSC: Boolean;
     Kind: TDOSBoxKind;
 begin
   Kind:=GetSelectedDosBoxKind;
   IsFS:=SameText(Trim(DeviceComboBox.Text),'soundfont');
   IsMT:=SameText(Trim(DeviceComboBox.Text),'mt32');
-  FluidSynthGroupBox.Visible:=(Kind in [dbkStaging,dbkX,dbkPure]) and (IsFS or IsMT);
+  IsSC:=SameText(Trim(DeviceComboBox.Text),'soundcanvas');
+  FluidSynthGroupBox.Visible:=(Kind in [dbkStaging,dbkX,dbkPure]) and (IsFS or IsMT or IsSC);
+  SoundCanvasFilterCheckBox.Visible:=IsSC and (Kind=dbkStaging) and (FTempGame<>nil) and (not FTempGame.IsOldStaging);
   If not FluidSynthGroupBox.Visible then exit;
 
   FluidSynthGroupBox.Caption:=LanguageSetup.ProfileEditorSoundMIDIFluidSynth;
@@ -324,9 +340,8 @@ begin
   end else begin
     FluidSynthPathBox.EditLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIMT32RomDir;
     BtnFluidSynthPath.Hint:=LanguageSetup.ChooseFolder;
-    If Kind=dbkPure then PopulatePureMT32Models;
+    If IsMT and (Kind=dbkPure) then PopulatePureMT32Models;
   end;
-  { Gain slider is shared; do not reload profile gain on device change. }
   tbFluidSynthGainSlider.Enabled:=True;
   lbFluidSynthGainValue.Enabled:=True;
 end;
@@ -339,6 +354,8 @@ begin
     If FGame<>nil then FluidSynthPathBox.Text:=Trim(FGame.FluidSoundFont) else FluidSynthPathBox.Text:='';
   end else If SameText(Cur,'mt32') then begin
     If FGame<>nil then FluidSynthPathBox.Text:=Trim(FGame.MIDIMT32RomDir) else FluidSynthPathBox.Text:='';
+  end else If SameText(Cur,'soundcanvas') then begin
+    If FGame<>nil then FluidSynthPathBox.Text:=Trim(FGame.SoundCanvasRomDir) else FluidSynthPathBox.Text:='';
   end else
     FluidSynthPathBox.Text:='';
 end;
@@ -360,6 +377,7 @@ begin
   NoFlicker(FluidSynthPathBox);
   NoFlicker(tbFluidSynthGainSlider);
   NoFlicker(lbFluidSynthGainValue);
+  NoFlicker(SoundCanvasFilterCheckBox);
 
   FMIDIDeviceConfOpt:=InitData.GameDB.ConfOpt.MIDIDevice;
   FMIDIDeviceStagingConfOpt:=InitData.GameDB.ConfOpt.MIDIDeviceStaging;
@@ -368,6 +386,7 @@ begin
   FMIDIDevicePureConfOpt:=InitData.GameDB.ConfOpt.MIDIDevicePure;
   FMT32ModelStagingConfOpt:=InitData.GameDB.ConfOpt.MT32ModelStaging;
   FMT32ModelXConfOpt:=InitData.GameDB.ConfOpt.MT32ModelX;
+  FSoundCanvasModelStagingConfOpt:=InitData.GameDB.ConfOpt.SoundCanvasModelStaging;
   InitData.OnShowFrame:=ShowFrame;
   InitData.OnInvalidate:=Invalidate;
 
@@ -394,6 +413,8 @@ begin
   lbFluidSynthGainValue.ReadOnly:=True;
   lbFluidSynthGainValue.TabStop:=False;
   lbFluidSynthGainValue.Text:='';
+  SoundCanvasFilterCheckBox.Caption:=LanguageSetup.ProfileEditorSoundMIDISoundCanvasFilter;
+  SoundCanvasFilterCheckBox.Visible:=False;
 
   MT32SettingsGroupBox.Caption:=LanguageSetup.ProfileEditorSoundMIDIMT32;
   MT32ModeLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIMT32Mode;
@@ -463,6 +484,9 @@ begin
 
   FLoadedMT32Model:=Trim(Game.MIDIMT32Model);
   If FLoadedMT32Model='' then FLoadedMT32Model:='auto';
+  FLoadedSoundCanvasModel:=Trim(Game.SoundCanvasModel);
+  If FLoadedSoundCanvasModel='' then FLoadedSoundCanvasModel:='auto';
+  SoundCanvasFilterCheckBox.Checked:=Game.SoundCanvasFilter;
 
   ApplyMIDIDeviceList;
   AdditionalSettingsEdit.Text:=Game.MIDIConfig;
@@ -488,9 +512,11 @@ begin
   Cur:=Trim(DeviceComboBox.Text);
   LastMIDIDevice:=Cur;
 
-  MT32SettingsGroupBox.Visible:=SameText(Cur,'mt32');
-  If not SameText(Cur,'soundfont') and not SameText(Cur,'mt32') then
+  MT32SettingsGroupBox.Visible:=SameText(Cur,'mt32') or SameText(Cur,'soundcanvas');
+  If not SameText(Cur,'soundfont') and not SameText(Cur,'mt32') and not SameText(Cur,'soundcanvas') then
     ClearFluidSynthUI;
+  If SameText(Cur,'mt32') or SameText(Cur,'soundcanvas') then
+    ApplyMT32ModelList;
   ApplyFluidSynthPathVisibility;
   If UpdatePath then
     SetFluidSynthBoxPath;
@@ -503,14 +529,15 @@ begin
   S:=Trim(FluidSynthPathBox.Text);
   If S='' then S:=PrgSetup.BaseDir else S:=MakeAbsPath(S,PrgSetup.BaseDir);
 
-  If SameText(Trim(DeviceComboBox.Text),'mt32') then begin
+  If SameText(Trim(DeviceComboBox.Text),'mt32') or SameText(Trim(DeviceComboBox.Text),'soundcanvas') then begin
     If not DirectoryExists(S) then
       If DirectoryExists(ExtractFilePath(S)) then S:=ExtractFilePath(S) else S:=PrgSetup.BaseDir;
     If not SelectDirectory(Handle,LanguageSetup.ChooseFolder,S) then exit;
     S:=MakeRelPath(IncludeTrailingPathDelimiter(S),PrgSetup.BaseDir);
     If S='' then exit;
     FluidSynthPathBox.Text:=S;
-    PopulatePureMT32Models;
+    If SameText(Trim(DeviceComboBox.Text),'mt32') then
+      PopulatePureMT32Models;
     exit;
   end;
 
@@ -553,7 +580,7 @@ end;
 procedure TModernProfileEditorMIDIFrame.GetGame(const Game: TGame);
 Var PathNow: String;
     Kind: TDOSBoxKind;
-    IsFS, IsMT: Boolean;
+    IsFS, IsMT, IsSC: Boolean;
 begin
   Game.MIDIType:=TypeComboBox.Text;
   If DeviceComboBox.ItemIndex>=0 then
@@ -562,14 +589,26 @@ begin
 
   IsFS:=(DeviceComboBox.ItemIndex>=0) and SameText(Trim(DeviceComboBox.Text),'soundfont');
   IsMT:=(DeviceComboBox.ItemIndex>=0) and SameText(Trim(DeviceComboBox.Text),'mt32');
+  IsSC:=(DeviceComboBox.ItemIndex>=0) and SameText(Trim(DeviceComboBox.Text),'soundcanvas');
   PathNow:=Trim(FluidSynthPathBox.Text);
   Kind:=GetSelectedDosBoxKind;
 
-  If (IsFS or IsMT) and (Trim(FTempGame.MIDIDeviceGainValue)<>'') then
+  If (IsFS or IsMT or IsSC) and (Trim(FTempGame.MIDIDeviceGainValue)<>'') then
     Game.MIDIDeviceGainValue:=IntToStr(tbFluidSynthGainSlider.Position);
 
   If (Kind in [dbkStaging,dbkX,dbkPure]) and IsFS then
     Game.FluidSoundFont:=PathNow;
+
+  If IsSC then begin
+    If Kind=dbkStaging then begin
+      If MT32ModelComboBox.ItemIndex>=0 then begin
+        Game.SoundCanvasModel:=MT32ModelComboBox.Text;
+        FLoadedSoundCanvasModel:=Game.SoundCanvasModel;
+      end;
+      Game.SoundCanvasRomDir:=PathNow;
+      Game.SoundCanvasFilter:=SoundCanvasFilterCheckBox.Checked;
+    end;
+  end;
 
   If IsMT then begin
     If Kind in [dbkStandard,dbkX] then begin

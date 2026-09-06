@@ -110,6 +110,7 @@ type
     SilentMode : Boolean;
     Procedure InitGUI;
     Procedure InvalidateFrames;
+    Procedure SetProgramInformationTitle(const Title : String);
   end;
 
 var
@@ -137,7 +138,7 @@ uses ShellAPI, Math, VistaToolsUnit, LanguageSetupUnit,
      ModernProfileEditorDirectoryFrameUnit, ModernProfileEditorDOSBoxFrameUnit,
      ModernProfileEditorHardwareFrameUnit, ModernProfileEditorCPUFrameUnit,
      ModernProfileEditorMemoryFrameUnit, ModernProfileEditorGraphicsFrameUnit,
-     ModernProfileEditorGlideFrameUnit,
+     ModernProfileEditorImageQualityFrameUnit, ModernProfileEditorGlideFrameUnit,
      ModernProfileEditorKeyboardFrameUnit, ModernProfileEditorMouseFrameUnit,
      ModernProfileEditorSoundFrameUnit, ModernProfileEditorVolumeFrameUnit,
      ModernProfileEditorSoundBlasterFrameUnit, ModernProfileEditorGUSFrameUnit,
@@ -546,6 +547,7 @@ begin
         F:=TModernProfileEditorCPUFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorCPUFrame(F),LanguageSetup.ProfileEditorCPUSheet,3,9);
         F:=TModernProfileEditorMemoryFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorMemoryFrame(F),LanguageSetup.ProfileEditorMemorySheet,4,10);
         F:=TModernProfileEditorGraphicsFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorGraphicsFrame(F),LanguageSetup.ProfileEditorGraphicsSheet,4,11);
+        F:=TModernProfileEditorImageQualityFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorImageQualityFrame(F),LanguageSetup.ProfileEditorImageQualitySheet,4,25);
         F:=TModernProfileEditorGlideFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorGlideFrame(F),LanguageSetup.ProfileEditorGlideSheet,4,24);
         F:=TModernProfileEditorKeyboardFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorKeyboardFrame(F),LanguageSetup.ProfileEditorKeyboardSheet,4,15);
         F:=TModernProfileEditorMouseFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorMouseFrame(F),LanguageSetup.ProfileEditorMouseSheet,4,12);
@@ -593,12 +595,14 @@ procedure TModernProfileEditorForm.FormShow(Sender: TObject);
 Var I : Integer;
 begin
   FreeAndNil(TempGame);
-  TempGame:=TGame.Create(PrgSetup);
+  TempGame:=TGame.Create('');
+  TempGame.StoreConfigOnExit:=False;
   if Game<>nil then
     TempGame.AssignFrom(Game);
 
   InitGUI;
 
+  UserIconLoader.AddEmptyImages(ImageList,nil,25);
   UserIconLoader.DirectLoad(ImageList,'ModernProfileEditor');
 
   If (Game=nil) and (LoadTemplate<>nil) then begin
@@ -919,6 +923,14 @@ Var I : Integer;
 begin
   result:=nil;
   For I:=0 to length(FrameList)-1 do If FrameList[I].Frame is FrameClass then begin result:=FrameList[I].Frame; exit; end;
+end;
+
+procedure TModernProfileEditorForm.SetProgramInformationTitle(const Title : String);
+Var F : TModernProfileEditorGameInfoFrame;
+begin
+  F:=TModernProfileEditorGameInfoFrame(GetFrame(TModernProfileEditorGameInfoFrame));
+  If F=nil then exit;
+  F.GameInfoValueListEditor.Strings.ValueFromIndex[0]:=Title;
 end;
 
 { global }

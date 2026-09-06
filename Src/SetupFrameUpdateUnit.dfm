@@ -25,14 +25,6 @@ object SetupFrameUpdate: TSetupFrameUpdate
     Height = 13
     Caption = 'Program update:'
   end
-  object UpdateCheckBox: TCheckBox
-    Left = 16
-    Top = 48
-    Width = 553
-    Height = 17
-    Caption = 'Kennung der aktuellen Version in die Abfrage-URL integrieren'
-    TabOrder = 1
-  end
   object PackagesComboBox: TComboBox
     Left = 16
     Top = 95
@@ -40,7 +32,7 @@ object SetupFrameUpdate: TSetupFrameUpdate
     Height = 21
     Style = csDropDownList
     ItemHeight = 0
-    TabOrder = 2
+    TabOrder = 1
   end
   object UpdateButton: TBitBtn
     Left = 16
@@ -48,7 +40,7 @@ object SetupFrameUpdate: TSetupFrameUpdate
     Width = 169
     Height = 25
     Caption = 'Search for updates now'
-    TabOrder = 5
+    TabOrder = 3
     OnClick = ButtonWork
     Glyph.Data = {
       36040000424D3604000000000000360000002800000010000000100000000100
@@ -93,7 +85,7 @@ object SetupFrameUpdate: TSetupFrameUpdate
     Height = 21
     Style = csDropDownList
     ItemHeight = 0
-    TabOrder = 3
+    TabOrder = 2
   end
   object ProgramUpdateComboBox: TComboBox
     Left = 16

@@ -19,6 +19,14 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
       DefaultValueVSyncPure='off,Force 60fps';
       DefaultValuePresentationModeStaging='auto,dos-rate,host-rate';
       DefaultValueDosRateStaging='default,host,50,60,70,72,75,90,100,120,144,165,240';
+      DefaultValuesDeinterlacingStaging='off,on,light,medium,strong,full';
+      DefaultValuesDeditheringStaging='off,on';
+      DefaultValuesCrtColorProfileStaging='auto,none,ebu,p22,smpte-c,philips,trinitron';
+      DefaultValuesColorSpaceStaging='srgb,display-p3,dci-p3,dci-p3-d65,modern-p3,adobe-rgb,rec-2020';
+      DefaultValuesIntegerScalingStaging='auto,vertical,horizontal,off';
+      DefaultValuesColorTemperatureStaging='auto,3000,4000,5000,5500,6500,7500,9300,10000';
+      DefaultValuesDiskSpeedStaging='maximum,fast,medium,slow';
+      DefaultValuesDiskNoiseStaging='off,seek-only,on';
       DefaultValueScalePure='default,nearest,bilinear,integer';
       DefaultValueShaderPure='scanline,blur,mask,curvature,corner';
       DefaultValueCycles='auto,max,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,6000,7000,8000,9000,10000,11000,12000,12000,13000,14000,15000,16000,17000,18000,19000,20000';
@@ -55,7 +63,7 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
                             '61282 (Latvian and Russian "RusLat"),62306 (Cyrillic Uzbek)';
       DefaultValuesReportedDOSVersion='default,6.22,6.2,6.0,5.0,4.0,3.3';
       DefaultValuesMIDIDevice='default,alsa,oss,win32,coreaudio,mt32,none';
-      DefaultValuesMIDIDeviceStaging='port,soundfont,mt32,none';
+      DefaultValuesMIDIDeviceStaging='port,soundfont,mt32,soundcanvas,none';
       DefaultValuesMIDIDeviceStagingOld='auto,win32,soundfont,mt32,none';
       DefaultValuesMIDIDeviceX='default,win32,soundfont,mt32,timidity,none';
       DefaultValuesMIDIDevicePure='system,mt32,soundfont,none';
@@ -65,6 +73,8 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
         'mt32_105,mt32_104,mt32_bluer,mt32_new,mt32_207,mt32_206,mt32_204,mt32_203';
       { DOSBox-X mt32.model Set_values. }
       DefaultValuesMT32ModelX='auto,cm32l,mt32';
+      DefaultValuesSoundCanvasModelStaging=
+        'auto,sc55,sc55_121,sc55_120,sc55_110,sc55_100,sc55_200,sc55mk2,sc55mk2_100,sc55mk2_101';
       DefaultValuesBlocksize='512,1024,2048,3072,4096,8192';
       DefaultValuesCyclesDown='20,50,100,500,1000,2000,5000,10000';
       DefaultValuesCyclesUp='20,50,100,500,1000,2000,5000,10000';
@@ -81,6 +91,8 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
       DefaultValuesRate='8000,11025,22050,32000,44100,48000,49716';
       DefaultValuesSBBase='220,240,260,280,2a0,2c0,2e0,300';
       DefaultValuesMouseSensitivity='10,20,30,40,50,60,70,80,90,100,125,150,175,200,250,300,350,400,450,500,550,600,700,800,900,1000';
+      DefaultValuesMouseDriverModelStaging='2button,3button,wheel';
+      DefaultValuesMouseMoveThresholdStaging='1,2,3,4,5,6,7,8,9';
       DefaultValuesTandyRate='8000,11025,16000,22050,32000,44100,48000,49716';
       DefaultValuesScummVMFilter='No filtering. no scaling. Fastest (1x),No filtering. factor 2x. default for non 640x480 games (2x),No filtering. factor 3x (3x),2xSAI filter. factor 2x (2xsai),Enhanced 2xSAI filtering. factor 2x (super2xsai),'+
                                  'Less blurry than 2xSAI but slower. Factor 2x (supereagle),Doesn''t rely on blurring like 2xSAI. fast. Factor 2x (advmame2x),Doesn''t rely on blurring like 2xSAI. fast. Factor 3x (advmame3x),Very nice high quality filter but slow. Factor 2x (hq2x),'+

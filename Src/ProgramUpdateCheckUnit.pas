@@ -5,7 +5,9 @@ uses Classes;
 
 Type TUpdateResult=(urNoUpdatesAvailable, urUpdateAvailable, urUpdateInstalled, urUpdateInstallCanceled);
 
-Function RunUpdateCheck(const AOwner : TComponent; const Quiet, QuietOnError : Boolean) : TUpdateResult;
+Function ParseGitHubReleaseTagName(const Body : String) : String;
+Function NormalizeReleaseTag(const Tag : String) : String;
+Function RunUpdateCheck(const AOwner : TComponent; const Quiet, QuietOnError : Boolean; const AlwaysNotify : Boolean = False) : TUpdateResult;
 Procedure RunUpdateCheckIfSetup(const AOwner : TComponent);
 Procedure RunUpdateCheckIdleCloseHandle;
 Procedure RunExternalUpdateCheck(const Quiet : Boolean);
@@ -13,13 +15,14 @@ Procedure RunExternalUpdateCheck(const Quiet : Boolean);
 implementation
 
 uses Windows, SysUtils, Dialogs, Forms, Controls, ShellAPI, PrgSetupUnit,
-     CommonHelpers, CommonTools, DownloadWaitFormUnit, LanguageSetupUnit, PrgConsts, MainUnit;
+     CommonHelpers, CommonTools, HTTPDownloadHelpers, LanguageSetupUnit, PrgConsts, MainUnit,
+     UpdateAvailableFormUnit, System.JSON;
 
 var UpdaterProcessHandleProcess : THandle = INVALID_HANDLE_VALUE;
 
 Procedure RunExternalUpdateCheck(const Quiet : Boolean);
 Var St : TStringList;
-    FileName,Add,Prg : String;
+    FileName,Prg : String;
     StartupInfo : TStartupInfo;
     ProcessInformation : TProcessInformation;
 begin
@@ -39,8 +42,7 @@ begin
   St:=TStringList.Create;
   try
     St.Add(GetNormalFileVersionAsString);
-    If PrgSetup.VersionSpecificUpdateCheck then Add:='?Version='+GetNormalFileVersionAsString else Add:='';
-    St.Add(PrgSetup.UpdateCheckURL+Add);
+    St.Add(PrgSetup.UpdateCheckURL);
     St.Add('DFendXUpdate.exe');
     St.Add(PrgDir);
     If Quiet then St.Add('silent') else St.Add('normal');
@@ -90,60 +92,68 @@ begin
   end;
 end;
 
-Function RunUpdateCheck(const AOwner : TComponent; const Quiet, QuietOnError : Boolean) : TUpdateResult;
-Var URL, FileName : String;
-    St : TStringList;
-    B : Boolean;
+Function ParseGitHubReleaseTagName(const Body : String) : String;
+Var Root : TJSONValue;
+    Obj : TJSONObject;
+    V : TJSONValue;
 begin
-  { Updates disabled for now — silent success. }
-  result:=urNoUpdatesAvailable;
-  exit;
-
-  result:=urUpdateInstallCanceled;
-
-  FileName:=TempDir+'UpdateCheckSetup.txt';
-  URL:=PrgSetup.UpdateCheckURL; If PrgSetup.VersionSpecificUpdateCheck then URL:=URL+'?Version='+GetNormalFileVersionAsString;
-
-  If Quiet then begin
-    B:=(DownloadFileWithOutDialog(AOwner,-1,'',URL,'',FileName)=drSuccess);
-  end else begin
-    B:=(DownloadFileWithDialog(AOwner,-1,'',URL,'',FileName)=drSuccess);
+  result:='';
+  Root:=TJSONObject.ParseJSONValue(Body);
+  If Root=nil then exit;
+  try
+    If not (Root is TJSONObject) then exit;
+    Obj:=TJSONObject(Root);
+    V:=Obj.Values['tag_name'];
+    If Assigned(V) then result:=V.Value;
+  finally
+    Root.Free;
   end;
+end;
 
-  If not B then begin
+Function NormalizeReleaseTag(const Tag : String) : String;
+begin
+  result:=Trim(Tag);
+  If (Length(result)>=2) and ((result[1]='v') or (result[1]='V')) and (result[2] in ['0'..'9']) then Delete(result,1,1);
+end;
+
+Function RunUpdateCheck(const AOwner : TComponent; const Quiet, QuietOnError : Boolean; const AlwaysNotify : Boolean = False) : TUpdateResult;
+Var URL,Body,Tag,Remote,Local : String;
+    Status : Integer;
+    OK : Boolean;
+begin
+  result:=urUpdateInstallCanceled;
+  URL:='https://api.github.com/repos/'+GitHubUpdateOwner+'/'+GitHubUpdateRepo+'/releases/latest';
+  OK:=THTTPDownloadHelper.HTTPRequestToString('GET',URL,nil,PrgSetup.HTTPUserAgent,'',30000,30000,Body,Status);
+  If (not OK) or (not THTTPDownloadHelper.HTTPStatusOK(Status)) then begin
     If not QuietOnError then MessageDlg(Format(LanguageSetup.PackageManagerDownloadFailed,[URL]),mtError,[mbOK],0);
     exit;
   end;
 
-  St:=TStringList.Create;
-  try
-    PrgSetup.LastUpdateCheck:=Round(Int(Date));
+  Tag:=ParseGitHubReleaseTagName(Body);
+  If Tag='' then begin
+    result:=urNoUpdatesAvailable;
+    If not Quiet then MessageDlg(LanguageSetup.UpdateNoUpdates,mtInformation,[mbOK],0);
+    exit;
+  end;
 
-    try
-      St.LoadFromFile(FileName);
-      ExtDeleteFile(FileName,ftTemp);
-    except
-      MessageDlg(Format(LanguageSetup.MessageCouldNotOpenFile,[FileName]),mtError,[mbOK],0); exit;
+  PrgSetup.LastUpdateCheck:=Round(Int(Date));
+  Remote:=NormalizeReleaseTag(Tag);
+  Local:=GetNormalFileVersionAsString;
+  If VersionToInt(Remote)>VersionToInt(Local) then begin
+    result:=urUpdateAvailable;
+    If AlwaysNotify or (VersionToInt(Remote)>VersionToInt(PrgSetup.LastNotifiedUpdateVersion)) then begin
+      URL:='https://github.com/'+GitHubUpdateOwner+'/'+GitHubUpdateRepo+'/releases/tag/'+Tag;
+      ShowUpdateAvailableDialog(AOwner,Remote,Local,URL);
+      PrgSetup.LastNotifiedUpdateVersion:=Remote;
     end;
-
-    If (St.Count>1) and (VersionToInt(St[0])>VersionToInt(GetNormalFileVersionAsString)) then begin
-      result:=urUpdateAvailable;
-      RunExternalUpdateCheck(Quiet);
-    end else begin
-      result:=urNoUpdatesAvailable;
-      If Quiet then exit;
-      MessageDlg(LanguageSetup.UpdateNoUpdates,mtInformation,[mbOK],0);
-    end;
-  finally
-    St.Free;
+  end else begin
+    result:=urNoUpdatesAvailable;
+    If not Quiet then MessageDlg(LanguageSetup.UpdateNoUpdates,mtInformation,[mbOK],0);
   end;
 end;
 
 Procedure RunUpdateCheckIfSetup(const AOwner : TComponent);
 begin
-  { Updates disabled for now — scheduled checks do not run. }
-  exit;
-
   Case PrgSetup.CheckForUpdates of
     0 : {Do not check automatically};
     1 : If Round(Int(Date))>=PrgSetup.LastUpdateCheck+7 then RunUpdateCheck(AOwner,True,True);

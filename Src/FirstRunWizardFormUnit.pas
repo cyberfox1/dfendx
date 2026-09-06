@@ -436,8 +436,7 @@ begin
   PrgSetup.DOSBoxSettings[0].DosBoxLanguage:=DosBoxLang[DOSBoxLanguageComboBox.ItemIndex];
   PrgSetup.GameDir:=PrgDataDir+'VirtualHD\';
 
-  PrgSetup.VersionSpecificUpdateCheck:=True;
-  { Update checkbox is hidden; leave automatic update checks off. }
+  { Leave automatic update checks off. }
   PrgSetup.CheckForUpdates:=0;
   PrgSetup.DataReaderCheckForUpdates:=0;
   PrgSetup.PackageListsCheckForUpdates:=0;

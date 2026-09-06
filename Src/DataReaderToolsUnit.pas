@@ -39,7 +39,8 @@ begin
       PrgSetup.HTTPUserAgent, Referer, 30000, 30000, Result, Status, nil) then
       FreeAndNil(Result);
   except
-    FreeAndNil(Result);
+    on E: Exception do
+      FreeAndNil(Result);
   end;
 end;
 

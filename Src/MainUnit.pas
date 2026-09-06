@@ -453,6 +453,7 @@ type
     FGamesWereRunning : Boolean;
     FScreenshotPaneSource : String;
     FMainClosing : Boolean;
+    FStartupUpdateForce : Boolean;
     Procedure CloseScreenshotPaneEarly;
     Procedure AfterSetupDialog(ColWidths, UserCols : String);
     Procedure StartCaptureChangeNotify;
@@ -610,6 +611,7 @@ begin
   GameLinkList:=nil;
   FPostShowGateEnabled:=False;
   FGamesWereRunning:=False;
+  FStartupUpdateForce:=False;
 
   ListSort:=slbName;
   ListSortReverse:=False;
@@ -676,10 +678,7 @@ begin
     ReBuildTemplates(True);
     LogInfo('First run: Showing first run wizard');
     ShowFirstRunWizardDialog(self,B);
-    If B then begin
-      LogInfo('First run: Starting update check');
-      RunProgramStartSilentUpdateCheck(self,true);
-    end;
+    If B then FStartupUpdateForce:=True;
   end;
 
   if not InitBassMedia(PrgDir+BinFolder, Handle) then
@@ -807,9 +806,6 @@ begin
   EnsureBundled7zaPackerRow;
 
   FirstRunInfoPanel.Visible:=(GameDB.Count<=1) and PrgSetup.ShowAddGameInfoOnEmptyGamesList;
-
-  LogInfo('Update checker');
-  RunProgramStartSilentUpdateCheck(self,False);
 
   LogInfo('Setting up data viewer area');
   ViewFilesFrame.Init;
@@ -1639,6 +1635,10 @@ begin
   else
     Caption := 'DFendX';
 
+  LogInfo('Update checker');
+  RunProgramStartSilentUpdateCheck(self,FStartupUpdateForce);
+  FStartupUpdateForce:=False;
+
   LogInfo('### End of PostShow ###'+#13);
 
   LogInfo('*** Turning log off ***'+#13);
@@ -2151,7 +2151,7 @@ begin
   If PrgSetup.HasValidExoInstallation and (Game<>nil) and ExoDOSGamesList.DBFileExists then begin
     GamesDB:=TExoDOSDB.Create(ExoDOSGamesList.DBPath);
     try
-      ExtraRootPath:=GetGameDataParamByName(GamesDB,ExoDOSTitleWithoutYear(Game.Name),'RootFolder');
+      ExtraRootPath:=GetGameDataParamByName(GamesDB,ExoDOSTitleWithoutYear(Game.ResolveGameTitle),'RootFolder');
     finally
       GamesDB.Free;
     end;
@@ -3045,7 +3045,8 @@ begin
      TemplateDB:=TGameDB.Create(PrgDataDir+TemplateSubDir,gbtTemplateDB,False);
      DefaultGame:=TemplateDB[TemplateNr];
    end else begin
-     DefaultGame:=TGame.Create(PrgSetup);
+     DefaultGame:=TGame.Create('');
+     DefaultGame.StoreConfigOnExit:=False;
    end;
 
    Enabled:=False;
@@ -3078,7 +3079,8 @@ Var S : String;
 begin
   If not SelectProgramFile(S,'','',True,Nr,self) then exit;
 
-  DefaultGame:=TGame.Create(PrgSetup);
+  DefaultGame:=TGame.Create('');
+  DefaultGame.StoreConfigOnExit:=False;
   G:=nil;
 
   Enabled:=False;
@@ -3192,6 +3194,7 @@ begin
                     if TemplateFound then NewGame.AssignFrom(TemplateDB[I]);
 
                     NewGame.Name:=Title;
+                    NewGame.GameTitle:=Title;
                     NewGame.ProfileMode:='DOSBox';
                     NewGame.NrOfMounts:=1;
                     NewGame.Mount[0]:=MountStr;

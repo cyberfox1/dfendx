@@ -42,6 +42,7 @@ Type TDataReaderGameDataThread=class(TDataReaderThread)
     Procedure Execute; override;
   public
     Constructor Create(const ADataReader : TDataReader; const ANr : Integer; const AFullImages : Boolean);
+    Destructor Destroy; override;
     property Meta : TGameMetadata read FMeta;
   end;
 
@@ -128,6 +129,12 @@ begin
   FFullImages:=AFullImages;
   FMeta:=nil;
   inherited Create(ADataReader);
+end;
+
+destructor TDataReaderGameDataThread.Destroy;
+begin
+  FMeta.Free;
+  inherited Destroy;
 end;
 
 procedure TDataReaderGameDataThread.Execute;

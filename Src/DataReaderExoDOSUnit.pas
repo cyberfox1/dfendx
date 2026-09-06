@@ -62,8 +62,9 @@ begin
     if FileExists(ExoDOSGamesList.CachePath) then
       FGameCache.LoadFromFile(ExoDOSGamesList.CachePath);
   end;
-  if FDB=nil then
+  if FDB=nil then begin
     FDB:=TExoDOSDB.Create(ExoDOSGamesList.DBPath);
+  end;
 
   if FGameCache.Count=0 then exit;
 

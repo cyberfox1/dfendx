@@ -1,5 +1,16 @@
 DFendX Changelog
 
+Version 2.5.0 (09/06/2026)
+==========================
+- Restore program updates (manual/scheduled).
+- Add Game Title profile metadata field.
+- Improve performance of TheGamesDB lookups.
+- Add support for soundcanvas (SC-55) for Staging.
+- New Image Quality form in profile editor.
+- New Staging options (mouse, drive speed/noise).
+- [Fix] Don't pollute default template after profile edit.
+
+
 Version 2.4.0 (08/30/2026)
 ==========================
 - Major overhaul of ScummVM profile support.

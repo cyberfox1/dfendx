@@ -3,7 +3,7 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
   Top = 0
   BorderStyle = bsDialog
   Caption = 'SetupFrameDOSBoxForm'
-  ClientHeight = 574
+  ClientHeight = 594
   ClientWidth = 719
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -12,7 +12,6 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   Position = poOwnerFormCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -20,8 +19,7 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
   OnShow = FormShow
   DesignSize = (
     719
-    574)
-  PixelsPerInch = 96
+    594)
   TextHeight = 13
   object DosBoxMapperButton: TSpeedButton
     Tag = 2
@@ -50,17 +48,17 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
     ExplicitLeft = 787
   end
   object SDLVideodriverLabel: TLabel
-    Left = 14
-    Top = 308
+    Left = 15
+    Top = 326
     Width = 83
     Height = 13
     Caption = 'SDL Videotreiber:'
   end
   object SDLVideodriverInfoLabel: TLabel
-    Left = 248
-    Top = 308
+    Left = 238
+    Top = 345
     Width = 433
-    Height = 50
+    Height = 37
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
     Caption = 
@@ -163,7 +161,7 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
   end
   object CustomSetsLabel: TLabel
     Left = 14
-    Top = 360
+    Top = 380
     Width = 82
     Height = 13
     Caption = 'CustomSetsLabel'
@@ -178,9 +176,10 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
     EditLabel.Height = 13
     EditLabel.Caption = 'DosBoxMapperEdit'
     TabOrder = 4
+    Text = ''
   end
   object HideDosBoxConsoleCheckBox: TCheckBox
-    Left = 14
+    Left = 15
     Top = 200
     Width = 668
     Height = 17
@@ -189,7 +188,7 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
     TabOrder = 6
   end
   object CenterDOSBoxCheckBox: TCheckBox
-    Left = 14
+    Left = 15
     Top = 223
     Width = 668
     Height = 17
@@ -199,11 +198,10 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
   end
   object SDLVideoDriverComboBox: TComboBox
     Left = 14
-    Top = 323
+    Top = 345
     Width = 218
     Height = 21
     Style = csDropDownList
-    ItemHeight = 13
     ItemIndex = 0
     TabOrder = 10
     Text = 'Direct X'
@@ -230,35 +228,36 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
     EditLabel.Height = 13
     EditLabel.Caption = 'CommandLineEdit'
     TabOrder = 5
+    Text = ''
   end
   object OKButton: TBitBtn
     Left = 14
-    Top = 539
+    Top = 559
     Width = 97
     Height = 27
     Anchors = [akLeft, akBottom]
-    TabOrder = 15
-    OnClick = OKButtonClick
     Kind = bkOK
+    NumGlyphs = 2
+    TabOrder = 16
+    OnClick = OKButtonClick
   end
   object CancelButton: TBitBtn
     Left = 117
-    Top = 539
+    Top = 559
     Width = 97
     Height = 27
     Anchors = [akLeft, akBottom]
-    TabOrder = 16
     Kind = bkCancel
+    NumGlyphs = 2
+    TabOrder = 17
   end
   object RestoreDefaultValuesButton: TBitBtn
     Left = 323
-    Top = 538
+    Top = 558
     Width = 202
     Height = 28
     Anchors = [akLeft, akBottom]
     Caption = 'Vorgabewerte wiederherstellen'
-    TabOrder = 18
-    OnClick = RestoreDefaultValuesButtonClick
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -277,6 +276,8 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
       3333333333338888883333330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    TabOrder = 18
+    OnClick = RestoreDefaultValuesButtonClick
   end
   object DosBoxDirEdit: TLabeledEdit
     Left = 14
@@ -288,6 +289,7 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
     EditLabel.Height = 13
     EditLabel.Caption = 'DosBoxDirEdit'
     TabOrder = 0
+    Text = ''
     OnChange = DosBoxDirEditChange
   end
   object DosBoxLangEditComboBox: TComboBox
@@ -296,7 +298,6 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
     Width = 169
     Height = 21
     Style = csDropDownList
-    ItemHeight = 13
     TabOrder = 1
   end
   object WaitOnErrorCheckBox: TCheckBox
@@ -308,13 +309,22 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
     Caption = 'Wait on error'
     TabOrder = 9
   end
+  object WebserverCheckBox: TCheckBox
+    Left = 15
+    Top = 292
+    Width = 667
+    Height = 17
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 'Enable HTTP Internals API'
+    Enabled = False
+    TabOrder = 11
+  end
   object DOSBoxKeyboardLayoutComboBox: TComboBox
     Left = 216
     Top = 67
     Width = 169
     Height = 21
     Style = csDropDownList
-    ItemHeight = 13
     TabOrder = 2
   end
   object DOSBoxCodepageComboBox: TComboBox
@@ -323,30 +333,33 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
     Width = 169
     Height = 21
     Style = csDropDownList
-    ItemHeight = 13
     TabOrder = 3
   end
   object CustomSetsMemo: TRichEdit
     Left = 14
-    Top = 376
+    Top = 396
     Width = 639
     Height = 100
     Anchors = [akLeft, akTop, akRight, akBottom]
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
     PlainText = True
     ScrollBars = ssBoth
-    TabOrder = 11
+    TabOrder = 12
     WordWrap = False
   end
   object CustomSetsClearButton: TBitBtn
     Tag = 3
     Left = 14
-    Top = 482
+    Top = 502
     Width = 105
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'L'#246'schen'
-    TabOrder = 12
-    OnClick = ButtonWork
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000120B0000120B00001000000000000000000000000000
@@ -361,17 +374,17 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
       BBB35555F55555575F555550555555550BBB55575555555575F5555555555555
       50BB555555555555575F555555555555550B5555555555555575}
     NumGlyphs = 2
+    TabOrder = 13
+    OnClick = ButtonWork
   end
   object CustomSetsLoadButton: TBitBtn
     Tag = 4
     Left = 127
-    Top = 482
+    Top = 502
     Width = 105
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Laden...'
-    TabOrder = 13
-    OnClick = ButtonWork
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000130B0000130B00001000000000000000000000000000
@@ -386,17 +399,17 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
       B3333337FFFF77377FF333B000000333BB33337777777F3377FF3BB3333BB333
       3BB33773333773333773B333333B3333333B7333333733333337}
     NumGlyphs = 2
+    TabOrder = 14
+    OnClick = ButtonWork
   end
   object CustomSetsSaveButton: TBitBtn
     Tag = 5
     Left = 238
-    Top = 482
+    Top = 502
     Width = 105
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Speichern...'
-    TabOrder = 14
-    OnClick = ButtonWork
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000130B0000130B00001000000000000000000000000000
@@ -411,15 +424,18 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
       99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
       93337FFFF7737777733300000033333333337777773333333333}
     NumGlyphs = 2
+    TabOrder = 15
+    OnClick = ButtonWork
   end
   object HelpButton: TBitBtn
     Left = 220
-    Top = 539
+    Top = 559
     Width = 97
     Height = 27
-    TabOrder = 17
-    OnClick = HelpButtonClick
     Kind = bkHelp
+    NumGlyphs = 2
+    TabOrder = 19
+    OnClick = HelpButtonClick
   end
   object DosBoxTxtOpenDialog: TOpenDialog
     DefaultExt = 'txt'

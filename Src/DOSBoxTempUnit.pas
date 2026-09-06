@@ -18,11 +18,12 @@ end;
 
 const TempDOSBoxName='TempDOSBox';
 
+Function AllocateCleanTempProf : String;
 Procedure RunDOSBoxCommandLineOnFolder(const Folder : String);
 
 implementation
 
-uses Classes, SysUtils, PrgSetupUnit, CommonHelpers, CommonTools, DosBoxUnit;
+uses Windows, Classes, SysUtils, PrgSetupUnit, CommonHelpers, CommonTools, DosBoxUnit;
 
 { TTempGame }
 
@@ -39,9 +40,10 @@ begin
   PrgSetup.MinimizeOnWindowsGameStart:=False;
 
   If InitTempGame then begin
-    FTempProf:=TempDir+TempDOSBoxName+'.prof';
+    FTempProf:=AllocateCleanTempProf;
     FGame:=TGame.Create(FTempProf);
     DefaultGame:=TGame.Create(PrgSetup);
+    DefaultGame.StoreConfigOnExit:=False;
     try FGame.AssignFrom(DefaultGame); finally DefaultGame.Free; end;
     AddFreeDOSToPath;
   end else begin
@@ -109,6 +111,19 @@ begin
     St.Free;
   end;
 
+end;
+
+Function AllocateCleanTempProf : String;
+Var Standard : String;
+    Buf : array[0..MAX_PATH] of Char;
+begin
+  Standard:=TempDir+TempDOSBoxName+'.prof';
+  result:=Standard;
+  If not FileExists(Standard) then exit;
+  ExtDeleteFile(Standard,ftTemp);
+  If not FileExists(Standard) then exit;
+  If GetTempFileName(PChar(TempDir),'DFX',0,Buf)=0 then exit;
+  result:=Buf;
 end;
 
 procedure TTempGame.SetSimpleDefaults;

@@ -32,6 +32,7 @@ type
     SourceLabel: TLabel;
     SourceComboBox: TComboBox;
     btnSetDataReaderAPIKey: TButton;
+    TitleCheckBox: TCheckBox;
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -52,13 +53,13 @@ type
     { Public-Deklarationen }
     ConfigOK : Boolean;
     CaptureDir : String;
-    Name, Genre, Developer, Publisher, Year, Internet, Notes : String;
+    Name, Title, Genre, Developer, Publisher, Year, Internet, Notes : String;
   end;
 
 var
   DataReaderForm: TDataReaderForm;
 
-Function ShowDataReaderDialog(const AOwner : TComponent; const AGameName : String; var Name, Genre, Developer, Publisher, Year, Internet, Notes : String; const CaptureDir : String) : Boolean;
+Function ShowDataReaderDialog(const AOwner : TComponent; const AGameName : String; var Name, Title, Genre, Developer, Publisher, Year, Internet, Notes : String; const CaptureDir : String) : Boolean;
 
 implementation
 
@@ -112,7 +113,8 @@ begin
   SearchTypeCheckBox.Caption:=LanguageSetup.DataReaderSearchForDOSGames;
   SearchResultsLabel.Caption:=LanguageSetup.DataReaderSearchResults;
   GameDataBox.Caption:=LanguageSetup.DataReaderNoSearchResults;
-  NameCheckBox.Caption:=LanguageSetup.GameName;
+  NameCheckBox.Caption:=LanguageSetup.ProfileNameFull;
+  TitleCheckBox.Caption:=LanguageSetup.GameTitleFull;
   GenreCheckBox.Caption:=LanguageSetup.GameGenre;
   DeveloperCheckBox.Caption:=LanguageSetup.GameDeveloper;
   PublisherCheckBox.Caption:=LanguageSetup.GamePublisher;
@@ -138,10 +140,10 @@ begin
   ShowCompleted:=True;
 
   S:=Trim(PrgSetup.DataReaderActiveSettings);
-  While length(S)<7 do S:=S+'X';
-  If length(S)>7 then S:=Copy(S,1,7);
+  While length(S)<9 do S:=S+'X';
   { Name: default on only for eXoDOS; Moby/TheGamesDB leave name unchecked. }
   NameCheckBox.Checked:=(DataReader is TExoDOSDataReader);
+  TitleCheckBox.Checked:=(S[9]<>'-');
   GenreCheckBox.Checked:=(S[2]<>'-');
   DeveloperCheckBox.Checked:=(S[3]<>'-');
   PublisherCheckBox.Checked:=(S[4]<>'-');
@@ -168,7 +170,8 @@ begin
   If DownloadCoverCheckBox.Checked then S:=S+'X' else S:=S+'-';
   If DownloadCoverAllCheckBox.Checked then S:=S+'X' else S:=S+'-';
   if DescriptionCheckBox.Checked then S:=S+'X' else S:=S+'-';
-  
+  If TitleCheckBox.Checked then S:=S+'X' else S:=S+'-';
+
   PrgSetup.DataReaderActiveSettings:=S;
 
   GenreSt.Free;
@@ -213,7 +216,7 @@ begin
   try
     { TheGamesDB REST API requires ProgramSets/TheGamesDBAPIKey in DFendX.ini. }
     if (DataReader is TTheGamesDBDataReader) and (Trim(PrgSetup.TheGamesDBAPIKey)='') then begin
-      MessageDlg('TheGamesDB API key is not set (ProgramSets/TheGamesDBAPIKey).',mtError,[mbOK],0);
+      MessageDlg(LanguageSetup.DataReaderAPIKeyMissing,mtError,[mbOK],0);
       exit;
     end;
 
@@ -271,6 +274,7 @@ begin
   GameDataBox.Caption:=LanguageSetup.DataReaderNoSearchResults;
   InsertButton.Enabled:=False;
   NameCheckBox.Enabled:=False;
+  TitleCheckBox.Enabled:=False;
   NameLabel.Caption:='';
   GenreCheckBox.Enabled:=False;
   GenreLabel.Caption:='';
@@ -301,7 +305,7 @@ Var S: String;
 begin
   if DataReader is TExoDOSDataReader then exit;
   S:='';
-  If not InputQuery(LanguageSetup.DataReaderSetAPIKey,'',S) then exit;
+  If not InputQuery(LanguageSetup.DataReaderSetAPIKey,LanguageSetup.DataReaderSetAPIKeyPrompt,S) then exit;
   if DataReader is TTheGamesDBDataReader then begin
     PrgSetup.TheGamesDBAPIKey:=Trim(S);
     PrgSetup.UpdateFile;
@@ -318,6 +322,7 @@ begin
     GameDataBox.Caption:=LanguageSetup.DataReaderNoSearchResults;
     InsertButton.Enabled:=False;
     NameCheckBox.Enabled:=False;
+    TitleCheckBox.Enabled:=False;
     GenreCheckBox.Enabled:=False;
     GenreLabel.Caption:='';
     DeveloperCheckBox.Enabled:=False;
@@ -350,7 +355,6 @@ begin
         NotesSt[Nr]:=DecodeHTMLSymbols(DataReaderGameDataThread.Meta.Notes, LanguageSetup.CharsetHTMLTranslate);
       end;
     finally
-      DataReaderGameDataThread.Meta.Free;
       DataReaderGameDataThread.Free;
     end;
   end;
@@ -361,6 +365,7 @@ begin
   else
     NameLabel.Caption:=ListBox.Items[Nr];
   NameCheckBox.Enabled:=True;
+  TitleCheckBox.Enabled:=True;
   GenreCheckBox.Enabled:=(Trim(GenreSt[Nr])<>'');
   GenreLabel.Caption:=GenreSt[Nr];
   DeveloperCheckBox.Enabled:=(Trim(DeveloperSt[Nr])<>'');
@@ -384,6 +389,7 @@ Var S,T : String;
     St : TStringList;
 begin
   Name:='';
+  Title:='';
   Genre:='';
   Developer:='';
   Publisher:='';
@@ -391,6 +397,7 @@ begin
   Notes:='';
 
   If NameCheckBox.Enabled and NameCheckBox.Checked then Name:=NameLabel.Caption;
+  If TitleCheckBox.Enabled and TitleCheckBox.Checked then Title:=NameLabel.Caption;
   If GenreCheckBox.Enabled and GenreCheckBox.Checked then Genre:=GenreLabel.Caption;
   If DeveloperCheckBox.Enabled and DeveloperCheckBox.Checked then Developer:=DeveloperLabel.Caption;
   If PublisherCheckBox.Enabled and PublisherCheckBox.Checked then Publisher:=PublisherLabel.Caption;
@@ -405,7 +412,6 @@ begin
         if DataReaderGameDataThread.Meta<>nil then
           S:=DataReaderGameDataThread.Meta.ImagePageURL;
       finally
-        DataReaderGameDataThread.Meta.Free;
         DataReaderGameDataThread.Free;
       end;
       {Download all}
@@ -436,7 +442,7 @@ end;
 
 { global }
 
-Function ShowDataReaderDialog(const AOwner : TComponent; const AGameName : String; var Name, Genre, Developer, Publisher, Year, Internet, Notes : String; const CaptureDir : String) : Boolean;
+Function ShowDataReaderDialog(const AOwner : TComponent; const AGameName : String; var Name, Title, Genre, Developer, Publisher, Year, Internet, Notes : String; const CaptureDir : String) : Boolean;
 begin
   DataReaderForm:=TDataReaderForm.Create(AOwner);
   try
@@ -446,6 +452,7 @@ begin
     result:=(DataReaderForm.ShowModal=mrOK);
     if result then begin
       Name:=DataReaderForm.Name;
+      Title:=DataReaderForm.Title;
       Genre:=DataReaderForm.Genre;
       Developer:=DataReaderForm.Developer;
       Publisher:=DataReaderForm.Publisher;
