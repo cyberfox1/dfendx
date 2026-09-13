@@ -1,5 +1,15 @@
 DFendX Changelog
 
+Version 2.6.0 (09/13/2026)
+==========================
+- Expand SoundBlaster and other sound options.
+- PS/2 mouse support for Staging/X.
+- Enable program updates for portable builds.
+- FluidSynth chorus/reverb options.
+- GUS type/memory/gain options.
+- New video tab for ReelMagic support.
+
+
 Version 2.5.0 (09/06/2026)
 ==========================
 - Restore program updates (manual/scheduled).

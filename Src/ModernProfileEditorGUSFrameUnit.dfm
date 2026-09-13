@@ -91,4 +91,67 @@ object ModernProfileEditorGUSFrame: TModernProfileEditorGUSFrame
     EditLabel.Caption = 'PathEdit'
     TabOrder = 5
   end
+  object FilterLabel: TLabel
+    Left = 24
+    Top = 288
+    Width = 51
+    Height = 13
+    Caption = 'FilterLabel'
+  end
+  object TypeLabel: TLabel
+    Left = 24
+    Top = 344
+    Width = 49
+    Height = 13
+    Caption = 'TypeLabel'
+  end
+  object MemSizeLabel: TLabel
+    Left = 128
+    Top = 344
+    Width = 67
+    Height = 13
+    Caption = 'MemSizeLabel'
+  end
+  object MasterVolumeLabel: TLabel
+    Left = 232
+    Top = 344
+    Width = 97
+    Height = 13
+    Caption = 'MasterVolumeLabel'
+  end
+  object FilterComboBox: TComboBox
+    Left = 24
+    Top = 307
+    Width = 81
+    Height = 21
+    Style = csDropDownList
+    ItemHeight = 0
+    TabOrder = 6
+  end
+  object TypeComboBox: TComboBox
+    Left = 24
+    Top = 363
+    Width = 81
+    Height = 21
+    Style = csDropDownList
+    ItemHeight = 0
+    TabOrder = 7
+  end
+  object MemSizeComboBox: TComboBox
+    Left = 128
+    Top = 363
+    Width = 81
+    Height = 21
+    Style = csDropDownList
+    ItemHeight = 0
+    TabOrder = 8
+  end
+  object MasterVolumeComboBox: TComboBox
+    Left = 232
+    Top = 363
+    Width = 81
+    Height = 21
+    ItemHeight = 0
+    TabOrder = 9
+  end
 end

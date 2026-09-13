@@ -354,6 +354,10 @@ begin
   AddStringRec(92,'ColorTemperatureStaging','value',DefaultValuesColorTemperatureStaging);
   AddStringRec(93,'MouseDriverModelStaging','value',DefaultValuesMouseDriverModelStaging);
   AddStringRec(94,'MouseMoveThresholdStaging','value',DefaultValuesMouseMoveThresholdStaging);
+  AddStringRec(97,'Ps2MouseModelStaging','value',DefaultValuesPs2MouseModelStaging);
+  AddStringRec(98,'Ps2MouseModelX','value',DefaultValuesPs2MouseModelX);
+  AddStringRec(99,'Ps2ReportRateStaging','value',DefaultValuesPs2ReportRateStaging);
+  AddStringRec(100,'Ps2ReportRateX','value',DefaultValuesPs2ReportRateX);
   AddStringRec(95,'DiskSpeedStaging','value',DefaultValuesDiskSpeedStaging);
   AddStringRec(96,'DiskNoiseStaging','value',DefaultValuesDiskNoiseStaging);
   AddStringRec(63,'vsyncPure','value',DefaultValueVSyncPure);

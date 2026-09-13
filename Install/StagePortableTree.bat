@@ -95,6 +95,7 @@ call :CopyBin "AdminLauncher.exe" || exit /b 1
 call :CopyBin "SetInstallerLanguage.exe" || exit /b 1
 call :CopyBin "dfxvalidator.exe" || exit /b 1
 call :CopyBin "config.com" || exit /b 1
+call :CopyBin "ctmouse.exe" || exit /b 1
 
 REM Working-copy language tree (same as Setup File "..\Lang\*.ini" / "*.chm").
 dir /b "..\Lang\*.ini" >nul 2>&1

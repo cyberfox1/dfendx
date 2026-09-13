@@ -30,16 +30,21 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
       DefaultValueScalePure='default,nearest,bilinear,integer';
       DefaultValueShaderPure='scanline,blur,mask,curvature,corner';
       DefaultValueCycles='auto,max,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,6000,7000,8000,9000,10000,11000,12000,12000,13000,14000,15000,16000,17000,18000,19000,20000';
-      DefaultValuesVideo='hercules (Hercules Graphics Card),cga (Color Graphics Adapter),tandy (Tandy),pcjr (IBM PCjr),ega (Enhanced Graphics Adapter),'+
+      DefaultValuesVideo='hercules (Hercules Graphics Card),cga (Color Graphics Adapter),tandy (Tandy),pcjr (IBM PCjr),'+
+                         'PC98,DOS/V,olivetti (Olivetti M24 / AT&T 6300),pc3270 (IBM 3270 PC),'+
+                         'ega (Enhanced Graphics Adapter),'+
                          'vgaonly (Video Graphics Array), svga_s3 (VESA 2.0 compatible S3 SuperVGA card), svga_et3000 (Tseng ET3000 SuperVGA card),'+
                          'svga_et4000 (Tseng ET4000 SuperVGA card),svga_paradise (Paradise PVGA1A SuperVGA card),vesa_nolfb (VESA 2.0 compatible S3 SuperVGA card),'+
-                         'vesa_oldvbe (VESA 1.2 compatible S3 SuperVGA card),'+
-                         'PC98,DOS/V,olivetti (Olivetti M24 / AT&T 6300),pc3270 (IBM 3270 PC)';
+                         'vesa_oldvbe (VESA 1.2 compatible S3 SuperVGA card)';
       DefaultValuesMemory='1,2,4,8,16,32,63';
       DefaultValuesFrameSkip='0,1,2,3,4,5,6,7,8,9,10';
       DefaultValuesCore='auto,normal,dynamic,simple';
       DefaultValuesSBlaster='none,sb1,sb2,sbpro1,sbpro2,sb16,gb';
+      DefaultValuesSBlasterStaging='gb,sb1,sb2,sbpro1,sbpro2,sb16,ess,none';
+      DefaultValuesSBlasterX='sb1,sb1.0,sb1.5,sb2,sb2.0,sb2.01,sbpro1,sbpro2,sb16,sb16vibra,gb,ess688,ess1688,reveal_sc400,none';
       DefaultValuesOPLModes='auto,cms,opl2,dualopl2,opl3,none';
+      DefaultValuesOPLModesStaging='auto,cms,opl2,dualopl2,opl3,opl3gold,esfm,none';
+      DefaultValuesOPLModesX='auto,opl2,dualopl2,opl3,opl3gold,none,hardware,hardwaregb,esfm';
       DefaultValuesKeyboardLayout='default,none,Albania (SQ),Albania (SQ448),Argentina (LA),Armenia (HY),Australia (US),Austria (DE),Austria (DE453),Azerbaijan (AZ),'+
                                   'Belarus (BY),Belgium (BE),Bosnia & Herzegovina (BA),Brazil (BR),Brazil (BR274),Bulgaria (BG),Bulgaria (BG241),'+
                                   'Canada (CA),Canada (CA445),Canada (CF501),Chile (LA),Colombia (LA),Croatia (HR),Czech Republic (CZ),Czech Republic (CZ243),'+
@@ -93,6 +98,10 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
       DefaultValuesMouseSensitivity='10,20,30,40,50,60,70,80,90,100,125,150,175,200,250,300,350,400,450,500,550,600,700,800,900,1000';
       DefaultValuesMouseDriverModelStaging='2button,3button,wheel';
       DefaultValuesMouseMoveThresholdStaging='1,2,3,4,5,6,7,8,9';
+      DefaultValuesPs2MouseModelStaging='standard,intellimouse,explorer';
+      DefaultValuesPs2MouseModelX='2button,3button,intellimouse,intellimouse45';
+      DefaultValuesPs2ReportRateStaging='40,60,80,100,125,160,200,250,330,500';
+      DefaultValuesPs2ReportRateX='auto,40,60,80,100,125,200';
       DefaultValuesTandyRate='8000,11025,16000,22050,32000,44100,48000,49716';
       DefaultValuesScummVMFilter='No filtering. no scaling. Fastest (1x),No filtering. factor 2x. default for non 640x480 games (2x),No filtering. factor 3x (3x),2xSAI filter. factor 2x (2xsai),Enhanced 2xSAI filtering. factor 2x (super2xsai),'+
                                  'Less blurry than 2xSAI but slower. Factor 2x (supereagle),Doesn''t rely on blurring like 2xSAI. fast. Factor 2x (advmame2x),Doesn''t rely on blurring like 2xSAI. fast. Factor 3x (advmame3x),Very nice high quality filter but slow. Factor 2x (hq2x),'+
@@ -118,6 +127,33 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
       DefaultValuesScummVMLanguages='maniac:en-de-fr-it-es,zak:en-de-fr-it-es,dig_jp-zh-kr,comi:en-de-fr-it-pt-es-jp-zh-kr,sky:gb-en-de-fr-it-pt-es-se,sword1:en-de-fr-it-es-pt-cz,simon1:en-de-fr-it-es-hb-pl-ru,simon2:en-de-fr-it-es-hb-pl-ru';
       DefaultValuesCPUType='auto,386,386_slow,486_slow,pentium_slow,386_prefetch';
       DefaultValuesOplEmu='default,compat,fast,old';
+      DefaultValuesOplEmuX='default,compat,fast,nuked,mame,opl2board,opl3duoboard,retrowave_opl3,esfmu,cqm';
+      DefaultValuesOplEmuPure='default,nuked';
+      DefaultValuesPCSpeakerStaging='impulse,discrete,none';
+      DefaultValuesLptDacStaging='disney,covox,ston1,off';
+      DefaultValuesSBFilterStaging='auto,sb1,sb2,sbpro1,sbpro2,sb16,modern,off';
+      DefaultValuesGUSFilterStaging='on,off';
+      DefaultValuesGUSMemSizeX='256,512,1024,2048,4096,8192';
+      DefaultValuesGUSTypeX='classic,classic37,max,interwave';
+      DefaultValuesGUSMasterVolumeX='6,0,-3,-6,-12,-24';
+      DefaultValuesCrossfeedStaging='off,on,light,normal,strong';
+      DefaultValuesReverbStaging='off,on,tiny,small,medium,large,huge';
+      DefaultValuesChorusStaging='off,on,light,normal,strong';
+      DefaultValuesPCSpeakerFilterStaging='on,off';
+      DefaultValuesLptDacFilterStaging='on,off';
+      DefaultValuesPS1AudioX='on,off';
+      DefaultValuesFluidChorusStaging='auto,on,off';
+      DefaultValuesFluidReverbStaging='auto,on,off';
+      DefaultValuesFluidFilterStaging='on,off';
+      DefaultValuesFluidChorusX='yes,no';
+      DefaultValuesFluidReverbX='yes,no';
+      DefaultValuesFluidDriverX='default,dsound,wasapi,winmm,portaudio,pulseaudio,alsa,oss,coreaudio,sndman,jack,file';
+      DefaultValuesMIDIBaseX='0,300,310,320,330,332,334,336,340,360,c0d0,c8d0,d0d0,d8d0,e0d0,e8d0,f0d0,f8d0,80d2,80d4,80d6,80d8,80da,80dc,80de';
+      DefaultValuesMIDIIRQX='-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15';
+      DefaultValuesMIDISampleRateX='49716,48000,44100,32000,22050,16000,11025,8000';
+      DefaultValuesReelMagic='off,cardonly,on';
+      DefaultValuesReelMagicKey='auto,common,thehorde';
+      DefaultValuesReelMagicFCode='0,1,2,3,4,5,6,7';
       { Glide / Voodoo — Default = shared by all kinds that use the control;
         kind-specific suffix when value sets differ (X, NewStaging, Pure). }
       DefaultValuesGlideEmulation='false,true,emu';

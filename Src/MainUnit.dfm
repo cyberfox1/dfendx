@@ -7324,9 +7324,7 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
       object MenuHelpUpdates: TMenuItem
         Tag = 6010
         Caption = 'Search for updates...'
-        Enabled = False
         ImageIndex = 31
-        Visible = False
         OnClick = MenuWork
       end
       object N32: TMenuItem

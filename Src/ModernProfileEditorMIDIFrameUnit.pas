@@ -18,7 +18,6 @@ type
     MIDISelectListBox: TListBox;
     MIDISelectLabel1: TLabel;
     MIDISelectLabel2: TLabel;
-    InfoLabel: TLabel;
     MT32SettingsGroupBox: TGroupBox;
     MT32ModeComboBox: TComboBox;
     MT32TimeComboBox: TComboBox;
@@ -34,6 +33,21 @@ type
     MT32ModelLabel: TLabel;
     MT32LevelLabel: TLabel;
     SoundCanvasFilterCheckBox: TCheckBox;
+    comboMidiIrq: TComboBox;
+    Label1: TLabel;
+    comboMidiBase: TComboBox;
+    Label2: TLabel;
+    comboSampleRate: TComboBox;
+    Label3: TLabel;
+    FluidsynthSettingsGroupBox: TGroupBox;
+    FluidChorusLabel: TLabel;
+    FluidReverbLabel: TLabel;
+    FluidFilterLabel: TLabel;
+    FluidDriverLabel: TLabel;
+    FluidChorusComboBox: TComboBox;
+    FluidReverbComboBox: TComboBox;
+    FluidFilterComboBox: TComboBox;
+    FluidDriverComboBox: TComboBox;
     procedure MIDISelectButtonClick(Sender: TObject);
     procedure MIDISelectListBoxClick(Sender: TObject);
     procedure DeviceComboBoxChange(Sender: TObject); overload;
@@ -54,6 +68,11 @@ type
     FMT32ModelStagingConfOpt: String;
     FMT32ModelXConfOpt: String;
     FSoundCanvasModelStagingConfOpt: String;
+    FFluidChorusStagingConfOpt, FFluidReverbStagingConfOpt, FFluidFilterStagingConfOpt: String;
+    FFluidChorusXConfOpt, FFluidReverbXConfOpt, FFluidDriverXConfOpt: String;
+    FMIDIBaseConfOpt, FMIDIIRQConfOpt, FMIDISampleRateConfOpt: String;
+    FLoadedFluidChorus, FLoadedFluidReverb, FLoadedFluidFilter, FLoadedFluidDriver: String;
+    FLoadedMIDIBase, FLoadedMIDIIRQ, FLoadedMIDISampleRate: String;
     LastMIDIDevice: String;
     procedure DeviceComboBoxChange(Sender: TObject; UpdatePath: Boolean); overload;
     procedure ApplyFluidSynthPathVisibility;
@@ -273,10 +292,24 @@ begin
 end;
 
 procedure TModernProfileEditorMIDIFrame.ShowFrame(Sender: TObject);
+Var Kind: TDOSBoxKind;
 begin
   if DeviceComboBox.ItemIndex>=0 then
     LastMIDIDevice:=DeviceComboBox.Text;
   ApplyMIDIDeviceList;
+  Kind:=GetSelectedDosBoxKind;
+  If Kind=dbkStaging then begin
+    ReloadComboFromConfOpt(FluidChorusComboBox,FFluidChorusStagingConfOpt,True,FLoadedFluidChorus);
+    ReloadComboFromConfOpt(FluidReverbComboBox,FFluidReverbStagingConfOpt,True,FLoadedFluidReverb);
+  end else begin
+    ReloadComboFromConfOpt(FluidChorusComboBox,FFluidChorusXConfOpt,True,FLoadedFluidChorus);
+    ReloadComboFromConfOpt(FluidReverbComboBox,FFluidReverbXConfOpt,True,FLoadedFluidReverb);
+  end;
+  ReloadComboFromConfOpt(FluidFilterComboBox,FFluidFilterStagingConfOpt,True,FLoadedFluidFilter);
+  ReloadComboFromConfOpt(FluidDriverComboBox,FFluidDriverXConfOpt,True,FLoadedFluidDriver);
+  ReloadComboFromConfOpt(comboMidiBase,FMIDIBaseConfOpt,True,FLoadedMIDIBase);
+  ReloadComboFromConfOpt(comboMidiIrq,FMIDIIRQConfOpt,True,FLoadedMIDIIRQ);
+  ReloadComboFromConfOpt(comboSampleRate,FMIDISampleRateConfOpt,True,FLoadedMIDISampleRate);
   DeviceComboBoxChange(Self,False);
 end;
 
@@ -284,6 +317,13 @@ procedure TModernProfileEditorMIDIFrame.Invalidate(Sender: TObject);
 begin
   DeviceComboBox.ItemIndex:=-1;
   MT32ModelComboBox.ItemIndex:=-1;
+  FluidChorusComboBox.ItemIndex:=-1;
+  FluidReverbComboBox.ItemIndex:=-1;
+  FluidFilterComboBox.ItemIndex:=-1;
+  FluidDriverComboBox.ItemIndex:=-1;
+  comboMidiBase.ItemIndex:=-1;
+  comboMidiIrq.ItemIndex:=-1;
+  comboSampleRate.ItemIndex:=-1;
 end;
 
 function TModernProfileEditorMIDIFrame.FormatFluidGainDisplay(const N: Integer): String;
@@ -378,6 +418,14 @@ begin
   NoFlicker(tbFluidSynthGainSlider);
   NoFlicker(lbFluidSynthGainValue);
   NoFlicker(SoundCanvasFilterCheckBox);
+  NoFlicker(FluidsynthSettingsGroupBox);
+  NoFlicker(FluidChorusComboBox);
+  NoFlicker(FluidReverbComboBox);
+  NoFlicker(FluidFilterComboBox);
+  NoFlicker(FluidDriverComboBox);
+  NoFlicker(comboMidiBase);
+  NoFlicker(comboMidiIrq);
+  NoFlicker(comboSampleRate);
 
   FMIDIDeviceConfOpt:=InitData.GameDB.ConfOpt.MIDIDevice;
   FMIDIDeviceStagingConfOpt:=InitData.GameDB.ConfOpt.MIDIDeviceStaging;
@@ -387,10 +435,18 @@ begin
   FMT32ModelStagingConfOpt:=InitData.GameDB.ConfOpt.MT32ModelStaging;
   FMT32ModelXConfOpt:=InitData.GameDB.ConfOpt.MT32ModelX;
   FSoundCanvasModelStagingConfOpt:=InitData.GameDB.ConfOpt.SoundCanvasModelStaging;
+  FFluidChorusStagingConfOpt:=InitData.GameDB.ConfOpt.FluidChorusStaging;
+  FFluidReverbStagingConfOpt:=InitData.GameDB.ConfOpt.FluidReverbStaging;
+  FFluidFilterStagingConfOpt:=InitData.GameDB.ConfOpt.FluidFilterStaging;
+  FFluidChorusXConfOpt:=InitData.GameDB.ConfOpt.FluidChorusX;
+  FFluidReverbXConfOpt:=InitData.GameDB.ConfOpt.FluidReverbX;
+  FFluidDriverXConfOpt:=InitData.GameDB.ConfOpt.FluidDriverX;
+  FMIDIBaseConfOpt:=InitData.GameDB.ConfOpt.MIDIBaseX;
+  FMIDIIRQConfOpt:=InitData.GameDB.ConfOpt.MIDIIRQX;
+  FMIDISampleRateConfOpt:=InitData.GameDB.ConfOpt.MIDISampleRateX;
   InitData.OnShowFrame:=ShowFrame;
   InitData.OnInvalidate:=Invalidate;
 
-  InfoLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIInfo;
   TypeLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIType;
   St:=ValueToList(InitData.GameDB.ConfOpt.MPU401,';,'); try TypeComboBox.Items.AddStrings(St); finally St.Free; end;
   DeviceLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIDevice;
@@ -421,6 +477,28 @@ begin
   MT32TimeLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIMT32Time;
   MT32LevelLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIMT32Level;
   MT32ModelLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIMT32Model;
+  FluidsynthSettingsGroupBox.Caption:=LanguageSetup.ProfileEditorSoundMIDIFluidSynthSettings;
+  FluidChorusLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIFluidSynthChorus;
+  FluidReverbLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIFluidSynthReverb;
+  FluidFilterLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIFluidSynthFilter;
+  FluidDriverLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIFluidSynthDriver;
+  RebuildComboFromConfOpt(FluidChorusComboBox,FFluidChorusStagingConfOpt,'');
+  RebuildComboFromConfOpt(FluidReverbComboBox,FFluidReverbStagingConfOpt,'');
+  RebuildComboFromConfOpt(FluidFilterComboBox,FFluidFilterStagingConfOpt,'');
+  RebuildComboFromConfOpt(FluidDriverComboBox,FFluidDriverXConfOpt,'');
+  Label1.Caption:=LanguageSetup.ProfileEditorSoundMIDIPort;
+  Label2.Caption:=LanguageSetup.ProfileEditorSoundMIDIIRQ;
+  Label3.Caption:=LanguageSetup.ProfileEditorSoundMIDISampleRate;
+  RebuildComboFromConfOpt(comboMidiBase,FMIDIBaseConfOpt,'');
+  RebuildComboFromConfOpt(comboMidiIrq,FMIDIIRQConfOpt,'');
+  RebuildComboFromConfOpt(comboSampleRate,FMIDISampleRateConfOpt,'');
+  AddDefaultValueHint(comboMidiBase);
+  AddDefaultValueHint(comboMidiIrq);
+  AddDefaultValueHint(comboSampleRate);
+  AddDefaultValueHint(FluidChorusComboBox);
+  AddDefaultValueHint(FluidReverbComboBox);
+  AddDefaultValueHint(FluidFilterComboBox);
+  AddDefaultValueHint(FluidDriverComboBox);
 
   St:=ValueToList(InitData.GameDB.ConfOpt.MT32ReverbMode,';,');
   try
@@ -448,6 +526,7 @@ begin
 
   FluidSynthGroupBox.Visible:=False;
   MT32SettingsGroupBox.Visible:=False;
+  FluidsynthSettingsGroupBox.Visible:=False;
 
   HelpContext:=ID_ProfileEditSoundMIDI;
 end;
@@ -456,7 +535,7 @@ Procedure SetComboBox(const ComboBox : TComboBox; const Value : String; const De
 Var S : String;
     I : Integer;
 begin
-  try ComboBox.ItemIndex:=Default; except end;
+  ComboBox.ItemIndex:=Default;
   S:=Trim(ExtUpperCase(Value));
   For I:=0 to ComboBox.Items.Count-1 do If Trim(ExtUpperCase(ComboBox.Items[I]))=S then begin
     ComboBox.ItemIndex:=I; break;
@@ -497,6 +576,13 @@ begin
 
   LoadFluidGainUI(Trim(Game.MIDIDeviceGainValue));
   FTempGame.MIDIDeviceGainValue:='';
+  FLoadedFluidChorus:=Trim(Game.FluidChorus);
+  FLoadedFluidReverb:=Trim(Game.FluidReverb);
+  FLoadedFluidFilter:=Trim(Game.FluidFilter);
+  FLoadedFluidDriver:=Trim(Game.FluidDriver);
+  FLoadedMIDIBase:=Trim(Game.MIDIBase);
+  FLoadedMIDIIRQ:=Trim(Game.MIDIIRQ);
+  FLoadedMIDISampleRate:=Trim(Game.MIDISampleRate);
 
   DeviceComboBoxChange(self);
 end;
@@ -508,11 +594,51 @@ end;
 
 procedure TModernProfileEditorMIDIFrame.DeviceComboBoxChange(Sender: TObject; UpdatePath: Boolean);
 Var Cur: String;
+    Kind: TDOSBoxKind;
+    ShowFS: Boolean;
 begin
   Cur:=Trim(DeviceComboBox.Text);
   LastMIDIDevice:=Cur;
+  Kind:=GetSelectedDosBoxKind;
+  ShowFS:=SameText(Cur,'soundfont') and (Kind in [dbkStaging,dbkX]);
 
   MT32SettingsGroupBox.Visible:=SameText(Cur,'mt32') or SameText(Cur,'soundcanvas');
+  FluidsynthSettingsGroupBox.Visible:=ShowFS;
+  If not ShowFS then begin
+    SetComboNoSelect(FluidChorusComboBox);
+    SetComboNoSelect(FluidReverbComboBox);
+    SetComboNoSelect(FluidFilterComboBox);
+    SetComboNoSelect(FluidDriverComboBox);
+  end else begin
+    FluidChorusComboBox.Enabled:=True;
+    FluidReverbComboBox.Enabled:=True;
+    FluidChorusLabel.Enabled:=True;
+    FluidReverbLabel.Enabled:=True;
+    FluidFilterComboBox.Enabled:=Kind=dbkStaging;
+    FluidFilterLabel.Enabled:=Kind=dbkStaging;
+    FluidDriverComboBox.Enabled:=Kind=dbkX;
+    FluidDriverLabel.Enabled:=Kind=dbkX;
+    If Kind<>dbkStaging then SetComboNoSelect(FluidFilterComboBox);
+    If Kind<>dbkX then SetComboNoSelect(FluidDriverComboBox);
+  end;
+  comboMidiBase.Enabled:=Kind=dbkX;
+  comboMidiIrq.Enabled:=Kind=dbkX;
+  comboSampleRate.Enabled:=Kind=dbkX;
+  Label1.Enabled:=Kind=dbkX;
+  Label2.Enabled:=Kind=dbkX;
+  Label3.Enabled:=Kind=dbkX;
+  If Kind=dbkX then begin
+    If comboMidiBase.ItemIndex<0 then SelectComboValue(comboMidiBase,'330');
+    If comboMidiIrq.ItemIndex<0 then SelectComboValue(comboMidiIrq,'9');
+    If comboSampleRate.ItemIndex<0 then SelectComboValue(comboSampleRate,'48000');
+  end else begin
+    SelectComboValue(comboMidiBase,'330');
+    SelectComboValue(comboMidiIrq,'9');
+    If Kind=dbkStaging then
+      SelectComboValue(comboSampleRate,'48000')
+    else
+      SelectComboValue(comboSampleRate,'44100');
+  end;
   If not SameText(Cur,'soundfont') and not SameText(Cur,'mt32') and not SameText(Cur,'soundcanvas') then
     ClearFluidSynthUI;
   If SameText(Cur,'mt32') or SameText(Cur,'soundcanvas') then
@@ -582,7 +708,8 @@ Var PathNow: String;
     Kind: TDOSBoxKind;
     IsFS, IsMT, IsSC: Boolean;
 begin
-  Game.MIDIType:=TypeComboBox.Text;
+  If TypeComboBox.ItemIndex>=0 then
+    Game.MIDIType:=TypeComboBox.Text;
   If DeviceComboBox.ItemIndex>=0 then
     Game.MIDIDevice:=DeviceComboBox.Text;
   Game.MIDIConfig:=AdditionalSettingsEdit.Text;
@@ -598,6 +725,24 @@ begin
 
   If (Kind in [dbkStaging,dbkX,dbkPure]) and IsFS then
     Game.FluidSoundFont:=PathNow;
+  If IsFS and (Kind in [dbkStaging,dbkX]) then begin
+    If FluidChorusComboBox.ItemIndex>=0 then
+      Game.FluidChorus:=FluidChorusComboBox.Text;
+    If FluidReverbComboBox.ItemIndex>=0 then
+      Game.FluidReverb:=FluidReverbComboBox.Text;
+    If (Kind=dbkStaging) and (FluidFilterComboBox.ItemIndex>=0) then
+      Game.FluidFilter:=FluidFilterComboBox.Text;
+    If (Kind=dbkX) and (FluidDriverComboBox.ItemIndex>=0) then
+      Game.FluidDriver:=FluidDriverComboBox.Text;
+  end;
+  If Kind=dbkX then begin
+    If comboMidiBase.ItemIndex>=0 then
+      Game.MIDIBase:=comboMidiBase.Text;
+    If comboMidiIrq.ItemIndex>=0 then
+      Game.MIDIIRQ:=comboMidiIrq.Text;
+    If comboSampleRate.ItemIndex>=0 then
+      Game.MIDISampleRate:=comboSampleRate.Text;
+  end;
 
   If IsSC then begin
     If Kind=dbkStaging then begin

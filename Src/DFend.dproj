@@ -172,6 +172,7 @@
         <DCCReference Include="VistaToolsUnit.pas"/>
         <DCCReference Include="GameDBUnit.pas"/>
         <DCCReference Include="GameDBToolsHelpers.pas"/>
+        <DCCReference Include="GameDBImportUnit.pas"/>
         <DCCReference Include="GameDBToolsUnit.pas"/>
         <DCCReference Include="IconManagerFormUnit.pas">
             <Form>IconManagerForm</Form>
@@ -267,6 +268,10 @@
         </DCCReference>
         <DCCReference Include="ModernProfileEditorImageQualityFrameUnit.pas">
             <Form>ModernProfileEditorImageQualityFrame</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ModernProfileEditorVideoFrameUnit.pas">
+            <Form>ModernProfileEditorVideoFrame</Form>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="ModernProfileEditorGlideFrameUnit.pas">

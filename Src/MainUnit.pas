@@ -1037,13 +1037,8 @@ begin
   MenuHelpAbandonware.Caption:=LanguageSetup.MenuHelpAbandonware;
   MenuHelpHomepage.Caption:=LanguageSetup.MenuHelpHomepage;
   MenuHelpUpdates.Caption:=LanguageSetup.MenuHelpUpdates;
-  {$IFDEF DEBUG}
   MenuHelpUpdates.Visible:=True;
   MenuHelpUpdates.Enabled:=True;
-  {$ELSE}
-  MenuHelpUpdates.Visible:=False;
-  MenuHelpUpdates.Enabled:=False;
-  {$ENDIF}
   MenuHelpStatistics.Caption:=LanguageSetup.MenuHelpStatistics;
   MenuHelpOperationMode.Caption:=LanguageSetup.MenuHelpOperationMode;
   MenuHelpHelp.Caption:=LanguageSetup.MenuHelpHelp;

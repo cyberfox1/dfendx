@@ -111,6 +111,7 @@ begin
  2126 : Result := 'ProfileEditAdditionalChecksums.html';
  2127 : Result := 'ProfileEditSoundInnova.html';
  2128 : Result := 'ProfileEditImageQuality.html';
+ 2129 : Result := 'ProfileEditVideo.html';
  3001 : Result := 'ExtrasManageIcons.html';
  3002 : Result := 'ExtrasViewHistory.html';
  3003 : Result := 'ExtrasOpenGamesFolder.html';

@@ -23,12 +23,44 @@ type
     TandySampleRateLabel: TLabel;
     TandyComboBox: TComboBox;
     ActivateDisneyCheckBox: TCheckBox;
+    LptDacLabel: TLabel;
+    LptDacComboBox: TComboBox;
+    SwapStereoCheckBox: TCheckBox;
+    SampleAccurateCheckBox: TCheckBox;
+    DCBiasCheckBox: TCheckBox;
+    CompressorCheckBox: TCheckBox;
+    CrossfeedLabel: TLabel;
+    ReverbLabel: TLabel;
+    ChorusLabel: TLabel;
+    CrossfeedComboBox: TComboBox;
+    ReverbComboBox: TComboBox;
+    ChorusComboBox: TComboBox;
+    LptDacFilterLabel: TLabel;
+    LptDacFilterComboBox: TComboBox;
+    ActivatePS1AudioCheckBox: TCheckBox;
+    PS1AudioRateLabel: TLabel;
+    PS1AudioRateComboBox: TComboBox;
+    procedure ActivatePCSpeakerCheckBoxClick(Sender: TObject);
+    procedure TandyRadioGroupClick(Sender: TObject);
+    procedure ActivatePS1AudioCheckBoxClick(Sender: TObject);
   private
     { Private-Deklarationen }
+    FTempGame : TGame;
     FOldSampleRate, FOldBlockSize, FOldPreBuffer, FOldSpeakerRate, FOldTandyRate : Integer;
+    FLptDacStagingConfOpt : String;
+    FCrossfeedStagingConfOpt, FReverbStagingConfOpt, FChorusStagingConfOpt : String;
+    FLptDacFilterStagingConfOpt, FPS1AudioRateConfOpt : String;
+    FLoadedLptDac : String;
+    FLoadedCrossfeed, FLoadedReverb, FLoadedChorus : String;
+    FLoadedLptDacFilter, FLoadedPS1AudioRate : String;
     Procedure CheckValue(Sender : TObject; var OK : Boolean);
+    Procedure ApplyVisibility;
+    Procedure ApplySampleRateEnabled;
+    Procedure ShowFrame(Sender : TObject);
+    Procedure Invalidate(Sender : TObject);
   public
     { Public-Deklarationen }
+    Constructor Create(AOwner : TComponent); override;
     Procedure InitGUI(var InitData : TModernProfileEditorInitData);
     Procedure SetGame(const Game : TGame; const LoadFromTemplate : Boolean);
     Procedure GetGame(const Game : TGame);
@@ -42,10 +74,108 @@ uses VistaToolsUnit, LanguageSetupUnit, CommonHelpers, HelpConsts;
 
 { TModernProfileEditorSoundFrame }
 
+constructor TModernProfileEditorSoundFrame.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
+end;
+
+procedure TModernProfileEditorSoundFrame.ApplyVisibility;
+Var Staging, DBX : Boolean;
+begin
+  Staging:=FTempGame.IsStaging;
+  DBX:=FTempGame.IsDBX;
+  ActivatePCSpeakerCheckBox.Visible:=True;
+  PCSpeakerSampleRateLabel.Visible:=not Staging;
+  PCSpeakerSampleRateComboBox.Visible:=not Staging;
+  TandySampleRateLabel.Visible:=not Staging;
+  TandyComboBox.Visible:=not Staging;
+  ActivateDisneyCheckBox.Visible:=not Staging;
+  LptDacLabel.Visible:=Staging;
+  LptDacComboBox.Visible:=Staging;
+  SwapStereoCheckBox.Visible:=DBX;
+  SampleAccurateCheckBox.Visible:=DBX;
+  DCBiasCheckBox.Visible:=DBX;
+  CompressorCheckBox.Visible:=Staging;
+  CrossfeedLabel.Visible:=Staging;
+  CrossfeedComboBox.Visible:=Staging;
+  ReverbLabel.Visible:=Staging;
+  ReverbComboBox.Visible:=Staging;
+  ChorusLabel.Visible:=Staging;
+  ChorusComboBox.Visible:=Staging;
+  LptDacFilterLabel.Visible:=Staging;
+  LptDacFilterComboBox.Visible:=Staging;
+  ActivatePS1AudioCheckBox.Visible:=DBX;
+  PS1AudioRateLabel.Visible:=DBX;
+  PS1AudioRateComboBox.Visible:=DBX;
+  If not Staging then begin
+    SetComboNoSelect(LptDacComboBox);
+    SetComboNoSelect(CrossfeedComboBox);
+    SetComboNoSelect(ReverbComboBox);
+    SetComboNoSelect(ChorusComboBox);
+    SetComboNoSelect(LptDacFilterComboBox);
+  end;
+  If not DBX then
+    SetComboNoSelect(PS1AudioRateComboBox);
+  ApplySampleRateEnabled;
+end;
+
+procedure TModernProfileEditorSoundFrame.ApplySampleRateEnabled;
+Var OnPC, OnTandy, OnPS1 : Boolean;
+begin
+  OnPC:=ActivatePCSpeakerCheckBox.Checked;
+  OnTandy:=TandyRadioGroup.ItemIndex<>2;
+  OnPS1:=ActivatePS1AudioCheckBox.Checked;
+  PCSpeakerSampleRateLabel.Enabled:=OnPC;
+  PCSpeakerSampleRateComboBox.Enabled:=OnPC;
+  TandySampleRateLabel.Enabled:=OnTandy;
+  TandyComboBox.Enabled:=OnTandy;
+  PS1AudioRateLabel.Enabled:=OnPS1;
+  PS1AudioRateComboBox.Enabled:=OnPS1;
+end;
+
+procedure TModernProfileEditorSoundFrame.ActivatePCSpeakerCheckBoxClick(Sender: TObject);
+begin
+  ApplySampleRateEnabled;
+end;
+
+procedure TModernProfileEditorSoundFrame.TandyRadioGroupClick(Sender: TObject);
+begin
+  ApplySampleRateEnabled;
+end;
+
+procedure TModernProfileEditorSoundFrame.ActivatePS1AudioCheckBoxClick(Sender: TObject);
+begin
+  ApplySampleRateEnabled;
+end;
+
+procedure TModernProfileEditorSoundFrame.ShowFrame(Sender: TObject);
+begin
+  ReloadComboFromConfOpt(LptDacComboBox,FLptDacStagingConfOpt,True,FLoadedLptDac);
+  ReloadComboFromConfOpt(CrossfeedComboBox,FCrossfeedStagingConfOpt,True,FLoadedCrossfeed);
+  ReloadComboFromConfOpt(ReverbComboBox,FReverbStagingConfOpt,True,FLoadedReverb);
+  ReloadComboFromConfOpt(ChorusComboBox,FChorusStagingConfOpt,True,FLoadedChorus);
+  ReloadComboFromConfOpt(LptDacFilterComboBox,FLptDacFilterStagingConfOpt,True,FLoadedLptDacFilter);
+  ReloadComboFromConfOpt(PS1AudioRateComboBox,FPS1AudioRateConfOpt,True,FLoadedPS1AudioRate);
+  ApplyVisibility;
+end;
+
+procedure TModernProfileEditorSoundFrame.Invalidate(Sender: TObject);
+begin
+  LptDacComboBox.ItemIndex:=-1;
+  CrossfeedComboBox.ItemIndex:=-1;
+  ReverbComboBox.ItemIndex:=-1;
+  ChorusComboBox.ItemIndex:=-1;
+  LptDacFilterComboBox.ItemIndex:=-1;
+  PS1AudioRateComboBox.ItemIndex:=-1;
+end;
+
 procedure TModernProfileEditorSoundFrame.InitGUI(var InitData : TModernProfileEditorInitData);
 Var St : TStringList;
 begin
   InitData.OnCheckValue:=CheckValue;
+  InitData.OnShowFrame:=ShowFrame;
+  InitData.OnInvalidate:=Invalidate;
 
   NoFlicker(ActivateSoundCheckBox);
   NoFlicker(MixerGroupBox);
@@ -55,6 +185,24 @@ begin
   NoFlicker(ActivatePCSpeakerCheckBox);
   NoFlicker(PCSpeakerSampleRateComboBox);
   NoFlicker(TandyComboBox);
+  NoFlicker(LptDacComboBox);
+  NoFlicker(SwapStereoCheckBox);
+  NoFlicker(SampleAccurateCheckBox);
+  NoFlicker(DCBiasCheckBox);
+  NoFlicker(CompressorCheckBox);
+  NoFlicker(CrossfeedComboBox);
+  NoFlicker(ReverbComboBox);
+  NoFlicker(ChorusComboBox);
+  NoFlicker(LptDacFilterComboBox);
+  NoFlicker(ActivatePS1AudioCheckBox);
+  NoFlicker(PS1AudioRateComboBox);
+
+  FLptDacStagingConfOpt:=InitData.GameDB.ConfOpt.LptDacStaging;
+  FCrossfeedStagingConfOpt:=InitData.GameDB.ConfOpt.CrossfeedStaging;
+  FReverbStagingConfOpt:=InitData.GameDB.ConfOpt.ReverbStaging;
+  FChorusStagingConfOpt:=InitData.GameDB.ConfOpt.ChorusStaging;
+  FLptDacFilterStagingConfOpt:=InitData.GameDB.ConfOpt.LptDacFilterStaging;
+  FPS1AudioRateConfOpt:=InitData.GameDB.ConfOpt.Rate;
 
   ActivateSoundCheckBox.Caption:=LanguageSetup.ProfileEditorSoundEnableSound;
   MixerGroupBox.Caption:=LanguageSetup.ProfileEditorSoundMixer;
@@ -83,9 +231,32 @@ begin
   St:=ValueToList(InitData.GameDB.ConfOpt.TandyRate,';,'); try TandyComboBox.Items.AddStrings(St); finally St.Free; end;
 
   ActivateDisneyCheckBox.Caption:=LanguageSetup.ProfileEditorSoundMiscEnableDisneySoundsSource;
+  LptDacLabel.Caption:=LanguageSetup.ProfileEditorSoundMiscLptDac;
+  SwapStereoCheckBox.Caption:=LanguageSetup.ProfileEditorSoundMixerSwapStereo;
+  SampleAccurateCheckBox.Caption:=LanguageSetup.ProfileEditorSoundMixerSampleAccurate;
+  DCBiasCheckBox.Caption:=LanguageSetup.ProfileEditorSoundMixerDCBiasCorrection;
+  CompressorCheckBox.Caption:=LanguageSetup.ProfileEditorSoundMixerCompressor;
+  CrossfeedLabel.Caption:=LanguageSetup.ProfileEditorSoundMixerCrossfeed;
+  ReverbLabel.Caption:=LanguageSetup.ProfileEditorSoundMixerReverb;
+  ChorusLabel.Caption:=LanguageSetup.ProfileEditorSoundMixerChorus;
+  LptDacFilterLabel.Caption:=LanguageSetup.ProfileEditorSoundMiscLptDacFilter;
+  ActivatePS1AudioCheckBox.Caption:=LanguageSetup.ProfileEditorSoundMiscPS1Audio;
+  PS1AudioRateLabel.Caption:=LanguageSetup.ProfileEditorSoundMiscPS1AudioRate;
+  RebuildComboFromConfOpt(LptDacComboBox,FLptDacStagingConfOpt,'');
+  RebuildComboFromConfOpt(CrossfeedComboBox,FCrossfeedStagingConfOpt,'');
+  RebuildComboFromConfOpt(ReverbComboBox,FReverbStagingConfOpt,'');
+  RebuildComboFromConfOpt(ChorusComboBox,FChorusStagingConfOpt,'');
+  RebuildComboFromConfOpt(LptDacFilterComboBox,FLptDacFilterStagingConfOpt,'');
+  RebuildComboFromConfOpt(PS1AudioRateComboBox,FPS1AudioRateConfOpt,'');
 
   AddDefaultValueHint(SampleRateComboBox);
   AddDefaultValueHint(BlockSizeComboBox);
+  AddDefaultValueHint(LptDacComboBox);
+  AddDefaultValueHint(CrossfeedComboBox);
+  AddDefaultValueHint(ReverbComboBox);
+  AddDefaultValueHint(ChorusComboBox);
+  AddDefaultValueHint(LptDacFilterComboBox);
+  AddDefaultValueHint(PS1AudioRateComboBox);
 
   HelpContext:=ID_ProfileEditSound;
 end;
@@ -124,6 +295,18 @@ begin
   FOldTandyRate:=Game.SpeakerTandyRate;
 
   ActivateDisneyCheckBox.Checked:=Game.SpeakerDisney;
+  SwapStereoCheckBox.Checked:=Game.MixerSwapStereo;
+  SampleAccurateCheckBox.Checked:=Game.MixerSampleAccurate;
+  DCBiasCheckBox.Checked:=Game.MixerDCBiasCorrection;
+  CompressorCheckBox.Checked:=Game.MixerCompressor;
+  FLoadedLptDac:=Trim(Game.SpeakerLptDac);
+  FLoadedCrossfeed:=Trim(Game.MixerCrossfeed);
+  FLoadedReverb:=Trim(Game.MixerReverb);
+  FLoadedChorus:=Trim(Game.MixerChorus);
+  FLoadedLptDacFilter:=Trim(Game.SpeakerLptDacFilter);
+  ActivatePS1AudioCheckBox.Checked:=Game.PS1Audio;
+  FLoadedPS1AudioRate:=Trim(Game.PS1AudioRate);
+  ShowFrame(nil);
 end;
 
 Procedure TModernProfileEditorSoundFrame.CheckValue(Sender : TObject; var OK : Boolean);
@@ -149,15 +332,17 @@ begin
     end;
   end;
 
-  If (not TryStrToInt(Trim(PCSpeakerSampleRateComboBox.Text),I)) or (I<1) or (I>65536) then begin
-    If MessageDlg(Format(LanguageSetup.MessageInvalidValue,[PCSpeakerSampleRateComboBox.Text,LanguageSetup.ProfileEditorSoundMiscPCSpeakerRate,IntToStr(FOldSpeakerRate)]),mtWarning,[mbYes,mbNo],0)<>mrYes then begin
-      Ok:=False; exit;
+  If not FTempGame.IsStaging then begin
+    If PCSpeakerSampleRateComboBox.Enabled and ((not TryStrToInt(Trim(PCSpeakerSampleRateComboBox.Text),I)) or (I<1) or (I>65536)) then begin
+      If MessageDlg(Format(LanguageSetup.MessageInvalidValue,[PCSpeakerSampleRateComboBox.Text,LanguageSetup.ProfileEditorSoundMiscPCSpeakerRate,IntToStr(FOldSpeakerRate)]),mtWarning,[mbYes,mbNo],0)<>mrYes then begin
+        Ok:=False; exit;
+      end;
     end;
-  end;
 
-  If (not TryStrToInt(Trim(TandyComboBox.Text),I)) or (I<1) or (I>65536) then begin
-    If MessageDlg(Format(LanguageSetup.MessageInvalidValue,[TandyComboBox.Text,LanguageSetup.ProfileEditorSoundMiscTandyRate,IntToStr(FOldTandyRate)]),mtWarning,[mbYes,mbNo],0)<>mrYes then begin
-      Ok:=False; exit;
+    If TandyComboBox.Enabled and ((not TryStrToInt(Trim(TandyComboBox.Text),I)) or (I<1) or (I>65536)) then begin
+      If MessageDlg(Format(LanguageSetup.MessageInvalidValue,[TandyComboBox.Text,LanguageSetup.ProfileEditorSoundMiscTandyRate,IntToStr(FOldTandyRate)]),mtWarning,[mbYes,mbNo],0)<>mrYes then begin
+        Ok:=False; exit;
+      end;
     end;
   end;
 end;
@@ -171,16 +356,38 @@ begin
   If TryStrToInt(Trim(PreBufferComboBox.Text),I) and (I>=1) and (I<=65536) then Game.MixerPrebuffer:=I;
 
   Game.SpeakerPC:=ActivatePCSpeakerCheckBox.Checked;
-  If TryStrToInt(Trim(PCSpeakerSampleRateComboBox.Text),I) and (I>=1) and (I<=65536) then Game.SpeakerRate:=I;
+  Game.SpeakerDisney:=ActivateDisneyCheckBox.Checked;
+  If FTempGame.IsStaging then begin
+    If LptDacComboBox.ItemIndex>=0 then
+      Game.SpeakerLptDac:=LptDacComboBox.Text;
+    Game.MixerCompressor:=CompressorCheckBox.Checked;
+    If CrossfeedComboBox.ItemIndex>=0 then
+      Game.MixerCrossfeed:=CrossfeedComboBox.Text;
+    If ReverbComboBox.ItemIndex>=0 then
+      Game.MixerReverb:=ReverbComboBox.Text;
+    If ChorusComboBox.ItemIndex>=0 then
+      Game.MixerChorus:=ChorusComboBox.Text;
+    If LptDacFilterComboBox.ItemIndex>=0 then
+      Game.SpeakerLptDacFilter:=LptDacFilterComboBox.Text;
+  end else begin
+    If PCSpeakerSampleRateComboBox.Enabled and TryStrToInt(Trim(PCSpeakerSampleRateComboBox.Text),I) and (I>=1) and (I<=65536) then Game.SpeakerRate:=I;
+  end;
+  If FTempGame.IsDBX then begin
+    Game.MixerSwapStereo:=SwapStereoCheckBox.Checked;
+    Game.MixerSampleAccurate:=SampleAccurateCheckBox.Checked;
+    Game.MixerDCBiasCorrection:=DCBiasCheckBox.Checked;
+    Game.PS1Audio:=ActivatePS1AudioCheckBox.Checked;
+    If PS1AudioRateComboBox.Enabled and (PS1AudioRateComboBox.ItemIndex>=0) then
+      Game.PS1AudioRate:=PS1AudioRateComboBox.Text;
+  end;
 
   Case TandyRadioGroup.ItemIndex of
     0 : Game.SpeakerTandy:='auto';
     1 : Game.SpeakerTandy:='on';
     2 : Game.SpeakerTandy:='off';
   end;
-  If TryStrToInt(Trim(TandyComboBox.Text),I) and (I>=1) and (I<=65536) then Game.SpeakerTandyRate:=I;
-
-  Game.SpeakerDisney:=ActivateDisneyCheckBox.Checked;
+  If (not FTempGame.IsStaging) and TandyComboBox.Enabled then
+    If TryStrToInt(Trim(TandyComboBox.Text),I) and (I>=1) and (I<=65536) then Game.SpeakerTandyRate:=I;
 end;
 
 end.

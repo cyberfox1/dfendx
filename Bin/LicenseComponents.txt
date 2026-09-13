@@ -38,6 +38,12 @@ FreeDOS 1.0
 FreeDOS is a trademark of Jim Hall
 (http://www.freedos.org/)
 
+CuteMouse 2.0
+(c) 1997-2002 Nagy Daniel
+GNU General Public License version 2
+(http://cutemouse.sourceforge.net/)
+Runtime: Bin\ctmouse.exe
+
 OggEnc v2.88 (libvorbis 1.3.7-aoTuV-b6.03)
 (c) 2000-2015 Michael Smith & portions by John Edwards
 Windows binary: RareWares generic 32-bit build (2024)

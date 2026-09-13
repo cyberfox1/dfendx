@@ -856,6 +856,7 @@ Function BuildAutoexec(const Game : TGame; const RunSetup : Boolean; const St : 
   Procedure SetVolume(const Channel : String; const Left,Right : Integer);
   begin If (Left<>100) or (Right<>100) then St.Add('mixer '+Channel+' '+IntToStr(Left)+':'+IntToStr(Right)+' /NOSHOW'); end;
 Var S,T,U,NumCommands,MouseCommands,UsePath,Mount,UnMount : String;
+    NeedCtmouse : Boolean;
     I : Integer;
     B : Boolean;
     FreeDriveLetters : String;
@@ -897,6 +898,7 @@ begin
   GenerateAutoExecKeyboardConf(Game,St,DOSBoxNr);
   SpeedTestInfo('Adding reported DOS version settings to [autoexec] section of DOSBox conf file');
   GenerateAutoExecDOSVerConf(Game,St);
+  GenerateAutoExecPs2Conf(Game,St);
 
   { Text mode lines }
 
@@ -935,7 +937,8 @@ begin
     If Game.AutoMountCDs then AutoMountCDs(St,Game,DOSBoxVersion,FreeDriveLetters,SpecialMountedCDDrives,BuildForArchivePackage);
   end;
   U:='';
-  If GameExeIsUnderExoDOS(MakeAbsPath(Game.GameExe,PrgSetup.BaseDir),PrgSetup.ExoDOSDir) then begin
+  NeedCtmouse:=CtmouseShouldRun(Game.Force2ButtonMouseMode,Game.SwapMouseButtons,Game.Ps2MouseEnabled,Game.CtmouseEnabled,Game.DosBoxKind);
+  If GameExeIsUnderExoDOS(MakeAbsPath(Game.GameExe,PrgSetup.BaseDir),PrgSetup.ExoDOSDir) or NeedCtmouse then begin
     S:=IncludeTrailingPathDelimiter(PrgDir)+BinFolder;
     If DirectoryExists(S) then begin
       For I:=Length(FreeDriveLetters) downto 1 do
@@ -993,22 +996,23 @@ begin
   If (S='OFF') or (S='0') or (S='FALSE') then begin If NumCommands<>'' then NumCommands:=NumCommands+' '; NumCommands:=NumCommands+'/S0'; end;
 
   MouseCommands:='';
-  If Game.Force2ButtonMouseMode then MouseCommands:='/Y';
-  If Game.SwapMouseButtons then begin If MouseCommands<>'' then MouseCommands:=MouseCommands+' '; MouseCommands:=MouseCommands+'/L'; end;
+  If NeedCtmouse then
+    MouseCommands:=BuildCtmouseAutoexecLine(Game.Force2ButtonMouseMode,Game.SwapMouseButtons,Game.Ps2MouseEnabled,Game.Ps2MouseModel);
 
   SpeedTestInfo('Determining how to temporary mount the FreeDOS directory');
 
   TempMountFreeDOSDir(Game,FreeDriveLetters,UsePath,Mount,UnMount);
   SpeedTestInfoOnly('FreeDOS directory inside DOSBox: '+UsePath+' mount command (only if needed): '+Mount);
 
-  If ((NumCommands<>'') or (MouseCommands<>'')) and (UsePath<>'') then begin
+  If (NumCommands<>'') and (UsePath<>'') then begin
     If Mount<>'' then St.Add(Mount);
-    If NumCommands<>'' then St.Add(UsePath+'4dos.com /C Keybd '+NumCommands);
-    If MouseCommands<>'' then St.Add(UsePath+'ctmouse '+MouseCommands);
+    St.Add(UsePath+'4dos.com /C Keybd '+NumCommands);
     If UnMount<>'' then St.Add(UnMount);
   end;
   If U<>'' then
     St.Add('SET PATH='+U+':\;Z:\');
+  If (U<>'') and NeedCtmouse then
+    St.Add(MouseCommands);
 
   { User defined Autoexec }
 
@@ -1145,6 +1149,7 @@ begin
   result.Add('rate='+IntToStr(Game.MixerRate));
   result.Add('blocksize='+IntToStr(Game.MixerBlocksize));
   result.Add('prebuffer='+IntToStr(Game.MixerPrebuffer));
+  GenerateMixerKindConf(Game,result);
 
   GenerateMidiConf(Game,result,DOSBoxVersion,Game.IsStaging,Game.IsOldStaging);
   GenerateSoundDeviceConf(Game,result,DOSBoxVersion);

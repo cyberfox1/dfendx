@@ -160,6 +160,7 @@ Section "$(LANGNAME_DFendReloaded)" ID_DFend
   File "staging\Bin\SetInstallerLanguage.exe"
   File "staging\Bin\dfxvalidator.exe"
   File "staging\Bin\config.com"
+  File "staging\Bin\ctmouse.exe"
   
   SetDetailsPrint listonly
   SetOutPath "$INSTDIR\Lang"

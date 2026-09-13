@@ -585,7 +585,7 @@ end;
 procedure TModernProfileEditorGraphicsFrame.ApplyXMachineTypesToVideoList(const PreferredValue : String = '');
 Var Kind: TDOSBoxKind;
     SelTok, Want, T: String;
-    I: Integer;
+    I, J: Integer;
 begin
   Kind:=GetSelectedDosBoxKind;
   If Trim(PreferredValue)<>'' then
@@ -602,10 +602,16 @@ begin
   RemoveVideoListMachineToken(VideoCardComboBox.Items,'olivetti');
   RemoveVideoListMachineToken(VideoCardComboBox.Items,'pc3270');
   If Kind=dbkX then begin
-    VideoCardComboBox.Items.Add('PC98');
-    VideoCardComboBox.Items.Add('DOS/V');
-    VideoCardComboBox.Items.Add('olivetti (Olivetti M24 / AT&T 6300)');
-    VideoCardComboBox.Items.Add('pc3270 (IBM 3270 PC)');
+    J:=VideoCardComboBox.Items.Count;
+    For I:=0 to VideoCardComboBox.Items.Count-1 do begin
+      T:=Trim(ExtUpperCase(VideoCardComboBox.Items[I]));
+      If Pos('(',T)>0 then T:=Trim(Copy(T,1,Pos('(',T)-1));
+      If T='PCJR' then begin J:=I+1; break; end;
+    end;
+    VideoCardComboBox.Items.Insert(J,'PC98'); Inc(J);
+    VideoCardComboBox.Items.Insert(J,'DOS/V'); Inc(J);
+    VideoCardComboBox.Items.Insert(J,'olivetti (Olivetti M24 / AT&T 6300)'); Inc(J);
+    VideoCardComboBox.Items.Insert(J,'pc3270 (IBM 3270 PC)');
   end;
   { List first, then match profile / preferred token. }
   VideoCardComboBox.ItemIndex:=-1;

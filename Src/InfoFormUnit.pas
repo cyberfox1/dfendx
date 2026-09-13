@@ -36,8 +36,6 @@ type
     Image3: TImage;
     LicensePanel: TPanel;
     LicenseComboBox: TComboBox;
-    ChangeLogPanel: TPanel;
-    ChangeLogComboBox: TComboBox;
     Image4: TImage;
     Image2: TImage;
     procedure FormShow(Sender: TObject);
@@ -48,7 +46,6 @@ type
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure Image3Click(Sender: TObject);
     procedure LicenseComboBoxChange(Sender: TObject);
-    procedure ChangeLogComboBoxChange(Sender: TObject);
     procedure LanguageAuthorsTabMouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: Integer);
   private
@@ -137,11 +134,9 @@ begin
   end;
   try CompLicenseMemo.Lines.Insert(0,''); except end;
 
-  ChangeLogComboBox.Items.AddObject('DFendX',TObject(0));
-  ChangeLogComboBox.Items.AddObject('DOSBox',TObject(1));
-  If (Trim(PrgSetup.ScummVMPath)<>'') and DirectoryExists(PrgSetup.ScummVMPath) then ChangeLogComboBox.Items.AddObject('ScummVM',TObject(2));
-  ChangeLogComboBox.ItemIndex:=0;
-  ChangeLogComboBoxChange(Sender);
+  try ChangeLogMemo.Lines.Clear; except end;
+  try ChangeLogMemo.Lines.LoadFromFile(PrgDir+'CHANGES'); except end;
+  try ChangeLogMemo.Font.Name:='Courier New'; except end;
 
   St:=TStringList.Create;
   StShort:=TStringList.Create;
@@ -286,23 +281,6 @@ begin
        if FileExists(S) then LicenseMemo.Lines.LoadFromFile(S);
      except end;
   end;
-end;
-
-procedure TInfoForm.ChangeLogComboBoxChange(Sender: TObject);
-Var S : String;
-begin
-  try ChangeLogMemo.Lines.Clear; except end;
-  Case Integer(ChangeLogComboBox.Items.Objects[ChangeLogComboBox.ItemIndex]) of
-    0 : S:=PrgDir+'CHANGES';
-    1 : if FileExists(IncludeTrailingPathDelimiter(PrgSetup.DOSBoxSettings[0].DosBoxDir)+'Documentation\NEWS.txt')
-          then S:=IncludeTrailingPathDelimiter(PrgSetup.DOSBoxSettings[0].DosBoxDir)+'Documentation\NEWS.txt'
-          else S:=IncludeTrailingPathDelimiter(PrgSetup.DOSBoxSettings[0].DosBoxDir)+'NEWS.txt';
-    2 : S:=IncludeTrailingPathDelimiter(PrgSetup.ScummVMPath)+'NEWS.txt';
-  End;
-  If S<>'' then begin
-     try ChangeLogMemo.Lines.LoadFromFile(S); except end;
-  end;
-  try ChangeLogMemo.Font.Name:='Courier New'; except end;
 end;
 
 procedure TInfoForm.TimerTimer(Sender: TObject);

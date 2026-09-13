@@ -42,7 +42,7 @@ type
 implementation
 
 uses Math, LanguageSetupUnit, VistaToolsUnit, PrgSetupUnit, CommonHelpers, CommonTools, GameDBHelpers,
-     ConfOptDefaults, HelpConsts, IconLoaderUnit, TextEditPopupUnit, System.Types;
+     ConfOptDefaults, HelpConsts, IconLoaderUnit, TextEditPopupUnit, System.Types, PrgConsts;
 
 {$R *.dfm}
 
@@ -141,18 +141,49 @@ begin
   AddString(P1+S1+LanguageSetup.ProfileEditorSoundSBHDMA,GameDB.ConfOpt.HDMA);
   AddString(P1+LanguageSetup.GameOplmode,GameDB.ConfOpt.Oplmode);
   AddString(P1+LanguageSetup.GameOplemu,GameDB.ConfOpt.OplEmu);
+  AddString(P1+LanguageSetup.GameSblaster+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.SblasterStaging);
+  AddString(P1+LanguageSetup.GameSblaster+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.SblasterX);
+  AddString(P1+LanguageSetup.GameOplmode+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.OplmodeStaging);
+  AddString(P1+LanguageSetup.GameOplmode+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.OplmodeX);
+  AddString(P1+LanguageSetup.GameOplemu+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.OplEmuX);
+  AddString(P1+LanguageSetup.GameOplemu+' ('+DosBoxKindDisplayPure+')',GameDB.ConfOpt.OplEmuPure);
+  AddString(P1+LanguageSetup.ProfileEditorSoundMiscPCSpeakerMode+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.PCSpeakerStaging);
+  AddString(P1+LanguageSetup.ProfileEditorSoundMiscLptDac+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.LptDacStaging);
+  AddString(P1+LanguageSetup.ProfileEditorSoundSBFilter+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.SBFilterStaging);
   AddString(P1+LanguageSetup.ProfileEditorSoundSBOplRate,GameDB.ConfOpt.OPLRate);
 
   AddString(P1+S2+LanguageSetup.ProfileEditorSoundGUSAddress,GameDB.ConfOpt.GUSBase);
   AddString(P1+S2+LanguageSetup.ProfileEditorSoundGUSRate,GameDB.ConfOpt.GUSRate);
   AddString(P1+S2+LanguageSetup.ProfileEditorSoundGUSIRQ,GameDB.ConfOpt.GUSIRQ);
   AddString(P1+S2+LanguageSetup.ProfileEditorSoundGUSDMA,GameDB.ConfOpt.GUSDma);
+  AddString(P1+S2+LanguageSetup.ProfileEditorSoundGUSFilter+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.GUSFilterStaging);
+  AddString(P1+S2+LanguageSetup.ProfileEditorSoundGUSMemSize+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.GUSMemSizeX);
+  AddString(P1+S2+LanguageSetup.ProfileEditorSoundGUSType+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.GUSTypeX);
+  AddString(P1+S2+LanguageSetup.ProfileEditorSoundGUSMasterVolume+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.GUSMasterVolumeX);
+  AddString(P1+LanguageSetup.ProfileEditorSoundMixerCrossfeed+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.CrossfeedStaging);
+  AddString(P1+LanguageSetup.ProfileEditorSoundMixerReverb+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.ReverbStaging);
+  AddString(P1+LanguageSetup.ProfileEditorSoundMixerChorus+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.ChorusStaging);
+  AddString(P1+LanguageSetup.ProfileEditorSoundMiscPCSpeakerFilter+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.PCSpeakerFilterStaging);
+  AddString(P1+LanguageSetup.ProfileEditorSoundMiscLptDacFilter+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.LptDacFilterStaging);
+  AddString(P1+LanguageSetup.ProfileEditorSoundMiscPS1Audio+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.PS1AudioX);
 
   AddString(P1+LanguageSetup.ProfileEditorSoundMIDIDevice,GameDB.ConfOpt.MIDIDevice);
   AddString(P1+S3+LanguageSetup.ProfileEditorSoundMIDIType,GameDB.ConfOpt.MPU401);
   AddString(P1+S3+LanguageSetup.ProfileEditorSoundMIDIMT32+' '+LanguageSetup.ProfileEditorSoundMIDIMT32Mode,GameDB.ConfOpt.MT32ReverbMode);
   AddString(P1+S3+LanguageSetup.ProfileEditorSoundMIDIMT32+' '+LanguageSetup.ProfileEditorSoundMIDIMT32Time,GameDB.ConfOpt.MT32ReverbTime);
   AddString(P1+S3+LanguageSetup.ProfileEditorSoundMIDIMT32+' '+LanguageSetup.ProfileEditorSoundMIDIMT32Level,GameDB.ConfOpt.MT32ReverbLevel);
+  AddString(P1+S3+LanguageSetup.ProfileEditorSoundMIDIFluidSynthChorus+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.FluidChorusStaging);
+  AddString(P1+S3+LanguageSetup.ProfileEditorSoundMIDIFluidSynthReverb+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.FluidReverbStaging);
+  AddString(P1+S3+LanguageSetup.ProfileEditorSoundMIDIFluidSynthFilter+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.FluidFilterStaging);
+  AddString(P1+S3+LanguageSetup.ProfileEditorSoundMIDIFluidSynthChorus+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.FluidChorusX);
+  AddString(P1+S3+LanguageSetup.ProfileEditorSoundMIDIFluidSynthReverb+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.FluidReverbX);
+  AddString(P1+S3+LanguageSetup.ProfileEditorSoundMIDIFluidSynthDriver+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.FluidDriverX);
+  AddString(P1+S3+LanguageSetup.ProfileEditorSoundMIDIPort+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.MIDIBaseX);
+  AddString(P1+S3+LanguageSetup.ProfileEditorSoundMIDIIRQ+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.MIDIIRQX);
+  AddString(P1+S3+LanguageSetup.ProfileEditorSoundMIDISampleRate+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.MIDISampleRateX);
+  AddString(P1+LanguageSetup.ProfileEditorVideoReelMagic+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.ReelMagic);
+  AddString(P1+LanguageSetup.ProfileEditorVideoReelMagicKey+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.ReelMagicKey);
+  AddString(P1+LanguageSetup.ProfileEditorVideoReelMagicFCode+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.ReelMagicFCode);
 
   AddString(P1+LanguageSetup.ProfileEditorSoundInnovaSampleRate,GameDB.ConfOpt.InnovaEmulationSampleRate);
   AddString(P1+LanguageSetup.ProfileEditorSoundInnovaBaseAddress,GameDB.ConfOpt.InnovaEmulationBaseAddress);
@@ -246,18 +277,49 @@ begin
   GameDB.ConfOpt.HDMA:=GetString;
   GameDB.ConfOpt.Oplmode:=GetString;
   GameDB.ConfOpt.OplEmu:=GetString;
+  GameDB.ConfOpt.SblasterStaging:=GetString;
+  GameDB.ConfOpt.SblasterX:=GetString;
+  GameDB.ConfOpt.OplmodeStaging:=GetString;
+  GameDB.ConfOpt.OplmodeX:=GetString;
+  GameDB.ConfOpt.OplEmuX:=GetString;
+  GameDB.ConfOpt.OplEmuPure:=GetString;
+  GameDB.ConfOpt.PCSpeakerStaging:=GetString;
+  GameDB.ConfOpt.LptDacStaging:=GetString;
+  GameDB.ConfOpt.SBFilterStaging:=GetString;
   GameDB.ConfOpt.OPLRate:=GetString;
 
   GameDB.ConfOpt.GUSBase:=GetString;
   GameDB.ConfOpt.GUSRate:=GetString;
   GameDB.ConfOpt.GUSIRQ:=GetString;
   GameDB.ConfOpt.GUSDma:=GetString;
+  GameDB.ConfOpt.GUSFilterStaging:=GetString;
+  GameDB.ConfOpt.GUSMemSizeX:=GetString;
+  GameDB.ConfOpt.GUSTypeX:=GetString;
+  GameDB.ConfOpt.GUSMasterVolumeX:=GetString;
+  GameDB.ConfOpt.CrossfeedStaging:=GetString;
+  GameDB.ConfOpt.ReverbStaging:=GetString;
+  GameDB.ConfOpt.ChorusStaging:=GetString;
+  GameDB.ConfOpt.PCSpeakerFilterStaging:=GetString;
+  GameDB.ConfOpt.LptDacFilterStaging:=GetString;
+  GameDB.ConfOpt.PS1AudioX:=GetString;
 
   GameDB.ConfOpt.MIDIDevice:=GetString;
   GameDB.ConfOpt.MPU401:=GetString;
   GameDB.ConfOpt.MT32ReverbMode:=GetString;
   GameDB.ConfOpt.MT32ReverbTime:=GetString;
   GameDB.ConfOpt.MT32ReverbLevel:=GetString;
+  GameDB.ConfOpt.FluidChorusStaging:=GetString;
+  GameDB.ConfOpt.FluidReverbStaging:=GetString;
+  GameDB.ConfOpt.FluidFilterStaging:=GetString;
+  GameDB.ConfOpt.FluidChorusX:=GetString;
+  GameDB.ConfOpt.FluidReverbX:=GetString;
+  GameDB.ConfOpt.FluidDriverX:=GetString;
+  GameDB.ConfOpt.MIDIBaseX:=GetString;
+  GameDB.ConfOpt.MIDIIRQX:=GetString;
+  GameDB.ConfOpt.MIDISampleRateX:=GetString;
+  GameDB.ConfOpt.ReelMagic:=GetString;
+  GameDB.ConfOpt.ReelMagicKey:=GetString;
+  GameDB.ConfOpt.ReelMagicFCode:=GetString;
 
   GameDB.ConfOpt.InnovaEmulationSampleRate:=GetString;
   GameDB.ConfOpt.InnovaEmulationBaseAddress:=GetString;
@@ -367,18 +429,49 @@ begin
   Work(DefaultValuesHDMA);
   Work(DefaultValuesOPLModes);
   Work(DefaultValuesOplEmu);
+  Work(DefaultValuesSBlasterStaging);
+  Work(DefaultValuesSBlasterX);
+  Work(DefaultValuesOPLModesStaging);
+  Work(DefaultValuesOPLModesX);
+  Work(DefaultValuesOplEmuX);
+  Work(DefaultValuesOplEmuPure);
+  Work(DefaultValuesPCSpeakerStaging);
+  Work(DefaultValuesLptDacStaging);
+  Work(DefaultValuesSBFilterStaging);
   Work(DefaultValuesOPLRate);
 
   Work(DefaultValuesGUSBase);
   Work(DefaultValuesGUSRate);
   Work(DefaultValuesIRQ1);
   Work(DefaultValuesDMA1);
+  Work(DefaultValuesGUSFilterStaging);
+  Work(DefaultValuesGUSMemSizeX);
+  Work(DefaultValuesGUSTypeX);
+  Work(DefaultValuesGUSMasterVolumeX);
+  Work(DefaultValuesCrossfeedStaging);
+  Work(DefaultValuesReverbStaging);
+  Work(DefaultValuesChorusStaging);
+  Work(DefaultValuesPCSpeakerFilterStaging);
+  Work(DefaultValuesLptDacFilterStaging);
+  Work(DefaultValuesPS1AudioX);
 
   Work(DefaultValuesMIDIDevice);
   Work(DefaultValuesMPU401);
   Work(DefaultValuesMT32ReverbMode);
   Work(DefaultValuesMT32ReverbTime);
   Work(DefaultValuesMT32ReverbLevel);
+  Work(DefaultValuesFluidChorusStaging);
+  Work(DefaultValuesFluidReverbStaging);
+  Work(DefaultValuesFluidFilterStaging);
+  Work(DefaultValuesFluidChorusX);
+  Work(DefaultValuesFluidReverbX);
+  Work(DefaultValuesFluidDriverX);
+  Work(DefaultValuesMIDIBaseX);
+  Work(DefaultValuesMIDIIRQX);
+  Work(DefaultValuesMIDISampleRateX);
+  Work(DefaultValuesReelMagic);
+  Work(DefaultValuesReelMagicKey);
+  Work(DefaultValuesReelMagicFCode);
 
   Work(DefaultValuesInnovaEmulationSampleRate);
   Work(DefaultValuesInnovaEmulationBaseAddress);

@@ -115,6 +115,7 @@ ProfileEditCPU.html
 ProfileEditMemory.html
 ProfileEditGraphics.html
 ProfileEditImageQuality.html
+ProfileEditVideo.html
 ProfileEditKeyboard.html
 ProfileEditKeyboardList.html
 ProfileEditMouse.html
@@ -281,6 +282,7 @@ GPL3.html
 #define ProfileEditAdditionalChecksums 2126
 #define ProfileEditSoundInnova 2127
 #define ProfileEditImageQuality 2128
+#define ProfileEditVideo 2129
 
 #define ExtrasManageIcons 3001
 #define ExtrasViewHistory 3002

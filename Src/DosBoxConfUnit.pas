@@ -6,6 +6,7 @@ uses Classes, GameDBUnit;
 Procedure GenerateGraphicsConf(const Game: TGame; const Dest: TStrings);
 Procedure GenerateMouseConf(const Game: TGame; const Dest: TStrings);
 Procedure GenerateMidiConf(const Game: TGame; const Dest: TStrings; const DOSBoxVersion: Double; const IsStaging, IsOldStaging: Boolean);
+Procedure GenerateMixerKindConf(const Game: TGame; const Dest: TStrings);
 Procedure GenerateSoundDeviceConf(const Game: TGame; const Dest: TStrings; const DOSBoxVersion: Double);
 Procedure GenerateInnovaConf(const Game: TGame; const Dest: TStrings; const IsStaging, IsOldStaging: Boolean);
 Procedure GenerateSDLConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer; const BuildForArchivePackage: Boolean);
@@ -19,6 +20,7 @@ Procedure GenerateSpecialMachineConf(const Game: TGame; const Dest: TStrings);
 Procedure GenerateCPUConf(const Game: TGame; const Dest: TStrings; const DOSBoxVersion: Double);
 Procedure GenerateAutoExecKeyboardConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer);
 Procedure GenerateAutoExecDOSVerConf(const Game: TGame; const Dest: TStrings);
+Procedure GenerateAutoExecPs2Conf(const Game: TGame; const Dest: TStrings);
 Procedure GenerateWebserverConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer);
 
 implementation
@@ -105,6 +107,20 @@ begin
     end;
   end;
 
+  If Game.IsStaging then begin
+    Dest.Add('');
+    Dest.Add('[reelmagic]');
+    S:=Trim(Game.ReelMagic);
+    If S='' then S:='off';
+    Dest.Add('reelmagic='+S);
+    S:=Trim(Game.ReelMagicKey);
+    If S='' then S:='auto';
+    Dest.Add('reelmagic_key='+S);
+    S:=Trim(Game.ReelMagicFCode);
+    If S='' then S:='0';
+    Dest.Add('reelmagic_fcode='+S);
+  end;
+
   If PrgSetup.AllowVGAChipsetSettings and Game.IsDBX then begin
     I:=Game.VideoRam;
     if (I mod 1024)<>0 then I:=(I div 1024)+1 else I:=I div 1024;
@@ -132,9 +148,30 @@ begin
       S:=Trim(Game.MouseDriverOptions);
       If S<>'' then Dest.Add('builtin_dos_mouse_driver_options='+S);
     end;
+    If not Game.Ps2MouseEnabled then
+      Dest.Add('ps2_mouse_model=none')
+    else begin
+      S:=Trim(Game.Ps2MouseModel);
+      If S<>'' then Dest.Add('ps2_mouse_model='+S);
+      If Game.IsNewStaging then
+        Dest.Add('builtin_dos_mouse_driver=off')
+      else
+        Dest.Add('dos_mouse_driver=false');
+    end;
+    Dest.Add('vmware_mouse='+BoolToStr(Game.VMwareMouse));
+    Dest.Add('virtualbox_mouse='+BoolToStr(Game.VirtualBoxMouse));
   end else begin
     Dest.Add('autolock='+BoolToStr(Game.AutoLockMouse));
     Dest.Add('sensitivity='+IntToStr(Game.MouseSensitivity));
+  end;
+  If Game.IsDBX then begin
+    Dest.Add('');
+    Dest.Add('[keyboard]');
+    Dest.Add('aux='+BoolToStr(Game.Ps2MouseEnabled));
+    If Game.Ps2MouseEnabled then begin
+      S:=Trim(Game.Ps2MouseModel);
+      If S<>'' then Dest.Add('auxdevice='+S);
+    end;
   end;
 end;
 
@@ -152,6 +189,17 @@ begin
     S:=Game.MIDIDevice;
   Dest.Add('mididevice='+S);
   Dest.Add('midiconfig='+MakeDOSBoxMIDIString(Game.MIDIConfig));
+  If Game.IsDBX then begin
+    S:=Trim(Game.MIDIBase);
+    If S='' then S:='330';
+    Dest.Add('mpubase='+S);
+    S:=Trim(Game.MIDIIRQ);
+    If S='' then S:='9';
+    Dest.Add('mpuirq='+S);
+    S:=Trim(Game.MIDISampleRate);
+    If S='' then S:='48000';
+    Dest.Add('samplerate='+S);
+  end;
   If Game.IsDBX and Game.MIDIDeviceIs('soundfont') then begin
     S:=Trim(Game.FluidSoundFont);
     If S<>'' then begin
@@ -161,6 +209,15 @@ begin
     end;
     If Game.GetValidMidiGain(I) then
       Dest.Add('fluid.gain='+FloatToStrF(I/100.0,ffGeneral,15,4));
+    S:=Trim(Game.FluidChorus);
+    If S='' then S:='yes';
+    Dest.Add('fluid.chorus='+S);
+    S:=Trim(Game.FluidReverb);
+    If S='' then S:='yes';
+    Dest.Add('fluid.reverb='+S);
+    S:=Trim(Game.FluidDriver);
+    If S='' then S:='default';
+    Dest.Add('fluid.driver='+S);
   end;
   If Game.IsDBX and Game.MIDIDeviceIs('mt32') then begin
     S:=Trim(Game.MIDIMT32RomDir);
@@ -205,6 +262,15 @@ begin
       Dest.Add('soundfont='+S);
       If (not Game.IsOldStaging) and Game.GetValidMidiGain(I) then
         Dest.Add('soundfont_volume='+IntToStr(I));
+      S:=Trim(Game.FluidChorus);
+      If S='' then S:='auto';
+      Dest.Add('fsynth_chorus='+S);
+      S:=Trim(Game.FluidReverb);
+      If S='' then S:='auto';
+      Dest.Add('fsynth_reverb='+S);
+      S:=Trim(Game.FluidFilter);
+      If S='' then S:='off';
+      Dest.Add('fsynth_filter='+S);
     end;
   end;
 end;
@@ -273,7 +339,30 @@ begin
   GenerateSoundCanvasMidiConf(Game,Dest);
 end;
 
+Procedure GenerateMixerKindConf(const Game: TGame; const Dest: TStrings);
+Var S: String;
+begin
+  If Game.IsDBX then begin
+    Dest.Add('swapstereo='+BoolToStr(Game.MixerSwapStereo));
+    Dest.Add('sample accurate='+BoolToStr(Game.MixerSampleAccurate));
+    Dest.Add('dc bias correction='+BoolToStr(Game.MixerDCBiasCorrection));
+  end;
+  If Game.IsStaging then begin
+    Dest.Add('compressor='+BoolToStr(Game.MixerCompressor));
+    S:=Trim(Game.MixerCrossfeed);
+    If S='' then S:='off';
+    Dest.Add('crossfeed='+S);
+    S:=Trim(Game.MixerReverb);
+    If S='' then S:='off';
+    Dest.Add('reverb='+S);
+    S:=Trim(Game.MixerChorus);
+    If S='' then S:='off';
+    Dest.Add('chorus='+S);
+  end;
+end;
+
 Procedure GenerateSoundDeviceConf(const Game: TGame; const Dest: TStrings; const DOSBoxVersion: Double);
+Var S: String;
 begin
   Dest.Add('');
   Dest.Add('[sblaster]');
@@ -290,6 +379,18 @@ begin
   If not Game.IsStaging then begin
     Dest.Add('oplrate='+IntToStr(Game.SBOplRate));
     If DOSBoxVersion>0.72 then Dest.Add('oplemu='+Game.SBOplEmu);
+  end;
+  If Game.IsStaging or Game.IsDBX then begin
+    If Game.SBCMS then Dest.Add('cms=on') else Dest.Add('cms=off');
+  end;
+  If Game.IsDBX then
+    Dest.Add('goldplay='+BoolToStr(Game.SBGoldplay));
+  If Game.IsStaging then begin
+    S:=Trim(Game.SBFilter);
+    If S='' then S:='modern';
+    Dest.Add('sb_filter='+S);
+    Dest.Add('sb_filter_always_on='+BoolToStr(Game.SBFilterAlwaysOn));
+    Dest.Add('sbwarmup='+IntToStr(Game.SBWarmup));
   end;
 
   Dest.Add('');
@@ -310,26 +411,55 @@ begin
     Dest.Add('dma2='+IntToStr(Game.GUSDMA));
   end;
   Dest.Add('ultradir='+Game.GUSUltraDir);
+  If Game.IsStaging then begin
+    S:=Trim(Game.GUSFilter);
+    If S='' then S:='on';
+    Dest.Add('gus_filter='+S);
+  end;
+  If Game.IsDBX then begin
+    S:=Trim(Game.GUSMemSize);
+    If (S='') or SameText(S,'default') then S:='-1';
+    Dest.Add('gusmemsize='+S);
+    S:=Trim(Game.GUSType);
+    If S='' then S:='classic';
+    Dest.Add('gustype='+S);
+    S:=Trim(Game.GUSMasterVolume);
+    If S='' then S:='0';
+    Dest.Add('gus master volume='+S);
+  end;
 
   Dest.Add('');
   Dest.Add('[speaker]');
-  { Staging: pcspeaker is impulse/discrete/none (not true/false). }
-  If Game.IsStaging
-    then Dest.Add('pcspeaker='+StagingMapPCSpeaker(Game.SpeakerPC))
-    else Dest.Add('pcspeaker='+BoolToStr(Game.SpeakerPC));
+  If Game.IsStaging then
+    Dest.Add('pcspeaker='+StagingMapPCSpeaker(Game.SpeakerPC))
+  else
+    Dest.Add('pcspeaker='+BoolToStr(Game.SpeakerPC));
   { Staging: pcrate/tandyrate invalid — omit (old and new). }
   If not Game.IsStaging then
     Dest.Add('pcrate='+IntToStr(Game.SpeakerRate));
   Dest.Add('tandy='+Game.SpeakerTandy);
   If not Game.IsStaging then
     Dest.Add('tandyrate='+IntToStr(Game.SpeakerTandyRate));
-  { Staging: disney moved to lpt_dac; only emit when Disney is enabled in profile. }
   If Game.IsStaging then begin
-    If Game.SpeakerDisney then
-      Dest.Add('lpt_dac=disney');
+    S:=Trim(Game.SpeakerLptDac);
+    If S<>'' then Dest.Add('lpt_dac='+S);
   end
   else
     Dest.Add('disney='+BoolToStr(Game.SpeakerDisney));
+  If Game.IsStaging then begin
+    S:=Trim(Game.SpeakerPCFilter);
+    If S='' then S:='on';
+    Dest.Add('pcspeaker_filter='+S);
+    S:=Trim(Game.SpeakerLptDacFilter);
+    If S='' then S:='on';
+    Dest.Add('lpt_dac_filter='+S);
+  end;
+  If Game.IsDBX then begin
+    If Game.PS1Audio then Dest.Add('ps1audio=on') else Dest.Add('ps1audio=off');
+    S:=Trim(Game.PS1AudioRate);
+    If S='' then S:='22050';
+    Dest.Add('ps1audiorate='+S);
+  end;
 end;
 
 Procedure GenerateInnovaConf(const Game: TGame; const Dest: TStrings; const IsStaging, IsOldStaging: Boolean);
@@ -798,6 +928,16 @@ begin
     If (S<>'') and not SameText(S,'default') and not SameText(S,'auto') then
       Dest.Add('ver='+S);
   end;
+  If Game.IsDBX then begin
+    Dest.Add('int33='+BoolToStr(not Game.Ps2MouseEnabled));
+    Dest.Add('vmware='+BoolToStr(Game.VMwareMouse));
+    Dest.Add('biosps2='+BoolToStr(Game.BiosPs2));
+    S:=Trim(Game.Ps2ReportRate);
+    If S<>'' then begin
+      If SameText(S,'auto') then S:='0';
+      Dest.Add('mouse report rate='+S);
+    end;
+  end;
 
   {keyboardlayout can't handle layout+codepage -> moved to autoexec as keyb command
   S:=Trim(ExtUpperCase(Game.Codepage));
@@ -914,6 +1054,16 @@ begin
       Dest.Add('ver set '+S+' '+T);
     end;
   end;
+end;
+
+Procedure GenerateAutoExecPs2Conf(const Game: TGame; const Dest: TStrings);
+Var S: String;
+begin
+  If not Game.IsStaging then Exit;
+  If not Game.Ps2MouseEnabled then Exit;
+  S:=Trim(Game.Ps2ReportRate);
+  If (S='') or SameText(S,'auto') then Exit;
+  Dest.Add('mousectl PS2 -r '+S);
 end;
 
 Procedure GenerateWebserverConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer);

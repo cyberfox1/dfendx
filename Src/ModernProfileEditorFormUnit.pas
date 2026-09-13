@@ -138,7 +138,7 @@ uses ShellAPI, Math, VistaToolsUnit, LanguageSetupUnit,
      ModernProfileEditorDirectoryFrameUnit, ModernProfileEditorDOSBoxFrameUnit,
      ModernProfileEditorHardwareFrameUnit, ModernProfileEditorCPUFrameUnit,
      ModernProfileEditorMemoryFrameUnit, ModernProfileEditorGraphicsFrameUnit,
-     ModernProfileEditorImageQualityFrameUnit, ModernProfileEditorGlideFrameUnit,
+     ModernProfileEditorImageQualityFrameUnit, ModernProfileEditorVideoFrameUnit, ModernProfileEditorGlideFrameUnit,
      ModernProfileEditorKeyboardFrameUnit, ModernProfileEditorMouseFrameUnit,
      ModernProfileEditorSoundFrameUnit, ModernProfileEditorVolumeFrameUnit,
      ModernProfileEditorSoundBlasterFrameUnit, ModernProfileEditorGUSFrameUnit,
@@ -548,6 +548,7 @@ begin
         F:=TModernProfileEditorMemoryFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorMemoryFrame(F),LanguageSetup.ProfileEditorMemorySheet,4,10);
         F:=TModernProfileEditorGraphicsFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorGraphicsFrame(F),LanguageSetup.ProfileEditorGraphicsSheet,4,11);
         F:=TModernProfileEditorImageQualityFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorImageQualityFrame(F),LanguageSetup.ProfileEditorImageQualitySheet,4,25);
+        F:=TModernProfileEditorVideoFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorVideoFrame(F),LanguageSetup.ProfileEditorVideoSheet,4,26);
         F:=TModernProfileEditorGlideFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorGlideFrame(F),LanguageSetup.ProfileEditorGlideSheet,4,24);
         F:=TModernProfileEditorKeyboardFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorKeyboardFrame(F),LanguageSetup.ProfileEditorKeyboardSheet,4,15);
         F:=TModernProfileEditorMouseFrame.Create(self); AddTreeNode(N,F,TModernProfileEditorMouseFrame(F),LanguageSetup.ProfileEditorMouseSheet,4,12);
@@ -602,7 +603,7 @@ begin
 
   InitGUI;
 
-  UserIconLoader.AddEmptyImages(ImageList,nil,25);
+  UserIconLoader.AddEmptyImages(ImageList,nil,26);
   UserIconLoader.DirectLoad(ImageList,'ModernProfileEditor');
 
   If (Game=nil) and (LoadTemplate<>nil) then begin

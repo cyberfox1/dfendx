@@ -2671,9 +2671,9 @@ object InfoForm: TInfoForm
       ImageIndex = 3
       object ChangeLogMemo: TRichEdit
         Left = 0
-        Top = 30
+        Top = 0
         Width = 601
-        Height = 151
+        Height = 181
         Align = alClient
         BorderStyle = bsNone
         Font.Charset = ANSI_CHARSET
@@ -2686,24 +2686,6 @@ object InfoForm: TInfoForm
         ScrollBars = ssBoth
         TabOrder = 0
         WordWrap = False
-      end
-      object ChangeLogPanel: TPanel
-        Left = 0
-        Top = 0
-        Width = 601
-        Height = 30
-        Align = alTop
-        BevelOuter = bvNone
-        TabOrder = 1
-        object ChangeLogComboBox: TComboBox
-          Left = 2
-          Top = 0
-          Width = 145
-          Height = 21
-          Style = csDropDownList
-          TabOrder = 0
-          OnChange = ChangeLogComboBoxChange
-        end
       end
     end
     object DFendTabSheet: TTabSheet

@@ -46,17 +46,26 @@ object ModernProfileEditorMIDIFrame: TModernProfileEditorMIDIFrame
     Visible = False
     WordWrap = True
   end
-  object InfoLabel: TLabel
-    Left = 190
-    Top = 24
-    Width = 408
-    Height = 71
-    Anchors = [akLeft, akTop, akRight]
-    AutoSize = False
-    Caption = 
-      'The MIDI device will be available on address 330 and interrupt 2' +
-      ' in DOSBox.'
-    WordWrap = True
+  object Label1: TLabel
+    Left = 208
+    Top = 22
+    Width = 50
+    Height = 15
+    Caption = 'MIDI Port'
+  end
+  object Label2: TLabel
+    Left = 347
+    Top = 22
+    Width = 47
+    Height = 15
+    Caption = 'MIDI IRQ'
+  end
+  object Label3: TLabel
+    Left = 483
+    Top = 22
+    Width = 65
+    Height = 15
+    Caption = 'Sample Rate'
   end
   object TypeComboBox: TComboBox
     Left = 24
@@ -174,6 +183,75 @@ object ModernProfileEditorMIDIFrame: TModernProfileEditorMIDIFrame
       TabOrder = 3
     end
   end
+  object FluidsynthSettingsGroupBox: TGroupBox
+    Left = 24
+    Top = 313
+    Width = 489
+    Height = 81
+    Caption = 'FluidsynthSettingsGroupBox'
+    TabOrder = 11
+    Visible = False
+    object FluidChorusLabel: TLabel
+      Left = 16
+      Top = 24
+      Width = 89
+      Height = 15
+      Caption = 'FluidChorusLabel'
+    end
+    object FluidReverbLabel: TLabel
+      Left = 132
+      Top = 24
+      Width = 85
+      Height = 15
+      Caption = 'FluidReverbLabel'
+    end
+    object FluidFilterLabel: TLabel
+      Left = 247
+      Top = 24
+      Width = 85
+      Height = 15
+      Caption = 'FluidFilterLabel'
+    end
+    object FluidDriverLabel: TLabel
+      Left = 366
+      Top = 24
+      Width = 92
+      Height = 15
+      Caption = 'FluidDriverLabel'
+    end
+    object FluidChorusComboBox: TComboBox
+      Left = 16
+      Top = 40
+      Width = 90
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 0
+    end
+    object FluidReverbComboBox: TComboBox
+      Left = 132
+      Top = 40
+      Width = 90
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 1
+    end
+    object FluidFilterComboBox: TComboBox
+      Left = 247
+      Top = 40
+      Width = 90
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 2
+    end
+    object FluidDriverComboBox: TComboBox
+      Left = 366
+      Top = 40
+      Width = 90
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 3
+    end
+  end
   object FluidSynthGroupBox: TGroupBox
     Left = 24
     Top = 406
@@ -253,5 +331,29 @@ object ModernProfileEditorMIDIFrame: TModernProfileEditorMIDIFrame
     Caption = 'SC-55 filter'
     TabOrder = 7
     Visible = False
+  end
+  object comboMidiIrq: TComboBox
+    Left = 347
+    Top = 43
+    Width = 90
+    Height = 23
+    Style = csDropDownList
+    TabOrder = 8
+  end
+  object comboMidiBase: TComboBox
+    Left = 208
+    Top = 43
+    Width = 90
+    Height = 23
+    Style = csDropDownList
+    TabOrder = 9
+  end
+  object comboSampleRate: TComboBox
+    Left = 483
+    Top = 43
+    Width = 90
+    Height = 23
+    Style = csDropDownList
+    TabOrder = 10
   end
 end

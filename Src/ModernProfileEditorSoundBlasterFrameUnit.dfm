@@ -66,7 +66,7 @@ object ModernProfileEditorSoundBlasterFrame: TModernProfileEditorSoundBlasterFra
   object TypeComboBox: TComboBox
     Left = 24
     Top = 43
-    Width = 81
+    Width = 145
     Height = 21
     Style = csDropDownList
     ItemHeight = 0
@@ -134,6 +134,66 @@ object ModernProfileEditorSoundBlasterFrame: TModernProfileEditorSoundBlasterFra
     Anchors = [akLeft, akTop, akRight]
     Caption = 'UseMixerCheckBox'
     TabOrder = 8
+  end
+  object ActivateCMSCheckBox: TCheckBox
+    Left = 24
+    Top = 288
+    Width = 553
+    Height = 17
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 'Activate CMS'
+    TabOrder = 9
+  end
+  object GoldplayCheckBox: TCheckBox
+    Left = 24
+    Top = 344
+    Width = 553
+    Height = 17
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 'Activate Goldplay'
+    TabOrder = 10
+  end
+  object FilterLabel: TLabel
+    Left = 24
+    Top = 376
+    Width = 51
+    Height = 13
+    Caption = 'FilterLabel'
+  end
+  object FilterComboBox: TComboBox
+    Left = 24
+    Top = 395
+    Width = 81
+    Height = 21
+    Style = csDropDownList
+    ItemHeight = 0
+    TabOrder = 11
+  end
+  object FilterAlwaysOnCheckBox: TCheckBox
+    Left = 24
+    Top = 432
+    Width = 553
+    Height = 17
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 'FilterAlwaysOnCheckBox'
+    TabOrder = 12
+  end
+  object WarmupLabel: TLabel
+    Left = 24
+    Top = 464
+    Width = 64
+    Height = 13
+    Caption = 'WarmupLabel'
+  end
+  object WarmupEdit: TSpinEdit
+    Left = 24
+    Top = 483
+    Width = 81
+    Height = 22
+    MaxValue = 100
+    MinValue = 0
+    TabOrder = 13
+    Value = 100
   end
   object OplEmuComboBox: TComboBox
     Left = 120

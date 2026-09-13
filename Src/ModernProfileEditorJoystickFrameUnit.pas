@@ -58,7 +58,7 @@ Procedure SetComboBox(const ComboBox : TComboBox; const Value : String; const De
 Var S : String;
     I : Integer;
 begin
-  try ComboBox.ItemIndex:=Default; except end;
+  ComboBox.ItemIndex:=Default;
   S:=Trim(ExtUpperCase(Value));
   For I:=0 to ComboBox.Items.Count-1 do If Trim(ExtUpperCase(ComboBox.Items[I]))=S then begin
     ComboBox.ItemIndex:=I; break;

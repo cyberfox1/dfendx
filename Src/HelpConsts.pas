@@ -107,6 +107,7 @@ const ID_Index=1;
       ID_ProfileEditAdditionalChecksums=2126;
       ID_ProfileEditSoundInnova=2127;
       ID_ProfileEditImageQuality=2128;
+      ID_ProfileEditVideo=2129;
 
       ID_ExtrasManageIcons=3001;
       ID_ExtrasViewHistory=3002;

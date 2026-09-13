@@ -3,7 +3,7 @@ unit DOSBoxUnitHelpers;
 interface
 
 uses
-  SysUtils, Classes, CommonHelpers;
+  SysUtils, Classes, CommonHelpers, PrgConsts;
 
 function IsWindowsExe(const FileName: String): Boolean;
 function IsDOSExe(const FileName: String): Boolean;
@@ -40,6 +40,8 @@ function StagingMapCpuCycles(const Cycles: string): string;
 
 { Profile PC speaker on → "impulse"; off → "none". }
 function StagingMapPCSpeaker(const Enabled: Boolean): string;
+function CtmouseShouldRun(const Force2Button, SwapButtons, Ps2Enabled, CtmouseEnabled: Boolean; const Kind: TDOSBoxKind): Boolean;
+function BuildCtmouseAutoexecLine(const Force2Button, SwapButtons, Ps2Enabled: Boolean; const Ps2Model: String): String;
 
 implementation
 
@@ -316,6 +318,42 @@ begin
     Result := 'impulse'
   else
     Result := 'none';
+end;
+
+function CtmouseShouldRun(const Force2Button, SwapButtons, Ps2Enabled, CtmouseEnabled: Boolean; const Kind: TDOSBoxKind): Boolean;
+begin
+  if not Ps2Enabled then
+    Result := False
+  else if Kind in [dbkStaging, dbkX] then
+    Result := CtmouseEnabled or Force2Button or SwapButtons
+  else
+    Result := Force2Button or SwapButtons;
+end;
+
+function BuildCtmouseAutoexecLine(const Force2Button, SwapButtons, Ps2Enabled: Boolean; const Ps2Model: String): String;
+  procedure AddFlag(const Flag: String);
+  begin
+    if Result <> '' then
+      Result := Result + ' ';
+    Result := Result + Flag;
+  end;
+var
+  S: String;
+begin
+  Result := 'ctmouse';
+  if Ps2Enabled then
+    AddFlag('/P');
+  if Force2Button then
+    AddFlag('/Y')
+  else if Ps2Enabled then begin
+    S := Trim(Ps2Model);
+    if SameText(S, '2button') or SameText(S, 'standard') then
+      AddFlag('/Y')
+    else
+      AddFlag('/3');
+  end;
+  if SwapButtons then
+    AddFlag('/L');
 end;
 
 end.
