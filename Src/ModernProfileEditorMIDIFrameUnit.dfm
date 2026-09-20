@@ -61,8 +61,8 @@ object ModernProfileEditorMIDIFrame: TModernProfileEditorMIDIFrame
     Caption = 'MIDI IRQ'
   end
   object Label3: TLabel
-    Left = 483
-    Top = 22
+    Left = 208
+    Top = 80
     Width = 65
     Height = 15
     Caption = 'Sample Rate'
@@ -194,28 +194,28 @@ object ModernProfileEditorMIDIFrame: TModernProfileEditorMIDIFrame
     object FluidChorusLabel: TLabel
       Left = 16
       Top = 24
-      Width = 89
+      Width = 92
       Height = 15
       Caption = 'FluidChorusLabel'
     end
     object FluidReverbLabel: TLabel
       Left = 132
       Top = 24
-      Width = 85
+      Width = 90
       Height = 15
       Caption = 'FluidReverbLabel'
     end
     object FluidFilterLabel: TLabel
       Left = 247
       Top = 24
-      Width = 85
+      Width = 80
       Height = 15
       Caption = 'FluidFilterLabel'
     end
     object FluidDriverLabel: TLabel
       Left = 366
       Top = 24
-      Width = 92
+      Width = 85
       Height = 15
       Caption = 'FluidDriverLabel'
     end
@@ -349,8 +349,8 @@ object ModernProfileEditorMIDIFrame: TModernProfileEditorMIDIFrame
     TabOrder = 9
   end
   object comboSampleRate: TComboBox
-    Left = 483
-    Top = 43
+    Left = 208
+    Top = 99
     Width = 90
     Height = 23
     Style = csDropDownList

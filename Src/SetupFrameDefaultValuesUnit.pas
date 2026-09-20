@@ -109,6 +109,9 @@ begin
 
   AddString(P1+LanguageSetup.GameCore,GameDB.ConfOpt.Core);
   AddString(P1+LanguageSetup.GameCPUType,GameDB.ConfOpt.CPUType);
+  AddString(P1+LanguageSetup.GameCPUType+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.CPUTypeStaging);
+  AddString(P1+LanguageSetup.GameCPUType+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.CPUTypeX);
+  AddString(P1+LanguageSetup.GameCPUType+' ('+DosBoxKindDisplayPure+')',GameDB.ConfOpt.CPUTypePure);
   AddString(P1+LanguageSetup.GameCycles,GameDB.ConfOpt.Cycles);
   AddString(P1+LanguageSetup.GameCyclesDown,GameDB.ConfOpt.CyclesDown);
   AddString(P1+LanguageSetup.GameCyclesUp,GameDB.ConfOpt.CyclesUp);
@@ -245,6 +248,9 @@ begin
   I:=0;
   GameDB.ConfOpt.Core:=GetString;
   GameDB.ConfOpt.CPUType:=GetString;
+  GameDB.ConfOpt.CPUTypeStaging:=GetString;
+  GameDB.ConfOpt.CPUTypeX:=GetString;
+  GameDB.ConfOpt.CPUTypePure:=GetString;
   GameDB.ConfOpt.Cycles:=GetString;
   GameDB.ConfOpt.CyclesDown:=GetString;
   GameDB.ConfOpt.CyclesUp:=GetString;
@@ -397,6 +403,9 @@ begin
 
   Work(DefaultValuesCore);
   Work(DefaultValuesCPUType);
+  Work(DefaultValuesCPUTypeStaging);
+  Work(DefaultValuesCPUTypeX);
+  Work(DefaultValuesCPUTypePure);
   Work(DefaultValueCycles);
   Work(DefaultValuesCyclesDown);
   Work(DefaultValuesCyclesUp);

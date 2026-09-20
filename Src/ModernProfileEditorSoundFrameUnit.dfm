@@ -63,7 +63,7 @@ object ModernProfileEditorSoundFrame: TModernProfileEditorSoundFrame
   object MixerGroupBox: TGroupBox
     Left = 40
     Top = 56
-    Width = 492
+    Width = 505
     Height = 177
     Caption = 'MixerGroupBox'
     TabOrder = 1
@@ -82,7 +82,7 @@ object ModernProfileEditorSoundFrame: TModernProfileEditorSoundFrame
       Caption = 'BlockSizeLabel'
     end
     object PreBufferLabel: TLabel
-      Left = 360
+      Left = 358
       Top = 34
       Width = 77
       Height = 15
@@ -103,7 +103,7 @@ object ModernProfileEditorSoundFrame: TModernProfileEditorSoundFrame
       Caption = 'ReverbLabel'
     end
     object ChorusLabel: TLabel
-      Left = 360
+      Left = 358
       Top = 112
       Width = 66
       Height = 15
@@ -125,8 +125,8 @@ object ModernProfileEditorSoundFrame: TModernProfileEditorSoundFrame
       TabOrder = 1
     end
     object PreBufferComboBox: TComboBox
-      Left = 360
-      Top = 53
+      Left = 358
+      Top = 55
       Width = 82
       Height = 23
       TabOrder = 2
@@ -140,17 +140,17 @@ object ModernProfileEditorSoundFrame: TModernProfileEditorSoundFrame
       TabOrder = 3
     end
     object SampleAccurateCheckBox: TCheckBox
-      Left = 168
-      Top = 88
+      Left = 184
+      Top = 89
       Width = 150
       Height = 17
       Caption = 'SampleAccurateCheckBox'
       TabOrder = 4
     end
     object DCBiasCheckBox: TCheckBox
-      Left = 320
-      Top = 88
-      Width = 156
+      Left = 358
+      Top = 89
+      Width = 144
       Height = 17
       Caption = 'DCBiasCheckBox'
       TabOrder = 5
@@ -180,7 +180,7 @@ object ModernProfileEditorSoundFrame: TModernProfileEditorSoundFrame
       TabOrder = 8
     end
     object ChorusComboBox: TComboBox
-      Left = 360
+      Left = 358
       Top = 131
       Width = 82
       Height = 23

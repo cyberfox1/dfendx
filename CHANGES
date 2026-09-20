@@ -1,5 +1,12 @@
 DFendX Changelog
 
+Version 2.6.1 (09/20/2026)
+==========================
+- CPU type list per DOSBox kind.
+- Several UI layout tweaks.
+- Disable DOSBox-X working directory prompt on startup.
+
+
 Version 2.6.0 (09/13/2026)
 ==========================
 - Expand SoundBlaster and other sound options.

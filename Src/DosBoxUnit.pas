@@ -1235,6 +1235,7 @@ Var Add : String;
     SettingsNr : Integer;
     WantConsole : Boolean;
     Kind : TDOSBoxKind;
+    DOSBoxVersion : String;
 begin
   SettingsNr:=DOSBoxNr;
   If SettingsNr<0 then SettingsNr:=0; { bare path: borrow primary install settings }
@@ -1253,9 +1254,15 @@ begin
   End;
   { DOSBox-X is a Win32 GUI app: it does not open a log console unless -console
     is passed (sdlmain.cpp). Staging uses the opposite model (-NOCONSOLE to hide). }
-  if WantConsole and (SettingsNr<PrgSetup.DOSBoxSettingsCount) then begin
-    Kind:=PrgSetup.DOSBoxSettings[SettingsNr].DosBoxKind;
-    if Kind=dbkX then Add:=Add+' -console';
+  if SettingsNr<PrgSetup.DOSBoxSettingsCount then
+    Kind:=PrgSetup.DOSBoxSettings[SettingsNr].DosBoxKind
+  else
+    Kind:=dbkStandard;
+  if WantConsole and (Kind=dbkX) then Add:=Add+' -console';
+  if Kind=dbkX then begin
+    DOSBoxVersion:=PrgSetup.DOSBoxSettings[SettingsNr].DosBoxVersion;
+    if CompareDOSBoxVersion(DOSBoxVersion,'0.83.13')>=0 then
+      Add:=Add+' -nopromptfolder';
   end;
   If Trim(PrgSetup.DOSBoxSettings[SettingsNr].CommandLineParameters)<>'' then
     Add:=Add+' '+Trim(PrgSetup.DOSBoxSettings[SettingsNr].CommandLineParameters);

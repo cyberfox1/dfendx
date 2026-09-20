@@ -31,9 +31,16 @@ type
   private
     { Private-Deklarationen }
     SaveCycles : String;
+    FTempGame : TGame;
+    FCPUTypeConfOpt, FCPUTypeStagingConfOpt, FCPUTypeXConfOpt, FCPUTypePureConfOpt : String;
+    FLoadedCPUType : String;
     Procedure CheckValue(Sender : TObject; var OK : Boolean);
+    Procedure ApplyLists;
+    Procedure ShowFrame(Sender : TObject);
+    Procedure Invalidate(Sender : TObject);
   public
     { Public-Deklarationen }
+    Constructor Create(AOwner : TComponent); override;
     Procedure InitGUI(var InitData : TModernProfileEditorInitData);
     Procedure SetGame(const Game : TGame; const LoadFromTemplate : Boolean);
     Procedure GetGame(const Game : TGame);
@@ -41,11 +48,17 @@ type
 
 implementation
 
-uses Math, CommonHelpers, LanguageSetupUnit, VistaToolsUnit, HelpConsts, PrgSetupUnit, System.UITypes;
+uses Math, CommonHelpers, LanguageSetupUnit, VistaToolsUnit, HelpConsts, PrgSetupUnit, PrgConsts, System.UITypes;
 
 {$R *.dfm}
 
 { TModernProfileEditorCPUFrame }
+
+constructor TModernProfileEditorCPUFrame.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
+end;
 
 procedure TModernProfileEditorCPUFrame.InitGUI(var InitData : TModernProfileEditorInitData);
 Var St : TStringList;
@@ -105,18 +118,12 @@ begin
   CPUTypeLabel.Caption:=LanguageSetup.GameCPUType;
   InfoLabel.Caption:=LanguageSetup.GameCPUInfo;
 
-  St:=ValueToList(InitData.GameDB.ConfOpt.CPUType,';,');
-  try
-    CPUTypeComboBox.Items.BeginUpdate;
-    try
-      CPUTypeComboBox.Items.Clear;
-      CPUTypeComboBox.Items.AddStrings(St);
-    finally
-      CPUTypeComboBox.Items.EndUpdate;
-    end;
-  finally
-    St.Free;
-  end;
+  FCPUTypeConfOpt:=InitData.GameDB.ConfOpt.CPUType;
+  FCPUTypeStagingConfOpt:=InitData.GameDB.ConfOpt.CPUTypeStaging;
+  FCPUTypeXConfOpt:=InitData.GameDB.ConfOpt.CPUTypeX;
+  FCPUTypePureConfOpt:=InitData.GameDB.ConfOpt.CPUTypePure;
+  InitData.OnShowFrame:=ShowFrame;
+  InitData.OnInvalidate:=Invalidate;
 
   AddDefaultValueHint(CPUTypeComboBox);
 
@@ -161,11 +168,32 @@ begin
   CyclesDownComboBoxChange(self);
   CyclesDownEdit.Value:=Game.CyclesDown;
 
-  CPUTypeComboBox.ItemIndex:=0;
-  S:=Trim(ExtUpperCase(Game.CPUType));
-  For I:=0 to CPUTypeComboBox.Items.Count-1 do If S=Trim(ExtUpperCase(CPUTypeComboBox.Items[I])) then begin
-    CPUTypeComboBox.ItemIndex:=I; break;
+  FLoadedCPUType:=Trim(Game.CPUType);
+  ShowFrame(nil);
+end;
+
+procedure TModernProfileEditorCPUFrame.ApplyLists;
+Var Kind : TDOSBoxKind;
+    TypeList : String;
+begin
+  Kind:=FTempGame.DosBoxKind;
+  Case Kind of
+    dbkStaging: TypeList:=FCPUTypeStagingConfOpt;
+    dbkX:       TypeList:=FCPUTypeXConfOpt;
+    dbkPure:    TypeList:=FCPUTypePureConfOpt;
+    else        TypeList:=FCPUTypeConfOpt;
   end;
+  ReloadComboFromConfOpt(CPUTypeComboBox,TypeList,True,FLoadedCPUType);
+end;
+
+procedure TModernProfileEditorCPUFrame.ShowFrame(Sender: TObject);
+begin
+  ApplyLists;
+end;
+
+procedure TModernProfileEditorCPUFrame.Invalidate(Sender: TObject);
+begin
+  CPUTypeComboBox.ItemIndex:=-1;
 end;
 
 Procedure TModernProfileEditorCPUFrame.CheckValue(Sender : TObject; var OK : Boolean);
@@ -229,7 +257,8 @@ begin
   Game.CyclesUp:=Min(30000,Max(1,CyclesUpEdit.Value));
   Game.CyclesDown:=Min(30000,Max(1,CyclesDownEdit.Value));
 
-  Game.CPUType:=CPUTypeComboBox.Text;
+  If CPUTypeComboBox.ItemIndex>=0 then
+    Game.CPUType:=CPUTypeComboBox.Text;
 end;
 
 end.

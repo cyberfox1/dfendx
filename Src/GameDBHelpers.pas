@@ -133,6 +133,9 @@ Type TConfOptH=class(TBasePrgSetup)
     property ReelMagic : String index 129 read GetString write SetString;
     property ReelMagicKey : String index 130 read GetString write SetString;
     property ReelMagicFCode : String index 131 read GetString write SetString;
+    property CPUTypeStaging : String index 132 read GetString write SetString;
+    property CPUTypeX : String index 133 read GetString write SetString;
+    property CPUTypePure : String index 134 read GetString write SetString;
     property PresentationModeStaging : String index 76 read GetString write SetString;
     property DosRateStaging : String index 77 read GetString write SetString;
     property ScummVMGfxMode : String index 78 read GetString write SetString;
@@ -1107,6 +1110,9 @@ begin
   AddStringRec(129,'ReelMagic','value',DefaultValuesReelMagic);
   AddStringRec(130,'ReelMagicKey','value',DefaultValuesReelMagicKey);
   AddStringRec(131,'ReelMagicFCode','value',DefaultValuesReelMagicFCode);
+  AddStringRec(132,'CPUTypeStaging','value',DefaultValuesCPUTypeStaging);
+  AddStringRec(133,'CPUTypeX','value',DefaultValuesCPUTypeX);
+  AddStringRec(134,'CPUTypePure','value',DefaultValuesCPUTypePure);
   AddStringRec(63,'vsyncPure','value',DefaultValueVSyncPure);
   AddStringRec(64,'scalePure','value',DefaultValueScalePure);
   AddStringRec(65,'shaderPure','value',DefaultValueShaderPure);

@@ -129,7 +129,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
   object MouseDriverOptionsGroupBox: TGroupBox
     Left = 16
     Top = 215
-    Width = 448
+    Width = 489
     Height = 60
     Caption = 'MouseDriverOptionsGroupBox'
     TabOrder = 6
@@ -151,9 +151,9 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
       TabOrder = 1
     end
     object MouseNoGranularityCheckBox: TCheckBox
-      Left = 319
+      Left = 303
       Top = 24
-      Width = 178
+      Width = 130
       Height = 17
       Caption = 'No granularity'
       TabOrder = 2
