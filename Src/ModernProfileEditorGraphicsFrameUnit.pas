@@ -259,10 +259,13 @@ begin
   St:=ValueToList(InitData.GameDB.ConfOpt.Video,';,'); try VideoCardComboBox.Items.AddStrings(St); finally St.Free; end;
   VGASettingsGroupBox.Caption:=LanguageSetup.GameVGASettings;
   VGAChipsetLabel.Caption:=LanguageSetup.GameVGAChipset;
+  VGAChipsetLabel.Enabled:=False;
   St:=ValueToList(InitData.GameDB.ConfOpt.VGAChipsets,';,'); try VGAChipsetComboBox.Items.AddStrings(St); finally St.Free; end;
+  VGAChipsetComboBox.Enabled:=False;
+  VGAChipsetComboBox.ItemIndex:=-1;
   VideoRamLabel.Caption:=LanguageSetup.GameVideoRam;
   St:=ValueToList(InitData.GameDB.ConfOpt.VGAVideoRAM,';,'); try VideoRamComboBox.Items.AddStrings(St); finally St.Free; end;
-  VGASettingsLabel.Caption:=LanguageSetup.GameVGASettingsInfo;
+  VGASettingsLabel.Visible:=False;
   ScaleLabel.Caption:=LanguageSetup.GameScale;
   FScaleConfOpt:=InitData.GameDB.ConfOpt.Scale;
   St:=ValueToList(FScaleConfOpt,';,'); try ScaleComboBox.Items.AddStrings(St); finally St.Free; end;
@@ -952,12 +955,7 @@ begin
 
   VGASettingsGroupBox.Visible:=PrgSetup.AllowVGAChipsetSettings;
   If PrgSetup.AllowVGAChipsetSettings then begin
-    If VGAChipsetComboBox.Items.Count>0 then VGAChipsetComboBox.ItemIndex:=0;
-    S:=Trim(ExtUpperCase(Game.VGAChipset));
-    For I:=0 to VGAChipsetComboBox.Items.Count-1 do If Trim(ExtUpperCase(VGAChipsetComboBox.Items[I]))=S then begin
-      VGAChipsetComboBox.ItemIndex:=I;
-      break;
-    end;
+    VGAChipsetComboBox.ItemIndex:=-1;
     If VideoRamComboBox.Items.Count>0 then VideoRamComboBox.ItemIndex:=0;
     S:=Trim(ExtUpperCase(IntToStr(Game.VideoRam)));
     For I:=0 to VideoRamComboBox.Items.Count-1 do begin
@@ -1142,7 +1140,6 @@ begin
   end;
 
   If PrgSetup.AllowVGAChipsetSettings then begin
-    Game.VGAChipset:=VGAChipsetComboBox.Text;
     try Game.VideoRam:=StrToInt(VideoRamComboBox.Text); except Game.VideoRam:=2048; end;
   end;  
 

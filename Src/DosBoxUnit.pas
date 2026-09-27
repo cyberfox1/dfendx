@@ -905,8 +905,8 @@ begin
   SpeedTestInfo('Adding text mode settings to [autoexec] section of DOSBox conf file');
 
   If PrgSetup.AllowTextModeLineChange then begin
-    If Game.TextModeLines=28 then St.Add('Z:\28.COM');
-    If Game.TextModeLines=50 then St.Add('Z:\50.COM');
+    S:=TextModeAutoexecLine(Game.DosBoxKind,Game.TextModeLines);
+    If S<>'' then St.Add(S);
   end;
 
   { IPX connect }

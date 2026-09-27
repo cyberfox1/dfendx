@@ -42,6 +42,7 @@ function StagingMapCpuCycles(const Cycles: string): string;
 function StagingMapPCSpeaker(const Enabled: Boolean): string;
 function CtmouseShouldRun(const Force2Button, SwapButtons, Ps2Enabled, CtmouseEnabled: Boolean; const Kind: TDOSBoxKind): Boolean;
 function BuildCtmouseAutoexecLine(const Force2Button, SwapButtons, Ps2Enabled: Boolean; const Ps2Model: String): String;
+function TextModeAutoexecLine(const Kind: TDOSBoxKind; const Lines: Integer): String;
 
 implementation
 
@@ -354,6 +355,27 @@ begin
   end;
   if SwapButtons then
     AddFlag('/L');
+end;
+
+function TextModeAutoexecLine(const Kind: TDOSBoxKind; const Lines: Integer): String;
+begin
+  Result := '';
+  case Kind of
+    dbkX:
+      case Lines of
+        28: Result := 'Z:\TEXTUTIL\28.COM';
+        50: Result := 'Z:\TEXTUTIL\50.COM';
+      else
+        Result := 'Z:\TEXTUTIL\25.COM';
+      end;
+    dbkStaging:
+      case Lines of
+        28: Result := 'mode 80x28';
+        50: Result := 'mode 80x50';
+      else
+        Result := 'mode 80x25';
+      end;
+  end;
 end;
 
 end.

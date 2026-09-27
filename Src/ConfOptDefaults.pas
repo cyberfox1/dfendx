@@ -41,10 +41,10 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
       DefaultValuesCore='auto,normal,dynamic,simple';
       DefaultValuesSBlaster='none,sb1,sb2,sbpro1,sbpro2,sb16,gb';
       DefaultValuesSBlasterStaging='gb,sb1,sb2,sbpro1,sbpro2,sb16,ess,none';
-      DefaultValuesSBlasterX='sb1,sb1.0,sb1.5,sb2,sb2.0,sb2.01,sbpro1,sbpro2,sb16,sb16vibra,gb,ess688,ess1688,reveal_sc400,none';
+      DefaultValuesSBlasterX='sb1,sb1.0,sb1.5,sb2,sb2.0,sb2.01,sbpro1,sbpro2,sb16,sb16vibra,gb,ess688,ess1688,reveal_sc400,pas,pasplus,pas16,none';
       DefaultValuesOPLModes='auto,cms,opl2,dualopl2,opl3,none';
       DefaultValuesOPLModesStaging='auto,cms,opl2,dualopl2,opl3,opl3gold,esfm,none';
-      DefaultValuesOPLModesX='auto,opl2,dualopl2,opl3,opl3gold,none,hardware,hardwaregb,esfm';
+      DefaultValuesOPLModesX='auto,opl2,dualopl2,opl3,opl3gold,hardware,hardwaregb,esfm,none';
       DefaultValuesKeyboardLayout='default,none,Albania (SQ),Albania (SQ448),Argentina (LA),Armenia (HY),Australia (US),Austria (DE),Austria (DE453),Azerbaijan (AZ),'+
                                   'Belarus (BY),Belgium (BE),Bosnia & Herzegovina (BA),Brazil (BR),Brazil (BR274),Bulgaria (BG),Bulgaria (BG241),'+
                                   'Canada (CA),Canada (CA445),Canada (CF501),Chile (LA),Colombia (LA),Croatia (HR),Czech Republic (CZ),Czech Republic (CZ243),'+

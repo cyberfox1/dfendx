@@ -929,6 +929,7 @@ begin
       Dest.Add('ver='+S);
   end;
   If Game.IsDBX then begin
+    Dest.Add('mountwarning=false');
     Dest.Add('int33='+BoolToStr(not Game.Ps2MouseEnabled));
     Dest.Add('vmware='+BoolToStr(Game.VMwareMouse));
     Dest.Add('biosps2='+BoolToStr(Game.BiosPs2));

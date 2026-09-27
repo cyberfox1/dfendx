@@ -6408,7 +6408,7 @@ begin
   AddStringRec(NR_GameCPUType,'GameSetup','CPUType','CPU Type');
   AddStringRec(NR_GameCPUInfo,'GameSetup','CPUInfo','Emulation core "dynamic" can be used for very CPU demanding games. Other CPU types than "auto" should only be used if a game is not working with CPU type "auto".');
   AddStringRec(NR_GameVideoCard,'GameSetup','VideoCard','Video card');
-  AddStringRec(NR_GameVGASettings,'GameSetup','VGASettings','Settings for video card type "vga"');
+  AddStringRec(NR_GameVGASettings,'GameSetup','VGASettings','Settings for VGA class machines');
   AddStringRec(NR_GameVGASettingsInfo,'GameSetup','VGASettings.Info','This settings are only used if video card type is "vga".');
   AddStringRec(NR_GameVGAChipset,'GameSetup','VGAChipset','VGA chipset');
   AddStringRec(NR_GameVideoRam,'GameSetup','VideoRam','VideoRAM (in KB)');

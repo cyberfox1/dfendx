@@ -400,6 +400,7 @@ begin
   try
     {----- global [scummvm] --------------------------------------------------}
     St1.Add('[scummvm]');
+    St1.Add('updates_check=0');
 
     ScummVMAddProfileGraphicsKeys(St1, Game);
 

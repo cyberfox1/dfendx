@@ -1,5 +1,14 @@
 DFendX Changelog
 
+Version 2.6.2 (09/27/2026)
+==========================
+- Generate correct text lines config for X and Staging.
+- Add PAS soundblaster types (for future DOSBox-X).
+- Minor UI tweaks.
+- Disable mount warning on startup for DOSBox-X.
+- Disable ScummVM update check prompt on startup.
+
+
 Version 2.6.1 (09/20/2026)
 ==========================
 - CPU type list per DOSBox kind.

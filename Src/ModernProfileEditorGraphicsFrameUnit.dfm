@@ -141,6 +141,7 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
       Height = 34
       AutoSize = False
       Caption = 'This settings are only used if video card type is "vga".'
+      Visible = False
       WordWrap = True
     end
     object VGAChipsetComboBox: TComboBox
@@ -149,6 +150,7 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
       Width = 145
       Height = 23
       Style = csDropDownList
+      Enabled = False
       TabOrder = 0
     end
     object VideoRamComboBox: TComboBox
