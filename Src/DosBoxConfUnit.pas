@@ -460,6 +460,15 @@ begin
     If S='' then S:='22050';
     Dest.Add('ps1audiorate='+S);
   end;
+  If Game.IsDBX and Game.WSS then begin
+    Dest.Add('');
+    Dest.Add('[wss]');
+    Dest.Add('wss=true');
+    Dest.Add('wssbase=530');
+    Dest.Add('wssmixer=true');
+    Dest.Add('irq=7');
+    Dest.Add('dma=3');
+  end;
 end;
 
 Procedure GenerateInnovaConf(const Game: TGame; const Dest: TStrings; const IsStaging, IsOldStaging: Boolean);
@@ -929,6 +938,9 @@ begin
       Dest.Add('ver='+S);
   end;
   If Game.IsDBX then begin
+    S:=Trim(Game.LFN);
+    If (S='') or SameText(S,'default') then S:='auto';
+    Dest.Add('lfn='+S);
     Dest.Add('mountwarning=false');
     Dest.Add('int33='+BoolToStr(not Game.Ps2MouseEnabled));
     Dest.Add('vmware='+BoolToStr(Game.VMwareMouse));

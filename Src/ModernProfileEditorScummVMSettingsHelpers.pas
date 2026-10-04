@@ -68,6 +68,12 @@ procedure ScummVMSettingsRoundTripValues(
   var OutInt: array of Integer
 );
 
+function ScummVMSettingsPackScummEnhancements(const G1, G2, G3, G4: Boolean): Integer;
+
+function ScummVMSettingsJoinOptionsBlob(const A, B: String): String;
+function ScummVMSettingsEncodeEnhancementGroups(const SpecialCaption: String; const G1, G2, G3, G4: Boolean): String;
+procedure ScummVMSettingsReadEnhancementGroups(const Stored: String; out G1, G2, G3, G4: Boolean);
+
 implementation
 
 uses
@@ -138,7 +144,7 @@ end;
 
 function ScummVMSettingsLoadOptions(const GameId: String; const Variant: String = ''): TScummVMGameOptionArray;
 begin
-  Result := GetScummVMGameOptionsCoreThenVariant(ScummVMSettingsBareGameId(GameId), Trim(Variant));
+  Result := GetScummVMGameOptions(ScummVMSettingsBareGameId(GameId), Trim(Variant));
 end;
 
 function ScummVMSettingsEncodeOptions(
@@ -158,7 +164,9 @@ begin
     Parts.Delimiter := ',';
     Parts.QuoteChar := #0;
     for I := 0 to High(Opts) do begin
-      if Opts[I].Kind = sgokInteger then begin
+      if Opts[I].Kind = sgokSpecial then
+        Continue
+      else if Opts[I].Kind = sgokInteger then begin
         if (I >= Low(IntValues)) and (I <= High(IntValues)) then
           IntVal := IntValues[I]
         else
@@ -257,7 +265,9 @@ var
 begin
   HasStored := Trim(Stored) <> '';
   for I := 0 to High(Opts) do begin
-    if Opts[I].Kind = sgokInteger then begin
+    if Opts[I].Kind = sgokSpecial then
+      Continue
+    else if Opts[I].Kind = sgokInteger then begin
       if (I >= Low(IntValues)) and (I <= High(IntValues)) then begin
         if HasStored then
           IntValues[I] := ScummVMSettingsReadInt(Stored, Opts[I].IniKey, Opts[I].DefaultInt)
@@ -314,6 +324,70 @@ var
 begin
   Encoded := ScummVMSettingsEncodeOptions(Opts, InBool, InInt);
   ScummVMSettingsValuesFromStored(Opts, Encoded, OutBool, OutInt);
+end;
+
+const
+  ScummEnhGameBreaking = 1;
+  ScummEnhGrp1 = 6;
+  ScummEnhGrp2 = 120;
+  ScummEnhGrp3 = 128;
+  ScummEnhGrp4 = 256;
+
+function ScummVMSettingsPackScummEnhancements(const G1, G2, G3, G4: Boolean): Integer;
+begin
+  Result := ScummEnhGameBreaking;
+  if G1 then Result := Result or ScummEnhGrp1;
+  if G2 then Result := Result or ScummEnhGrp2;
+  if G3 then Result := Result or ScummEnhGrp3;
+  if G4 then Result := Result or ScummEnhGrp4;
+end;
+
+const
+  ScummEnhGroupKey1 = 'enhancementGroup1';
+  ScummEnhGroupKey2 = 'enhancementGroup2';
+  ScummEnhGroupKey3 = 'enhancementGroup3';
+  ScummEnhGroupKey4 = 'enhancementGroup4';
+
+function ScummVMSettingsJoinOptionsBlob(const A, B: String): String;
+begin
+  if Trim(A) = '' then
+    Result := Trim(B)
+  else if Trim(B) = '' then
+    Result := Trim(A)
+  else
+    Result := Trim(A) + ',' + Trim(B);
+end;
+
+function ScummVMSettingsEncodeEnhancementGroups(const SpecialCaption: String; const G1, G2, G3, G4: Boolean): String;
+var
+  Parts: TStringList;
+begin
+  Parts := TStringList.Create;
+  try
+    Parts.StrictDelimiter := True;
+    Parts.Delimiter := ',';
+    Parts.QuoteChar := #0;
+    if SameText(SpecialCaption, 'macs2-enhancements') then begin
+      if G2 then Parts.Add(ScummEnhGroupKey2);
+      if G4 then Parts.Add(ScummEnhGroupKey4);
+    end else begin
+      if G1 then Parts.Add(ScummEnhGroupKey1);
+      if G2 then Parts.Add(ScummEnhGroupKey2);
+      if G3 then Parts.Add(ScummEnhGroupKey3);
+      if G4 then Parts.Add(ScummEnhGroupKey4);
+    end;
+    Result := Parts.DelimitedText;
+  finally
+    Parts.Free;
+  end;
+end;
+
+procedure ScummVMSettingsReadEnhancementGroups(const Stored: String; out G1, G2, G3, G4: Boolean);
+begin
+  G1 := ScummVMSettingsIsSelected(Stored, ScummEnhGroupKey1);
+  G2 := ScummVMSettingsIsSelected(Stored, ScummEnhGroupKey2);
+  G3 := ScummVMSettingsIsSelected(Stored, ScummEnhGroupKey3);
+  G4 := ScummVMSettingsIsSelected(Stored, ScummEnhGroupKey4);
 end;
 
 end.

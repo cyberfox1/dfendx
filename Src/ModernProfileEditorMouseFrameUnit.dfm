@@ -59,8 +59,8 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Visible = False
   end
   object Ps2ModelLabel: TLabel
-    Left = 222
-    Top = 483
+    Left = 17
+    Top = 459
     Width = 80
     Height = 15
     Caption = 'Ps2ModelLabel'

@@ -41,7 +41,7 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
       DefaultValuesCore='auto,normal,dynamic,simple';
       DefaultValuesSBlaster='none,sb1,sb2,sbpro1,sbpro2,sb16,gb';
       DefaultValuesSBlasterStaging='gb,sb1,sb2,sbpro1,sbpro2,sb16,ess,none';
-      DefaultValuesSBlasterX='sb1,sb1.0,sb1.5,sb2,sb2.0,sb2.01,sbpro1,sbpro2,sb16,sb16vibra,gb,ess688,ess1688,reveal_sc400,pas,pasplus,pas16,none';
+      DefaultValuesSBlasterX='sb1,sb1.0,sb1.5,sb2,sb2.0,sb2.01,sbpro1,sbpro2,sb16,sb16vibra,awe32,gb,ess688,ess1688,reveal_sc400,pas,pasplus,pas16,none';
       DefaultValuesOPLModes='auto,cms,opl2,dualopl2,opl3,none';
       DefaultValuesOPLModesStaging='auto,cms,opl2,dualopl2,opl3,opl3gold,esfm,none';
       DefaultValuesOPLModesX='auto,opl2,dualopl2,opl3,opl3gold,hardware,hardwaregb,esfm,none';
@@ -66,7 +66,8 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
                             '1116 (Estonian),1117 (Latvian),1125 (Cyrillic Ukrainian),1131 (Cyrillic Belarusian),57781 (Hungarian),58152 (Cyrillic Kazakh with Euro),'+
                             '58210 (Cyrillic Azeri Cyrillic),59234 (Cyrillic Tatar),59829 (Georgian),60258 (Cyrillic Azeri Latin),60853 (Georgian with capital letters),'+
                             '61282 (Latvian and Russian "RusLat"),62306 (Cyrillic Uzbek)';
-      DefaultValuesReportedDOSVersion='default,6.22,6.2,6.0,5.0,4.0,3.3';
+      DefaultValuesReportedDOSVersion='default,7.1,7.0,6.22,6.2,6.0,5.0,4.0,3.3';
+      DefaultValuesLFNX='true,false,auto,autostart';
       DefaultValuesMIDIDevice='default,alsa,oss,win32,coreaudio,mt32,none';
       DefaultValuesMIDIDeviceStaging='port,soundfont,mt32,soundcanvas,none';
       DefaultValuesMIDIDeviceStagingOld='auto,win32,soundfont,mt32,none';

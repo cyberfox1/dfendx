@@ -18,6 +18,8 @@ type
     FCheckBoxes: array of TCheckBox;
     FSpinEdits: array of TSpinEdit;
     FIntLabels: array of TLabel;
+    FSpecialCheckBoxes: array of TCheckBox;
+    FHasSpecial: String;
     FData: TScummVMSettingsData;
     FStoredExtra: String;
     FSuppressChange: Boolean;
@@ -29,6 +31,7 @@ type
     function SelectedGameId: String;
     function SelectedVariant: String;
     procedure CaptureValuesToStored;
+    function SpecialCheckBoxesBlob: String;
     procedure ShowFrame(Sender: TObject);
     procedure ApplyGameId(const GameId, PreferVariant: String; const ResetStoredIfDifferent: Boolean);
   public
@@ -54,10 +57,14 @@ begin
     FreeAndNil(FSpinEdits[I]);
   for I := 0 to High(FIntLabels) do
     FreeAndNil(FIntLabels[I]);
+  for I := 0 to High(FSpecialCheckBoxes) do
+    FreeAndNil(FSpecialCheckBoxes[I]);
   SetLength(FCheckBoxes, 0);
   SetLength(FSpinEdits, 0);
   SetLength(FIntLabels, 0);
+  SetLength(FSpecialCheckBoxes, 0);
   SetLength(FOpts, 0);
+  FHasSpecial := '';
 end;
 
 function TModernProfileEditorScummVMSettingsFrame.SelectedGameId: String;
@@ -91,12 +98,38 @@ begin
     if FOpts[I].Kind = sgokInteger then begin
       if (I <= High(FSpinEdits)) and (FSpinEdits[I] <> nil) then
         IntValues[I] := FSpinEdits[I].Value;
-    end else begin
+    end else if FOpts[I].Kind <> sgokSpecial then begin
       if (I <= High(FCheckBoxes)) and (FCheckBoxes[I] <> nil) then
         BoolValues[I] := FCheckBoxes[I].Checked;
     end;
   end;
-  FStoredExtra := ScummVMSettingsEncodeOptions(FOpts, BoolValues, IntValues);
+  FStoredExtra := ScummVMSettingsJoinOptionsBlob(
+    ScummVMSettingsEncodeOptions(FOpts, BoolValues, IntValues),
+    SpecialCheckBoxesBlob);
+end;
+
+function TModernProfileEditorScummVMSettingsFrame.SpecialCheckBoxesBlob: String;
+var
+  G1, G2, G3, G4: Boolean;
+begin
+  Result := '';
+  if FHasSpecial = '' then Exit;
+  G1 := False;
+  G2 := False;
+  G3 := False;
+  G4 := False;
+  if SameText(FHasSpecial, 'macs2-enhancements') then begin
+    if Length(FSpecialCheckBoxes) >= 2 then begin
+      G2 := FSpecialCheckBoxes[0].Checked;
+      G4 := FSpecialCheckBoxes[1].Checked;
+    end;
+  end else if Length(FSpecialCheckBoxes) >= 4 then begin
+    G1 := FSpecialCheckBoxes[0].Checked;
+    G2 := FSpecialCheckBoxes[1].Checked;
+    G3 := FSpecialCheckBoxes[2].Checked;
+    G4 := FSpecialCheckBoxes[3].Checked;
+  end;
+  Result := ScummVMSettingsEncodeEnhancementGroups(FHasSpecial, G1, G2, G3, G4);
 end;
 
 procedure TModernProfileEditorScummVMSettingsFrame.RebuildVariantCombo(const GameId, PreferVariant: String);
@@ -139,6 +172,10 @@ var
   Lbl: TLabel;
   BoolValues: array of Boolean;
   IntValues: array of Integer;
+  G1, G2, G3, G4: Boolean;
+  SpecialCaptions: array[0..3] of String;
+  SpecialStates: array[0..3] of Boolean;
+  S: Integer;
 begin
   ClearOptionControls;
   FOpts := ScummVMSettingsLoadOptions(GameId, Variant);
@@ -156,7 +193,55 @@ begin
   Gap := (LineH * 5) div 4; { +0.25 line height between options }
   RowH := Max(LineH + 8, 22);
   for I := 0 to High(FOpts) do begin
-    if FOpts[I].Kind = sgokInteger then begin
+    if (FOpts[I].Kind = sgokSpecial) and SameText(FOpts[I].Caption, 'scumm-enhancements') then begin
+      FHasSpecial := FOpts[I].Caption;
+      SpecialCaptions[0] := 'Fix original bugs';
+      SpecialCaptions[1] := 'Audio-visual improvements';
+      SpecialCaptions[2] := 'Restored content';
+      SpecialCaptions[3] := 'Modern UI/UX adjustments';
+      ScummVMSettingsReadEnhancementGroups(FStoredExtra, G1, G2, G3, G4);
+      SpecialStates[0] := G1;
+      SpecialStates[1] := G2;
+      SpecialStates[2] := G3;
+      SpecialStates[3] := G4;
+      SetLength(FSpecialCheckBoxes, 4);
+      for S := 0 to 3 do begin
+        CB := TCheckBox.Create(Self);
+        CB.Parent := OptionsScrollBox;
+        CB.Left := 0;
+        CB.Top := Y;
+        CB.Width := OptionsScrollBox.ClientWidth - 8;
+        CB.Anchors := [akLeft, akTop, akRight];
+        CB.Caption := SpecialCaptions[S];
+        CB.Checked := SpecialStates[S];
+        CB.Tag := I;
+        NoFlicker(CB);
+        FSpecialCheckBoxes[S] := CB;
+        Inc(Y, CB.Height + Gap);
+      end;
+    end else if (FOpts[I].Kind = sgokSpecial) and SameText(FOpts[I].Caption, 'macs2-enhancements') then begin
+      FHasSpecial := FOpts[I].Caption;
+      SpecialCaptions[0] := 'Audio-visual improvements';
+      SpecialCaptions[1] := 'Modern UI/UX adjustments';
+      ScummVMSettingsReadEnhancementGroups(FStoredExtra, G1, G2, G3, G4);
+      SpecialStates[0] := G2;
+      SpecialStates[1] := G4;
+      SetLength(FSpecialCheckBoxes, 2);
+      for S := 0 to 1 do begin
+        CB := TCheckBox.Create(Self);
+        CB.Parent := OptionsScrollBox;
+        CB.Left := 0;
+        CB.Top := Y;
+        CB.Width := OptionsScrollBox.ClientWidth - 8;
+        CB.Anchors := [akLeft, akTop, akRight];
+        CB.Caption := SpecialCaptions[S];
+        CB.Checked := SpecialStates[S];
+        CB.Tag := I;
+        NoFlicker(CB);
+        FSpecialCheckBoxes[S] := CB;
+        Inc(Y, CB.Height + Gap);
+      end;
+    end else if FOpts[I].Kind = sgokInteger then begin
       SE := TSpinEdit.Create(Self);
       SE.Parent := OptionsScrollBox;
       SE.Left := 0;
@@ -283,12 +368,13 @@ begin
       if FOpts[I].Kind = sgokInteger then begin
         if (I <= High(FSpinEdits)) and (FSpinEdits[I] <> nil) then
           IntValues[I] := FSpinEdits[I].Value;
-      end else begin
+      end else if FOpts[I].Kind <> sgokSpecial then begin
         if (I <= High(FCheckBoxes)) and (FCheckBoxes[I] <> nil) then
           BoolValues[I] := FCheckBoxes[I].Checked;
       end;
     end;
     ScummVMSettingsSaveData(FData, Id, True, Variant, FOpts, BoolValues, IntValues, OutData, GameToken);
+    OutData.ExtraOptions := ScummVMSettingsJoinOptionsBlob(OutData.ExtraOptions, SpecialCheckBoxesBlob);
   end else begin
     OutData.GameId := Id;
     OutData.Variant := Variant;
@@ -299,6 +385,10 @@ begin
   end;
   Game.ScummVMExtraVariant := Variant;
   Game.ScummGameOptions := OutData.ExtraOptions;
+  if FHasSpecial <> '' then
+    Game.ScummVMHasSpecialOptions := 'enhancements'
+  else
+    Game.ScummVMHasSpecialOptions := '';
   FData := OutData;
   FStoredExtra := OutData.ExtraOptions;
 end;

@@ -384,7 +384,7 @@ end;
 
 {=========== config builder (primary place for all settings) ==================}
 
-Procedure ScummVMApplyGameOptionsBlob(const St : TStringList; const OptionsBlob : String); forward;
+Procedure ScummVMApplyGameOptionsBlob(const St : TStringList; const OptionsBlob, HasSpecialOptions : String); forward;
 
 Function BuildScummVMIniFile(const Game : TGame; const RunMode : Boolean) : TStringList;
 Var S, MusicDriver, Mt32Device, GmDevice, SoundFont : String;
@@ -513,7 +513,7 @@ begin
       St2.Add('walkspeed=' + IntToStr(Game.ScummVMWalkspeed));
 
     { Options from ScummVM settings page (opt,opt=5,...) }
-    ScummVMApplyGameOptionsBlob(St2, Game.ScummGameOptions);
+    ScummVMApplyGameOptionsBlob(St2, Game.ScummGameOptions, Game.ScummVMHasSpecialOptions);
 
     { Merge themepath / gui_theme / extrapath / soundfont from installed ScummVM }
     S := FindScummVMIni;
@@ -705,40 +705,74 @@ begin
   ScummVMCounter.Add(result);
 end;
 
-Procedure ScummVMApplyGameOptionsBlob(const St : TStringList; const OptionsBlob : String);
-Var Parts : TStringList;
+Procedure ScummVMApplyGameOptionsBlob(const St : TStringList; const OptionsBlob, HasSpecialOptions : String);
+Var Parts, Specials : TStringList;
     I, P : Integer;
     Tok, Key, Val : String;
+    HasEnhancementsSpecial, IsGroupKey : Boolean;
+    G1, G2, G3, G4 : Boolean;
 begin
-  If (St = nil) or (Trim(OptionsBlob) = '') then Exit;
-  Parts := TStringList.Create;
+  If St = nil then Exit;
+  HasEnhancementsSpecial := False;
+  Specials := TStringList.Create;
   try
-    Parts.StrictDelimiter := True;
-    Parts.Delimiter := ',';
-    Parts.QuoteChar := #0;
-    Parts.DelimitedText := OptionsBlob;
-    For I := 0 to Parts.Count - 1 do begin
-      Tok := Trim(Parts[I]);
-      If Tok = '' then Continue;
-      P := Pos('=', Tok);
-      If P <= 0 then begin
-        If SameText(Tok, 'enhancements') then
-          St.Add('enhancements=7')
-        else
-          St.Add(Tok + '=true');
-      end else begin
-        Key := Trim(Copy(Tok, 1, P - 1));
-        Val := Trim(Copy(Tok, P + 1, MaxInt));
-        If SameText(Key, 'enhancements') and SameText(Val, 'true') then
-          Val := '7'
-        else If SameText(Key, 'enhancements') and SameText(Val, 'false') then
-          Val := '0';
-        If Key <> '' then
-          St.Add(Key + '=' + Val);
-      end;
-    end;
+    Specials.StrictDelimiter := True;
+    Specials.Delimiter := ',';
+    Specials.QuoteChar := #0;
+    Specials.DelimitedText := Trim(HasSpecialOptions);
+    For I := 0 to Specials.Count - 1 do
+      If SameText(Trim(Specials[I]), 'enhancements') then
+        HasEnhancementsSpecial := True;
   finally
-    Parts.Free;
+    Specials.Free;
+  end;
+  If (Trim(OptionsBlob) = '') and not HasEnhancementsSpecial then Exit;
+
+  If Trim(OptionsBlob) <> '' then begin
+    Parts := TStringList.Create;
+    try
+      Parts.StrictDelimiter := True;
+      Parts.Delimiter := ',';
+      Parts.QuoteChar := #0;
+      Parts.DelimitedText := OptionsBlob;
+      For I := 0 to Parts.Count - 1 do begin
+        Tok := Trim(Parts[I]);
+        If Tok = '' then Continue;
+        P := Pos('=', Tok);
+        If P <= 0 then
+          Key := Tok
+        else
+          Key := Trim(Copy(Tok, 1, P - 1));
+        IsGroupKey :=
+          SameText(Key, 'enhancementGroup1') or
+          SameText(Key, 'enhancementGroup2') or
+          SameText(Key, 'enhancementGroup3') or
+          SameText(Key, 'enhancementGroup4');
+        If HasEnhancementsSpecial and (IsGroupKey or SameText(Key, 'enhancements')) then
+          Continue;
+        If P <= 0 then begin
+          If SameText(Tok, 'enhancements') then
+            St.Add('enhancements=7')
+          else
+            St.Add(Tok + '=true');
+        end else begin
+          Val := Trim(Copy(Tok, P + 1, MaxInt));
+          If SameText(Key, 'enhancements') and SameText(Val, 'true') then
+            Val := '7'
+          else If SameText(Key, 'enhancements') and SameText(Val, 'false') then
+            Val := '0';
+          If Key <> '' then
+            St.Add(Key + '=' + Val);
+        end;
+      end;
+    finally
+      Parts.Free;
+    end;
+  end;
+
+  If HasEnhancementsSpecial then begin
+    ScummVMSettingsReadEnhancementGroups(OptionsBlob, G1, G2, G3, G4);
+    St.Add('enhancements=' + IntToStr(ScummVMSettingsPackScummEnhancements(G1, G2, G3, G4)));
   end;
 end;
 

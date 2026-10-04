@@ -209,6 +209,9 @@ begin
     AGame.UMB:=StrToBool(INI.ReadString('dos','umb','true'));
     AGame.KeyboardLayout:=INI.ReadString('dos','keyboardlayout','none');
     If ExtUpperCase(AGame.KeyboardLayout)='AUTO' then AGame.KeyboardLayout:='default';
+    S:=Trim(INI.ReadString('dos','lfn','auto'));
+    If (S='') or SameText(S,'default') then S:='auto';
+    AGame.LFN:=S;
 
     AGame.MixerNosound:=StrToBool(INI.ReadString('mixer','nosound','false'));
     AGame.MixerRate:=Ini.ReadInteger('mixer','rate',22050);
@@ -285,6 +288,7 @@ begin
     S:=Trim(Ini.ReadString('speaker','ps1audio',''));
     AGame.PS1Audio:=SameText(S,'on') or SameText(S,'true') or SameText(S,'auto');
     AGame.PS1AudioRate:=Ini.ReadString('speaker','ps1audiorate','');
+    AGame.WSS:=StrToBool(INI.ReadString('wss','wss','false'));
 
     AGame.JoystickType:=Ini.ReadString('joystick','joysticktype','auto');
     AGame.JoystickTimed:=StrToBool(INI.ReadString('joystick','timed','true'));

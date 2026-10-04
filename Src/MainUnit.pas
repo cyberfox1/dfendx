@@ -3048,6 +3048,7 @@ begin
    try
      If Mode<>'' then begin
        DefaultGame.ProfileMode:=Mode;
+       If SameText(Mode,'ScummVM') and (TemplateNr<0) then DefaultGame.StartFullscreen:=False;
        if not ModernEditGameProfil(self,GameDB,G,DefaultGame,SearchLinkFile,DeleteOnExit,'',ExeFile) then exit;
      end else begin
         if not ModernEditGameProfil(self,GameDB,G,DefaultGame,SearchLinkFile,DeleteOnExit,'',ExeFile) then exit;

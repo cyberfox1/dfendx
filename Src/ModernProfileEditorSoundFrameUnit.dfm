@@ -260,4 +260,13 @@ object ModernProfileEditorSoundFrame: TModernProfileEditorSoundFrame
     Style = csDropDownList
     TabOrder = 9
   end
+  object cbWSSEnable: TCheckBox
+    Left = 24
+    Top = 436
+    Width = 169
+    Height = 17
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 'Activate WSS'
+    TabOrder = 11
+  end
 end

@@ -621,6 +621,7 @@ const NR_Author=1;
       NR_ProfileEditorSoundMiscLptDacFilter=40677;
       NR_ProfileEditorSoundMiscPS1Audio=40678;
       NR_ProfileEditorSoundMiscPS1AudioRate=40679;
+      NR_ProfileEditorSoundMiscWSS=40688;
       NR_ProfileEditorSoundMIDIFluidSynthSettings=40680;
       NR_ProfileEditorSoundMIDIFluidSynthChorus=40681;
       NR_ProfileEditorSoundMIDIFluidSynthReverb=40682;
@@ -1651,6 +1652,7 @@ const NR_Author=1;
       NR_GameNE2000RealInterface=62044;
       NR_GameNE2000RealInterfaceList=62045;
       NR_GameReportedDOSVersion=62046;
+      NR_GameLFN=62047;
 
       NR_GameEnablePrinterEmulation=62135;
       NR_GamePrinterResolution=62136;
@@ -2997,6 +2999,7 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property ProfileEditorSoundMiscLptDacFilter : String index NR_ProfileEditorSoundMiscLptDacFilter read GetString write SetString;
     property ProfileEditorSoundMiscPS1Audio : String index NR_ProfileEditorSoundMiscPS1Audio read GetString write SetString;
     property ProfileEditorSoundMiscPS1AudioRate : String index NR_ProfileEditorSoundMiscPS1AudioRate read GetString write SetString;
+    property ProfileEditorSoundMiscWSS : String index NR_ProfileEditorSoundMiscWSS read GetString write SetString;
     property ProfileEditorSoundVolumeSheet : String index NR_ProfileEditorSoundVolumeSheet read GetString write SetString;
     property ProfileEditorSoundMasterVolume : String index NR_ProfileEditorSoundMasterVolume read GetString write SetString;
     property ProfileEditorSoundMasterGain : String index NR_ProfileEditorSoundMasterGain read GetString write SetString;
@@ -3994,6 +3997,7 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property GameNE2000RealInterface : String index NR_GameNE2000RealInterface read GetString write SetString;
     property GameNE2000RealInterfaceList : String index NR_GameNE2000RealInterfaceList read GetString write SetString;
     property GameReportedDOSVersion : String index NR_GameReportedDOSVersion read GetString write SetString;
+    property GameLFN : String index NR_GameLFN read GetString write SetString;
     property GameEnablePrinterEmulation : String index NR_GameEnablePrinterEmulation read GetString write SetString;
     property GamePrinterResolution : String index NR_GamePrinterResolution read GetString write SetString;
     property GamePaperWidth : String index NR_GamePaperWidth read GetString write SetString;
@@ -5421,6 +5425,7 @@ begin
   AddStringRec(NR_ProfileEditorSoundMiscLptDacFilter,'ProfileEditorForm','Sound.Misc.LptDacFilter','LPT DAC filter');
   AddStringRec(NR_ProfileEditorSoundMiscPS1Audio,'ProfileEditorForm','Sound.Misc.PS1Audio','Activate PS/1 audio');
   AddStringRec(NR_ProfileEditorSoundMiscPS1AudioRate,'ProfileEditorForm','Sound.Misc.PS1AudioRate','PS/1 sample rate');
+  AddStringRec(NR_ProfileEditorSoundMiscWSS,'ProfileEditorForm','Sound.Misc.WSS','Activate WSS');
   AddStringRec(NR_ProfileEditorSoundVolumeSheet,'ProfileEditorForm','Sound.Volume','Volume');
   AddStringRec(NR_ProfileEditorSoundMasterVolume,'ProfileEditorForm','Sound.MasterVolume','Master');
   AddStringRec(NR_ProfileEditorSoundMasterGain,'ProfileEditorForm','Sound.MasterGain','Master Gain');
@@ -6440,6 +6445,7 @@ begin
   AddStringRec(NR_GameNE2000RealInterface,'GameSetup','NE2000.RealInterface','Real network interface');
   AddStringRec(NR_GameNE2000RealInterfaceList,'GameSetup','NE2000.RealInterface.List','List real network devices');
   AddStringRec(NR_GameReportedDOSVersion,'GameSetup','ReportedDOSVersion','Reported DOS version');
+  AddStringRec(NR_GameLFN,'GameSetup','LFN','Long filename (LFN)');
   AddStringRec(NR_GameEnablePrinterEmulation,'GameSetup','EnablePrinterEmulation','Enable printer emulation');
   AddStringRec(NR_GamePrinterResolution,'GameSetup','PrinterResolution','Resolution (in dpi)');
   AddStringRec(NR_GamePaperWidth,'GameSetup','PaperWidth','Paper width');

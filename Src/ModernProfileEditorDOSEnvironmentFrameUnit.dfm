@@ -10,15 +10,23 @@ object ModernProfileEditorDOSEnvironmentFrame: TModernProfileEditorDOSEnvironmen
   object ReportedDOSVersionLabel: TLabel
     Left = 24
     Top = 24
-    Width = 126
-    Height = 13
-    Caption = 'ReportedDOSVersionLabel'
+    Width = 115
+    Height = 15
+    Caption = 'Reported DOS Version'
+  end
+  object LFNLabel: TLabel
+    Left = 212
+    Top = 24
+    Width = 155
+    Height = 15
+    Caption = 'Long Filename (LFN) Support'
+    Visible = False
   end
   object CustomSetsEnvLabel: TLabel
     Left = 25
     Top = 181
-    Width = 104
-    Height = 13
+    Width = 120
+    Height = 15
     Caption = 'Environment variables:'
   end
   object Use4DOSInfoLabel: TLabel
@@ -34,9 +42,16 @@ object ModernProfileEditorDOSEnvironmentFrame: TModernProfileEditorDOSEnvironmen
     Left = 24
     Top = 43
     Width = 97
-    Height = 21
-    ItemHeight = 13
+    Height = 23
     TabOrder = 0
+  end
+  object LFNComboBox: TComboBox
+    Left = 212
+    Top = 43
+    Width = 113
+    Height = 23
+    TabOrder = 1
+    Visible = False
   end
   object Use4DOSCheckBox: TCheckBox
     Left = 24
@@ -45,7 +60,7 @@ object ModernProfileEditorDOSEnvironmentFrame: TModernProfileEditorDOSEnvironmen
     Height = 17
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Use4DOSCheckBox'
-    TabOrder = 1
+    TabOrder = 2
   end
   object CustomSetsValueListEditor: TValueListEditor
     Left = 24
@@ -54,7 +69,7 @@ object ModernProfileEditorDOSEnvironmentFrame: TModernProfileEditorDOSEnvironmen
     Height = 219
     Anchors = [akLeft, akTop, akRight, akBottom]
     KeyOptions = [keyEdit]
-    TabOrder = 2
+    TabOrder = 3
     ColWidths = (
       150
       345)
@@ -66,8 +81,6 @@ object ModernProfileEditorDOSEnvironmentFrame: TModernProfileEditorDOSEnvironmen
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Add'
-    TabOrder = 3
-    OnClick = ButtonWork
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000130B0000130B00001000000000000000000000000000
@@ -82,6 +95,8 @@ object ModernProfileEditorDOSEnvironmentFrame: TModernProfileEditorDOSEnvironmen
       333333333337733333FF3333333C333330003333333733333777333333333333
       3000333333333333377733333333333333333333333333333333}
     NumGlyphs = 2
+    TabOrder = 4
+    OnClick = ButtonWork
   end
   object CustomSetsEnvDel: TBitBtn
     Tag = 1
@@ -91,8 +106,6 @@ object ModernProfileEditorDOSEnvironmentFrame: TModernProfileEditorDOSEnvironmen
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Delete'
-    TabOrder = 4
-    OnClick = ButtonWork
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000120B0000120B00001000000000000000000000000000
@@ -107,5 +120,7 @@ object ModernProfileEditorDOSEnvironmentFrame: TModernProfileEditorDOSEnvironmen
       BBB35555F55555575F555550555555550BBB55575555555575F5555555555555
       50BB555555555555575F555555555555550B5555555555555575}
     NumGlyphs = 2
+    TabOrder = 5
+    OnClick = ButtonWork
   end
 end

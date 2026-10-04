@@ -40,6 +40,7 @@ type
     ActivatePS1AudioCheckBox: TCheckBox;
     PS1AudioRateLabel: TLabel;
     PS1AudioRateComboBox: TComboBox;
+    cbWSSEnable: TCheckBox;
     procedure ActivatePCSpeakerCheckBoxClick(Sender: TObject);
     procedure TandyRadioGroupClick(Sender: TObject);
     procedure ActivatePS1AudioCheckBoxClick(Sender: TObject);
@@ -108,6 +109,7 @@ begin
   ActivatePS1AudioCheckBox.Visible:=DBX;
   PS1AudioRateLabel.Visible:=DBX;
   PS1AudioRateComboBox.Visible:=DBX;
+  cbWSSEnable.Visible:=DBX;
   If not Staging then begin
     SetComboNoSelect(LptDacComboBox);
     SetComboNoSelect(CrossfeedComboBox);
@@ -196,6 +198,7 @@ begin
   NoFlicker(LptDacFilterComboBox);
   NoFlicker(ActivatePS1AudioCheckBox);
   NoFlicker(PS1AudioRateComboBox);
+  NoFlicker(cbWSSEnable);
 
   FLptDacStagingConfOpt:=InitData.GameDB.ConfOpt.LptDacStaging;
   FCrossfeedStagingConfOpt:=InitData.GameDB.ConfOpt.CrossfeedStaging;
@@ -242,6 +245,7 @@ begin
   LptDacFilterLabel.Caption:=LanguageSetup.ProfileEditorSoundMiscLptDacFilter;
   ActivatePS1AudioCheckBox.Caption:=LanguageSetup.ProfileEditorSoundMiscPS1Audio;
   PS1AudioRateLabel.Caption:=LanguageSetup.ProfileEditorSoundMiscPS1AudioRate;
+  cbWSSEnable.Caption:=LanguageSetup.ProfileEditorSoundMiscWSS;
   RebuildComboFromConfOpt(LptDacComboBox,FLptDacStagingConfOpt,'');
   RebuildComboFromConfOpt(CrossfeedComboBox,FCrossfeedStagingConfOpt,'');
   RebuildComboFromConfOpt(ReverbComboBox,FReverbStagingConfOpt,'');
@@ -306,6 +310,7 @@ begin
   FLoadedLptDacFilter:=Trim(Game.SpeakerLptDacFilter);
   ActivatePS1AudioCheckBox.Checked:=Game.PS1Audio;
   FLoadedPS1AudioRate:=Trim(Game.PS1AudioRate);
+  cbWSSEnable.Checked:=Game.WSS;
   ShowFrame(nil);
 end;
 
@@ -379,6 +384,7 @@ begin
     Game.PS1Audio:=ActivatePS1AudioCheckBox.Checked;
     If PS1AudioRateComboBox.Enabled and (PS1AudioRateComboBox.ItemIndex>=0) then
       Game.PS1AudioRate:=PS1AudioRateComboBox.Text;
+    Game.WSS:=cbWSSEnable.Checked;
   end;
 
   Case TandyRadioGroup.ItemIndex of

@@ -1,5 +1,15 @@
 DFendX Changelog
 
+Version 2.6.3 (10/04/2026)
+==========================
+- update ScummVM game options
+- scummvm new profile fullscreen default off
+- Add Windows Sound System option on Sound form (X)
+- Add awe32 to list of Soundblaster types (X)
+- add version 7.x and LFN options to DOS environment
+- various UI tweaks
+
+
 Version 2.6.2 (09/27/2026)
 ==========================
 - Generate correct text lines config for X and Staging.

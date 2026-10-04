@@ -10,6 +10,8 @@ type
   TModernProfileEditorDOSEnvironmentFrame = class(TFrame, IModernProfileEditorFrame)
     ReportedDOSVersionLabel: TLabel;
     ReportedDOSVersionComboBox: TComboBox;
+    LFNLabel: TLabel;
+    LFNComboBox: TComboBox;
     Use4DOSCheckBox: TCheckBox;
     CustomSetsEnvLabel: TLabel;
     CustomSetsValueListEditor: TValueListEditor;
@@ -18,9 +20,12 @@ type
     Use4DOSInfoLabel: TLabel;
     procedure ButtonWork(Sender: TObject);
   private
-    { Private-Deklarationen }
+    FTempGame : TGame;
+    Procedure ShowFrame(Sender : TObject);
+    Procedure Invalidate(Sender : TObject);
+    Procedure ApplyLFNVisible;
   public
-    { Public-Deklarationen }
+    Constructor Create(AOwner : TComponent); override;
     Procedure InitGUI(var InitData : TModernProfileEditorInitData);
     Procedure SetGame(const Game : TGame; const LoadFromTemplate : Boolean);
     Procedure GetGame(const Game : TGame);
@@ -29,16 +34,23 @@ type
 implementation
 
 uses VistaToolsUnit, LanguageSetupUnit, CommonHelpers, PrgSetupUnit, HelpConsts,
-     IconLoaderUnit;
+     IconLoaderUnit, PrgConsts;
 
 {$R *.dfm}
 
 { TModernProfileEditorDOSEnvironmentFrame }
 
+constructor TModernProfileEditorDOSEnvironmentFrame.Create(AOwner : TComponent);
+begin
+  inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
+end;
+
 procedure TModernProfileEditorDOSEnvironmentFrame.InitGUI(var InitData : TModernProfileEditorInitData);
 Var St : TStringList;
 begin
   NoFlicker(ReportedDOSVersionComboBox);
+  NoFlicker(LFNComboBox);
   NoFlicker(Use4DOSCheckBox);
   NoFlicker(CustomSetsValueListEditor);
   NoFlicker(CustomSetsEnvAdd);
@@ -46,6 +58,10 @@ begin
 
   ReportedDOSVersionLabel.Caption:=LanguageSetup.GameReportedDOSVersion;
   St:=ValueToList(InitData.GameDB.ConfOpt.ReportedDOSVersion,';,'); try ReportedDOSVersionComboBox.Items.AddStrings(St); finally St.Free; end;
+  LFNLabel.Caption:=LanguageSetup.GameLFN;
+  St:=ValueToList(InitData.GameDB.ConfOpt.LFNX,';,'); try LFNComboBox.Items.AddStrings(St); finally St.Free; end;
+  InitData.OnShowFrame:=ShowFrame;
+  InitData.OnInvalidate:=Invalidate;
   Use4DOSCheckBox.Caption:=LanguageSetup.ProfileEditorAutoexecUse4DOS;
   Use4DOSInfoLabel.Caption:=LanguageSetup.ProfileEditorNeedFreeDOS;
   If DirectoryExists(IncludeTrailingPathDelimiter(MakeAbsPath(PrgSetup.PathToFREEDOS,PrgSetup.BaseDir))) then begin
@@ -63,8 +79,27 @@ begin
   UserIconLoader.DialogImage(DI_Delete,CustomSetsEnvDel);
 
   AddDefaultValueHint(ReportedDOSVersionComboBox);
+  AddDefaultValueHint(LFNComboBox);
 
   HelpContext:=ID_ProfileEditDOSEnvironment;
+end;
+
+procedure TModernProfileEditorDOSEnvironmentFrame.ApplyLFNVisible;
+Var Vis : Boolean;
+begin
+  Vis:=(FTempGame<>nil) and (FTempGame.DosBoxKind=dbkX);
+  LFNLabel.Visible:=Vis;
+  LFNComboBox.Visible:=Vis;
+end;
+
+procedure TModernProfileEditorDOSEnvironmentFrame.ShowFrame(Sender : TObject);
+begin
+  ApplyLFNVisible;
+end;
+
+procedure TModernProfileEditorDOSEnvironmentFrame.Invalidate(Sender : TObject);
+begin
+  ApplyLFNVisible;
 end;
 
 procedure TModernProfileEditorDOSEnvironmentFrame.SetGame(const Game: TGame; const LoadFromTemplate: Boolean);
@@ -72,6 +107,8 @@ Var St : TStringList;
     I : Integer;
 begin
   ReportedDOSVersionComboBox.Text:=Game.ReportedDOSVersion;
+  LFNComboBox.Text:=Game.LFN;
+  ApplyLFNVisible;
   Use4DOSCheckBox.Checked:=Game.Use4DOS;
   CustomSetsValueListEditor.Strings.Clear;
   If (Game.Environment='') and LoadFromTemplate then begin
@@ -100,6 +137,7 @@ Var St : TStringList;
     I : Integer;
 begin
   Game.ReportedDOSVersion:=ReportedDOSVersionComboBox.Text;
+  If LFNComboBox.Visible then Game.LFN:=LFNComboBox.Text;
   Game.Use4DOS:=Use4DOSCheckBox.Checked;
   St:=TStringList.Create;
   try

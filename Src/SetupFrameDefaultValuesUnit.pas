@@ -133,6 +133,7 @@ begin
   AddString(P1+LanguageSetup.GameKeyboardCodepage,GameDB.ConfOpt.Codepage);
   AddString(P1+LanguageSetup.GameMouseSensitivity,GameDB.ConfOpt.MouseSensitivity);
   AddString(P1+LanguageSetup.GameReportedDOSVersion,GameDB.ConfOpt.ReportedDOSVersion);
+  AddString(P1+LanguageSetup.GameLFN+' ('+DosBoxKindDisplayX+')',GameDB.ConfOpt.LFNX);
 
   AddString(P1+LanguageSetup.ProfileEditorSoundSampleRate,GameDB.ConfOpt.Rate);
   AddString(P1+LanguageSetup.ProfileEditorSoundBlockSize,GameDB.ConfOpt.Blocksize);
@@ -272,6 +273,7 @@ begin
   GameDB.ConfOpt.Codepage:=GetString;
   GameDB.ConfOpt.MouseSensitivity:=GetString;
   GameDB.ConfOpt.ReportedDOSVersion:=GetString;
+  GameDB.ConfOpt.LFNX:=GetString;
 
   GameDB.ConfOpt.Rate:=GetString;
   GameDB.ConfOpt.Blocksize:=GetString;
@@ -427,6 +429,7 @@ begin
   Work(DefaultValuesCodepage);
   Work(DefaultValuesMouseSensitivity);
   Work(DefaultValuesReportedDOSVersion);
+  Work(DefaultValuesLFNX);
 
   Work(DefaultValuesRate);
   Work(DefaultValuesBlocksize);
