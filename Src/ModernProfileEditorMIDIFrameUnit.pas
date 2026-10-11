@@ -84,6 +84,7 @@ type
     procedure ApplyMIDIDeviceList;
     procedure ApplyMT32ModelList;
     procedure PopulatePureMT32Models;
+    procedure PopulatePureSC55Models;
     procedure ShowFrame(Sender: TObject);
     procedure Invalidate(Sender: TObject);
   public
@@ -97,7 +98,7 @@ type
 implementation
 
 uses Math, VistaToolsUnit, LanguageSetupUnit, CommonHelpers, CommonTools, HelpConsts,
-     PrgSetupUnit, MIDITools, GameDBHelpers, GameDBToolsHelpers, DOSBoxUnitHelpers;
+     PrgSetupUnit, MIDITools, GameDBHelpers, GameDBToolsHelpers, DOSBoxUnitHelpers, DosBoxHelpers;
 
 {$R *.dfm}
 
@@ -172,7 +173,9 @@ begin
   IsSC:=SameText(Trim(LastMIDIDevice),'soundcanvas') or SameText(Trim(DeviceComboBox.Text),'soundcanvas');
   ReverbOK:=(not IsSC) and (Kind in [dbkStandard,dbkX]);
   ModelOK:=Kind in [dbkStaging,dbkX,dbkPure];
-  If IsSC then
+  If IsSC and (Kind=dbkPure) then
+    S:=''
+  else If IsSC then
     S:=FSoundCanvasModelStagingConfOpt
   else Case Kind of
     dbkStaging: S:=FMT32ModelStagingConfOpt;
@@ -215,39 +218,49 @@ begin
         MT32ModelComboBox.ItemIndex:=I;
         break;
       end;
+  If IsSC and (Kind=dbkPure) then
+    PopulatePureSC55Models;
 end;
 
-procedure CollectPureMT32Models(const Dir: String; Names: TStringList; Depth: Integer; MaxDepth: Integer = 32);
-const
-  ControlSuffix = '_CONTROL.ROM';
-Var Rec: TSearchRec;
+procedure TModernProfileEditorMIDIFrame.PopulatePureSC55Models;
+Var Root, Want: String;
+    Names: TStringList;
     I: Integer;
-    Full, EntryU, DeviceName: String;
 begin
-  If Depth>=MaxDepth then exit;
-  I:=FindFirst(Dir+'*.*',faAnyFile,Rec);
-  If I<>0 then exit;
+  If GetSelectedDosBoxKind<>dbkPure then exit;
+
+  Want:=Trim(MT32ModelComboBox.Text);
+  If Want='' then Want:=FLoadedSoundCanvasModel;
+
+  MT32ModelComboBox.Items.Clear;
+  MT32ModelComboBox.ItemIndex:=-1;
+
+  Root:=Trim(FluidSynthPathBox.Text);
+  If Root='' then exit;
+  Root:=IncludeTrailingPathDelimiter(MakeAbsPath(Root,PrgSetup.BaseDir));
+  If not DirectoryExists(Root) then exit;
+
+  Names:=TStringList.Create;
   try
-    While I=0 do begin
-      If (Rec.Name<>'') and (Rec.Name<>'.') and (Rec.Name<>'..') then begin
-        Full:=Dir+Rec.Name;
-        If (Rec.Attr and faDirectory)<>0 then
-          CollectPureMT32Models(Full+PathDelim,Names,Depth+1,MaxDepth)
-        else begin
-          EntryU:=ExtUpperCase(Rec.Name);
-          If (Length(EntryU)>Length(ControlSuffix)) and
-             (Copy(EntryU,Length(EntryU)-Length(ControlSuffix)+1,MaxInt)=ControlSuffix) then begin
-            DeviceName:=Copy(Rec.Name,1,Length(Rec.Name)-Length(ControlSuffix));
-            If (DeviceName<>'') and FileExists(Dir+DeviceName+'_PCM.ROM') then
-              Names.Add(DeviceName);
-          end;
-        end;
-      end;
-      I:=FindNext(Rec);
+    Names.Sorted:=True;
+    Names.Duplicates:=dupIgnore;
+    Names.CaseSensitive:=False;
+    CollectPureMidiRoms(Root,pmrkSC55,Names);
+    MT32ModelComboBox.Items.BeginUpdate;
+    try
+      MT32ModelComboBox.Items.AddStrings(Names);
+    finally
+      MT32ModelComboBox.Items.EndUpdate;
     end;
   finally
-    FindClose(Rec);
+    Names.Free;
   end;
+
+  for I:=0 to MT32ModelComboBox.Items.Count-1 do
+    if SameText(Trim(MT32ModelComboBox.Items[I]),Want) then begin
+      MT32ModelComboBox.ItemIndex:=I;
+      break;
+    end;
 end;
 
 procedure TModernProfileEditorMIDIFrame.PopulatePureMT32Models;
@@ -273,7 +286,7 @@ begin
     Names.Sorted:=True;
     Names.Duplicates:=dupIgnore;
     Names.CaseSensitive:=False;
-    CollectPureMT32Models(Root,Names,0);
+    CollectPureMidiRoms(Root,pmrkMT32,Names);
     MT32ModelComboBox.Items.BeginUpdate;
     try
       MT32ModelComboBox.Items.AddStrings(Names);
@@ -381,6 +394,7 @@ begin
     FluidSynthPathBox.EditLabel.Caption:=LanguageSetup.ProfileEditorSoundMIDIMT32RomDir;
     BtnFluidSynthPath.Hint:=LanguageSetup.ChooseFolder;
     If IsMT and (Kind=dbkPure) then PopulatePureMT32Models;
+    If IsSC and (Kind=dbkPure) then PopulatePureSC55Models;
   end;
   tbFluidSynthGainSlider.Enabled:=True;
   lbFluidSynthGainValue.Enabled:=True;
@@ -663,7 +677,9 @@ begin
     If S='' then exit;
     FluidSynthPathBox.Text:=S;
     If SameText(Trim(DeviceComboBox.Text),'mt32') then
-      PopulatePureMT32Models;
+      PopulatePureMT32Models
+    else If GetSelectedDosBoxKind=dbkPure then
+      PopulatePureSC55Models;
     exit;
   end;
 
@@ -695,12 +711,19 @@ procedure TModernProfileEditorMIDIFrame.FluidSynthPathBoxChange(Sender: TObject)
 Var Root: String;
 begin
   If GetSelectedDosBoxKind<>dbkPure then exit;
-  If not SameText(Trim(DeviceComboBox.Text),'mt32') then exit;
-  Root:=Trim(FluidSynthPathBox.Text);
-  If Root='' then exit;
-  Root:=IncludeTrailingPathDelimiter(MakeAbsPath(Root,PrgSetup.BaseDir));
-  If not DirectoryExists(Root) then exit;
-  PopulatePureMT32Models;
+  If SameText(Trim(DeviceComboBox.Text),'mt32') then begin
+    Root:=Trim(FluidSynthPathBox.Text);
+    If Root='' then exit;
+    Root:=IncludeTrailingPathDelimiter(MakeAbsPath(Root,PrgSetup.BaseDir));
+    If not DirectoryExists(Root) then exit;
+    PopulatePureMT32Models;
+  end else If SameText(Trim(DeviceComboBox.Text),'soundcanvas') then begin
+    Root:=Trim(FluidSynthPathBox.Text);
+    If Root='' then exit;
+    Root:=IncludeTrailingPathDelimiter(MakeAbsPath(Root,PrgSetup.BaseDir));
+    If not DirectoryExists(Root) then exit;
+    PopulatePureSC55Models;
+  end;
 end;
 
 procedure TModernProfileEditorMIDIFrame.GetGame(const Game: TGame);
@@ -752,6 +775,12 @@ begin
       end;
       Game.SoundCanvasRomDir:=PathNow;
       Game.SoundCanvasFilter:=SoundCanvasFilterCheckBox.Checked;
+    end else If Kind=dbkPure then begin
+      If MT32ModelComboBox.ItemIndex>=0 then begin
+        Game.SoundCanvasModel:=MT32ModelComboBox.Text;
+        FLoadedSoundCanvasModel:=Game.SoundCanvasModel;
+      end;
+      Game.SoundCanvasRomDir:=PathNow;
     end;
   end;
 

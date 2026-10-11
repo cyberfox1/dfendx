@@ -72,7 +72,7 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
       DefaultValuesMIDIDeviceStaging='port,soundfont,mt32,soundcanvas,none';
       DefaultValuesMIDIDeviceStagingOld='auto,win32,soundfont,mt32,none';
       DefaultValuesMIDIDeviceX='default,win32,soundfont,mt32,timidity,none';
-      DefaultValuesMIDIDevicePure='system,mt32,soundfont,none';
+      DefaultValuesMIDIDevicePure='system,mt32,soundfont,soundcanvas,none';
       { Staging [mt32] model Set_values (staging + 83rc). }
       DefaultValuesMT32ModelStaging=
         'auto,cm32l,cm32l_102,cm32l_100,cm32ln_100,mt32,mt32_old,mt32_107,mt32_106,'+

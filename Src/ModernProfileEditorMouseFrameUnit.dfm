@@ -66,7 +66,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Caption = 'Ps2ModelLabel'
   end
   object Ps2ReportRateLabel: TLabel
-    Left = 360
+    Left = 292
     Top = 459
     Width = 104
     Height = 15
@@ -185,7 +185,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     TabOrder = 9
   end
   object Ps2ReportRateComboBox: TComboBox
-    Left = 360
+    Left = 292
     Top = 480
     Width = 100
     Height = 23

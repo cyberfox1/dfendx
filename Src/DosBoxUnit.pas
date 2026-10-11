@@ -148,11 +148,30 @@ begin
     LogInfo('  conf line: (no shader=/glshader=/pixelshader= lines written)');
 end;
 
-{ BoolToStr moved to DosBoxHelpers }
+function ShortFolderName(const LongName: String): String;
+begin
+  If PrgSetup.UseShortFolderNames then begin
+    SetLength(result,MAX_PATH+10);
+    if GetShortPathName(PChar(LongName),PChar(result),MAX_PATH)=0
+      then result:=LongName
+      else SetLength(result,StrLen(PChar(result)));
+  end else begin
+    result:=LongName;
+  end;
+end;
 
-{ ShortName moved to DosBoxHelpers }
-
-{ LongPath moved to DosBoxHelpers }
+function LongPath(const ShortPath: String): String;
+Var S,T : String;
+    I : Integer;
+begin
+  result:=Copy(ShortPath,1,3);
+  S:=ExcludeTrailingPathDelimiter(Copy(ShortPath,4,MaxInt));
+  while S<>'' do begin
+    I:=Pos('\',S);
+    If I=0 then begin T:=S; S:=''; end else begin T:=Copy(S,1,I-1); S:=Copy(S,I+1,MaxInt); end;
+    result:=result+WinExpandLongPathName(result,T)+'\';
+  end;
+end;
 
 {Function LongPath(const Root, ShortPath : String) : String; -> WinExpandLongPathName
 Var Rec : TSearchRec;
@@ -160,7 +179,7 @@ Var Rec : TSearchRec;
     LongRoot, ShortRoot : String;
 begin
   LongRoot:=IncludeTrailingPathDelimiter(Root);
-  ShortRoot:=ExtUpperCase(IncludeTrailingPathDelimiter(ShortName(LongRoot)));
+  ShortRoot:=ExtUpperCase(IncludeTrailingPathDelimiter(ShortFolderName(LongRoot)));
 
   result:=ShortPath;
 
@@ -168,7 +187,7 @@ begin
   try
     While I=0 do begin
       I:=FindNext(Rec);
-      If ExtUpperCase(ShortName(LongRoot+Rec.Name))=ShortRoot+ExtUpperCase(ShortPath) then begin
+      If ExtUpperCase(ShortFolderName(LongRoot+Rec.Name))=ShortRoot+ExtUpperCase(ShortPath) then begin
         result:=Rec.Name; exit;
       end;
     end;
@@ -208,7 +227,7 @@ begin
   For I:=length(FreeDriveLetters) downto 1 do If FreeDriveLetters[I]<>'-' then begin TempDrive:=FreeDriveLetters[I]; break; end;
   {There must be free drive letters, because there are only 10 mounts}
 
-  Path:=IncludeTrailingPathDelimiter(ExtractFilePath(ShortName(Imgs[0])));
+  Path:=IncludeTrailingPathDelimiter(ExtractFilePath(ShortFolderName(Imgs[0])));
 
   S:='"'+TempDrive+':\'+DOSBoxShortName(ExtractFilePath(Imgs[0]),ExtractFileName(Imgs[0]))+'"';
   For I:=1 to Imgs.Count-1 do S:=S+' "'+TempDrive+':\'+DOSBoxShortName(ExtractFilePath(Imgs[I]),ExtractFileName(Imgs[I]))+'"';
@@ -327,7 +346,7 @@ begin
     If T='DRIVE' then begin
       {RealFolder;DRIVE;Letter;False;;FreeSpace}
       MarkDriveUsed(St[2]);
-      U:=UnmapDrive(ShortName(S),ptMount);
+      U:=UnmapDrive(ShortFolderName(S),ptMount);
       if BuildForArchivePackage then U:=MakeRelPath(U,PrgDataDir);
       result:='mount '+St[2]+' "'+U+'"';
       If (St.Count>=6) and (St[5]<>'') then result:=result+' -freesize '+St[5];
@@ -336,7 +355,7 @@ begin
     If T='FLOPPY' then begin
       {RealFolder;FLOPPY;Letter;False;;}
       MarkDriveUsed(St[2]);
-      U:=UnmapDrive(ShortName(S),ptMount);
+      U:=UnmapDrive(ShortFolderName(S),ptMount);
       if BuildForArchivePackage then U:=MakeRelPath(U,PrgDataDir);
       result:='mount '+St[2]+' "'+U+'" -t floppy';
     end;
@@ -345,7 +364,7 @@ begin
       {RealFolder;CDROM;Letter;IO;Label; (ASK /  NUMBER:x /  LABEL:x / FILE:x / FOLDER:x)}
       if not SpecialCDDriveMounting(S,St[2],ProfileName,SelectCD,SpecialMountedCDDrives) then begin OK:=False; exit; end;
       MarkDriveUsed(St[2]);
-      U:=UnmapDrive(ShortName(S),ptMount);
+      U:=UnmapDrive(ShortFolderName(S),ptMount);
       if BuildForArchivePackage then U:=MakeRelPath(U,PrgDataDir);
       result:='mount '+St[2]+' "'+U+'" -t cdrom';
       If Trim(UpperCase(St[3]))='TRUE' then result:=result+' -IOCTL';
@@ -363,7 +382,7 @@ begin
       If AllSameDir(St2) then begin
         result:=SpecialMultiImgMount(St[2],St2,FreeDriveLetters,'-t floppy -fs '+U);
       end else begin
-        S:='"'+ShortName(St2[0])+'"'; For I:=1 to St2.Count-1 do S:=S+' "'+ShortName(St2[I])+'"';
+        S:='"'+ShortFolderName(St2[0])+'"'; For I:=1 to St2.Count-1 do S:=S+' "'+ShortFolderName(St2[I])+'"';
         result:='imgmount '+St[2]+' '+S+' -t floppy -fs '+U;
       end;
     end;
@@ -378,7 +397,7 @@ begin
           result:=SpecialMultiImgMount(St[2],St2,FreeDriveLetters,'-t iso -fs iso');
         end;
       end else begin
-        S:='"'+ShortName(St2[0])+'"'; For I:=1 to St2.Count-1 do S:=S+' "'+ShortName(St2[I])+'"';
+        S:='"'+ShortFolderName(St2[0])+'"'; For I:=1 to St2.Count-1 do S:=S+' "'+ShortFolderName(St2[I])+'"';
         If DOSBoxVersion>0.73 then begin
           result:='imgmount '+St[2]+' '+S+' -t cdrom';
         end else begin
@@ -392,7 +411,7 @@ begin
       If St.Count>=6 then begin
         If (Trim(St[2])='2') or (Trim(St[2])='3') then U:='none' else U:='fat';
         MarkDriveUsed(St[2]);
-        result:='imgmount '+St[2]+' "'+ShortName(S)+'" -t hdd -fs '+U+' -size '+St[5];
+        result:='imgmount '+St[2]+' "'+ShortFolderName(S)+'" -t hdd -fs '+U+' -size '+St[5];
       end;
     end;
 
@@ -401,8 +420,8 @@ begin
       If St2.Count=2 then begin
         MarkDriveUsed(St[2]);
         CreateDir(MakeAbsPath(St2[0],PrgSetup.BaseDir));
-        U:=UnmapDrive(ShortName(St2[0]),ptMount);
-        V:=UnmapDrive(ShortName(St2[1]),ptMount);
+        U:=UnmapDrive(ShortFolderName(St2[0]),ptMount);
+        V:=UnmapDrive(ShortFolderName(St2[1]),ptMount);
         if BuildForArchivePackage then U:=MakeRelPath(U,PrgDataDir);
         if BuildForArchivePackage then V:=MakeRelPath(V,PrgDataDir);
         result:='mount '+St[2]+' "'+U+':'+V+':/"';
@@ -414,7 +433,7 @@ begin
       {RealFolder$ZipFile;ZIP;Letter;False;;FreeSpace;DeleteMode(no;files;folder)}
       If St2.Count=2 then begin
         MarkDriveUsed(St[2]);
-        U:=UnmapDrive(ShortName(St2[0]),ptMount);
+        U:=UnmapDrive(ShortFolderName(St2[0]),ptMount);
         if BuildForArchivePackage then U:=MakeRelPath(U,PrgDataDir);
         result:='mount '+St[2]+' "'+U+'"';
         If (St.Count>=6) and (St[5]<>'') then result:=result+' -freesize '+St[5];
@@ -457,7 +476,7 @@ begin
     For I:=length(FreeDriveLetters) downto 1 do If FreeDriveLetters[I]<>'-' then begin TempDrive:=FreeDriveLetters[I]; break; end;
     {There must be free drive letters, because there are only 10 mounts}
 
-    Mount:='mount '+TempDrive+': "'+UnmapDrive(ShortName(FreeDOSPath),ptMount)+'"';
+    Mount:='mount '+TempDrive+': "'+UnmapDrive(ShortFolderName(FreeDOSPath),ptMount)+'"';
     UseDir:=''+TempDrive+':\';
     Unmount:='mount -u '+TempDrive;
   end;
@@ -786,10 +805,10 @@ begin
       For I:=length(FreeDriveLetters) downto 1 do If FreeDriveLetters[I]<>'-' then begin TempDrive:=FreeDriveLetters[I]; break; end;
       {There must be free drive letters, because there are only 10 mounts}
 
-      Path:=IncludeTrailingPathDelimiter(ExtractFilePath(ShortName(Imgs[0])));
+      Path:=IncludeTrailingPathDelimiter(ExtractFilePath(ShortFolderName(Imgs[0])));
 
-      S:='"'+TempDrive+':\'+ExtractFileName(ShortName(Imgs[0]))+'"';
-      For I:=1 to Imgs.Count-1 do S:=S+' "'+TempDrive+':\'+ExtractFileName(ShortName(Imgs[I]))+'"';
+      S:='"'+TempDrive+':\'+ExtractFileName(ShortFolderName(Imgs[0]))+'"';
+      For I:=1 to Imgs.Count-1 do S:=S+' "'+TempDrive+':\'+ExtractFileName(ShortFolderName(Imgs[I]))+'"';
 
       T:=UnmapDrive(Path,ptMount);
       if BuildForArchivePackage then T:=MakeRelPath(T,PrgDataDir);
@@ -797,8 +816,8 @@ begin
       Autoexec.Add('boot '+S);
     end else begin
 
-      S:='"'+IncludeTrailingPathDelimiter(ExtractFilePath(ShortName(Imgs[0])))+ExtractFileName(ShortName(Imgs[0]))+'"';
-      For I:=1 to Imgs.Count-1 do S:=S+' "'+IncludeTrailingPathDelimiter(ExtractFilePath(ShortName(Imgs[I])))+ExtractFileName(ShortName(Imgs[I]))+'"';
+      S:='"'+IncludeTrailingPathDelimiter(ExtractFilePath(ShortFolderName(Imgs[0])))+ExtractFileName(ShortFolderName(Imgs[0]))+'"';
+      For I:=1 to Imgs.Count-1 do S:=S+' "'+IncludeTrailingPathDelimiter(ExtractFilePath(ShortFolderName(Imgs[I])))+ExtractFileName(ShortFolderName(Imgs[I]))+'"';
       Autoexec.Add('boot '+S);
     end;
   finally
@@ -948,7 +967,7 @@ begin
           break;
         end;
       If U<>'' then
-        St.Add('mount '+U+' "'+UnmapDrive(ShortName(IncludeTrailingPathDelimiter(S)),ptMount)+'"');
+        St.Add('mount '+U+' "'+UnmapDrive(ShortFolderName(IncludeTrailingPathDelimiter(S)),ptMount)+'"');
     end;
   end;
 
@@ -1594,16 +1613,32 @@ begin
 end;
 
 Procedure GeneratePureMidiCfg(const Game: TGame; const Cfg: TStrings; const WorkDir: String);
-Var S, RomDir, SoundFontSrc, SoundFontName, WorkDirSlash, VolOpt: String;
+Var S, RomDir, SoundFontSrc, SoundFontName, WorkDirSlash, VolOpt, Rel, AbsRoot: String;
     GainPct: Integer;
 begin
   if Game.MIDIDeviceIs('mt32') then begin
     S:=Trim(Game.MIDIMT32Model);
     RomDir:=Trim(Game.MIDIMT32RomDir);
     if (S<>'') and (RomDir<>'') then begin
-      RomDir:=StringReplace(ExcludeTrailingPathDelimiter(MakeAbsPath(RomDir,PrgSetup.BaseDir)),'\','/',[rfReplaceAll]);
-      Cfg.Add('"path_system" : "'+JsonString(RomDir)+'"');
-      Cfg.Add('"dosbox_pure_midi" : "'+JsonString(S+'_CONTROL.ROM')+'"');
+      AbsRoot:=IncludeTrailingPathDelimiter(MakeAbsPath(RomDir,PrgSetup.BaseDir));
+      Rel:=CollectPureMidiRoms(AbsRoot,pmrkMT32,nil,S+'_CONTROL.ROM');
+      if Rel<>'' then begin
+        RomDir:=StringReplace(ExcludeTrailingPathDelimiter(AbsRoot),'\','/',[rfReplaceAll]);
+        Cfg.Add('"path_system" : "'+JsonString(RomDir)+'"');
+        Cfg.Add('"dosbox_pure_midi" : "'+JsonString(Rel)+'"');
+      end;
+    end;
+  end else if Game.MIDIDeviceIs('soundcanvas') then begin
+    S:=Trim(Game.SoundCanvasModel);
+    RomDir:=Trim(Game.SoundCanvasRomDir);
+    if (S<>'') and (RomDir<>'') then begin
+      AbsRoot:=IncludeTrailingPathDelimiter(MakeAbsPath(RomDir,PrgSetup.BaseDir));
+      Rel:=CollectPureMidiRoms(AbsRoot,pmrkSC55,nil,S+'_rom1.bin');
+      if Rel<>'' then begin
+        RomDir:=StringReplace(ExcludeTrailingPathDelimiter(AbsRoot),'\','/',[rfReplaceAll]);
+        Cfg.Add('"path_system" : "'+JsonString(RomDir)+'"');
+        Cfg.Add('"dosbox_pure_midi" : "'+JsonString(Rel)+'"');
+      end;
     end;
   end else if Game.MIDIDeviceIs('soundfont') then begin
     SoundFontSrc:=Trim(Game.FluidSoundFont);
@@ -1620,7 +1655,7 @@ begin
     end;
   end else if Game.MIDIDeviceIs('port') then
     Cfg.Add('"dosbox_pure_midi" : "system"');
-  if (Game.MIDIDeviceIs('mt32') or Game.MIDIDeviceIs('soundfont'))
+  if (Game.MIDIDeviceIs('mt32') or Game.MIDIDeviceIs('soundfont') or Game.MIDIDeviceIs('soundcanvas'))
      and Game.GetValidMidiGain(GainPct) then begin
     VolOpt:=PureMidiVolumeOption(GainPct);
     Cfg.Add('"dosbox_pure_volume_midi" : "'+JsonString(VolOpt)+'"');

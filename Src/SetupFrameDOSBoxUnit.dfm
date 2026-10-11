@@ -57,21 +57,6 @@ object SetupFrameDOSBox: TSetupFrameDOSBox
     ShowHint = True
     OnClick = ButtonWork
   end
-  object DOSBoxDownloadURLInfo: TLabel
-    Left = 16
-    Top = 183
-    Width = 172
-    Height = 15
-    Caption = 'You can download DOSBox from'
-  end
-  object DOSBoxDownloadURL: TLabel
-    Left = 16
-    Top = 202
-    Width = 117
-    Height = 15
-    Caption = 'DOSBoxDownloadURL'
-    OnClick = DOSBoxDownloadURLClick
-  end
   object DOSBoxInstallationLabel: TLabel
     Left = 16
     Top = 8
@@ -224,10 +209,10 @@ object SetupFrameDOSBox: TSetupFrameDOSBox
     OnClick = WarningButtonClick
   end
   object lbDBInstallVerifyMsg: TLabel
-    Left = 328
-    Top = 107
-    Width = 260
-    Height = 25
+    Left = 16
+    Top = 105
+    Width = 108
+    Height = 15
     Caption = 'lbDBInstallVerifyMsg'
   end
   object DosBoxDirEdit: TLabeledEdit
@@ -256,7 +241,7 @@ object SetupFrameDOSBox: TSetupFrameDOSBox
   object MoreSettingsButton: TBitBtn
     Tag = 7
     Left = 16
-    Top = 107
+    Top = 131
     Width = 297
     Height = 25
     Caption = 'More settings for this DOSBox installation'
@@ -279,7 +264,7 @@ object SetupFrameDOSBox: TSetupFrameDOSBox
   end
   object PortableModeInfoButton: TBitBtn
     Left = 16
-    Top = 138
+    Top = 162
     Width = 170
     Height = 25
     Caption = 'Portable mode information'

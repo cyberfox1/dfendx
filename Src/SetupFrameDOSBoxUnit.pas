@@ -13,8 +13,6 @@ type
     FindDosBoxButton: TSpeedButton;
     DosBoxDirEdit: TLabeledEdit;
     DosBoxTxtOpenDialog: TOpenDialog;
-    DOSBoxDownloadURLInfo: TLabel;
-    DOSBoxDownloadURL: TLabel;
     DOSBoxInstallationLabel: TLabel;
     DOSBoxInstallationComboBox: TComboBox;
     DOSBoxAddButton: TSpeedButton;
@@ -28,7 +26,6 @@ type
     lbDBInstallVerifyMsg: TLabel;
     procedure DosBoxDirEditChange(Sender: TObject);
     procedure ButtonWork(Sender: TObject);
-    procedure DOSBoxDownloadURLClick(Sender: TObject);
     procedure DOSBoxInstallationComboBoxChange(Sender: TObject);
     procedure PortableModeInfoButtonClick(Sender: TObject);
     procedure WarningButtonClick(Sender: TObject);
@@ -57,7 +54,7 @@ type
 
 implementation
 
-uses ShellAPI, ShlObj, Math, Generics.Collections, LanguageSetupUnit, VistaToolsUnit, CommonHelpers, CommonTools,
+uses ShlObj, Math, Generics.Collections, LanguageSetupUnit, VistaToolsUnit, CommonHelpers, CommonTools,
      SetupDosBoxFormUnit, SetupFrameDOSBoxFormUnit, HelpConsts, IconLoaderUnit, System.UITypes,
      PrgConsts, GameDBToolsHelpers, DOSBoxUnitHelpers;
 
@@ -129,11 +126,6 @@ begin
   FindDosBoxButton.Hint:=LanguageSetup.SetupFormSearchDosBox;
   MoreSettingsButton.Caption:=LanguageSetup.SetupFormDOSBoxInstallationMoreSettings;
   PortableModeInfoButton.Caption:=LanguageSetup.SetupFormDOSBoxPortableModeInfo;
-
-  DOSBoxDownloadURLInfo.Caption:=LanguageSetup.SetupFormDOSBoxDownloadURL;
-  DOSBoxDownloadURL.Caption:='http:/'+'/www.dosbox.com/download.php?main=1';
-  with DOSBoxDownloadURL.Font do begin Color:=clBlue; Style:=[fsUnderline]; end;
-  DOSBoxDownloadURL.Cursor:=crHandPoint;
 end;
 
 procedure TSetupFrameDOSBox.PortableModeInfoButtonClick(Sender: TObject);
@@ -154,17 +146,8 @@ begin
     then OrigPortableModeInfoButtonTop:=PortableModeInfoButton.Top
     else PortableModeInfoButton.Top:=OrigPortableModeInfoButtonTop;
 
-  If AdvancedMode then begin
-    If PortableModeInfoButton.Visible
-      then DOSBoxDownloadURLInfo.Top:=PortableModeInfoButton.Top+PortableModeInfoButton.Height+10
-      else DOSBoxDownloadURLInfo.Top:=MoreSettingsButton.Top+MoreSettingsButton.Height+10;
-  end else begin
+  If not AdvancedMode then
     PortableModeInfoButton.Top:=MoreSettingsButton.Top;
-    If PortableModeInfoButton.Visible
-      then DOSBoxDownloadURLInfo.Top:=PortableModeInfoButton.Top+PortableModeInfoButton.Height+10
-      else DOSBoxDownloadURLInfo.Top:=DosBoxDirEdit.Top+DosBoxDirEdit.Height+15;
-  end;
-  DOSBoxDownloadURL.Top:=DOSBoxDownloadURLInfo.Top+19;
 
   DosBoxDirEditChange(self);
 end;
@@ -332,11 +315,6 @@ begin
           If DOSBoxInstallationComboBox.ItemIndex=0 then PDOSBoxLang^:=DOSBoxData[0].DosBoxLanguage;
         end;
   end;
-end;
-
-procedure TSetupFrameDOSBox.DOSBoxDownloadURLClick(Sender: TObject);
-begin
-  ShellExecute(Handle,'open',PChar((Sender as TLabel).Caption),nil,nil,SW_SHOW);
 end;
 
 procedure TSetupFrameDOSBox.WarningButtonClick(Sender: TObject);

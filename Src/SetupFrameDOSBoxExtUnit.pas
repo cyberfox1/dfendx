@@ -26,10 +26,7 @@ type
     NetworkGroupBox: TGroupBox;
     NE2000CheckBox: TCheckBox;
     InnovaCheckBox: TCheckBox;
-    InfoLabel: TLabel;
-    InfoURLLabel: TLabel;
     procedure DefaultValueChanged(Sender: TObject);
-    procedure InfoURLLabelClick(Sender: TObject);
   private
     { Private-Deklarationen }
     GameDB : TGameDB;
@@ -51,7 +48,7 @@ type
 
 implementation
 
-uses ShellAPI, LanguageSetupUnit, VistaToolsUnit, PrgSetupUnit, CommonHelpers,
+uses LanguageSetupUnit, VistaToolsUnit, PrgSetupUnit, CommonHelpers,
      HelpConsts;
 
 {$R *.dfm}
@@ -157,11 +154,6 @@ begin
   NetworkGroupBox.Caption:=LanguageSetup.SetupFormDOSBoxCVSNetworkGroup;
   NE2000CheckBox.Caption:=LanguageSetup.SetupFormDOSBoxCVSNetworkNE2000;
 
-  InfoLabel.Caption:=LanguageSetup.SetupFormDOSBoxCVSInfo;
-  InfoURLLabel.Caption:='http:/'+'/ykhwong.x-y.net/';
-  with InfoURLLabel.Font do begin Color:=clBlue; Style:=[fsUnderline]; end;
-  InfoURLLabel.Cursor:=crHandPoint;
-
   HelpContext:=ID_FileOptionsDOSBoxCVSFeatures;
 end;
 
@@ -244,11 +236,6 @@ begin
   PrgSetup.AllowPrinterSettings:=PrinterCheckBox.Checked;
 
   PrgSetup.AllowNe2000:=NE2000CheckBox.Checked;
-end;
-
-procedure TSetupFrameDOSBoxExt.InfoURLLabelClick(Sender: TObject);
-begin
-  ShellExecute(Handle,'open',PChar((Sender as TLabel).Caption),nil,nil,SW_SHOW);
 end;
 
 end.

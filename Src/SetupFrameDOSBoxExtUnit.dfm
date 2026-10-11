@@ -29,21 +29,6 @@ object SetupFrameDOSBoxExt: TSetupFrameDOSBoxExt
       Caption = 'WarningLabel'
       WordWrap = True
     end
-    object InfoLabel: TLabel
-      Left = 16
-      Top = 608
-      Width = 281
-      Height = 13
-      Caption = 'You can download DOSBoxs supporting this features here:'
-    end
-    object InfoURLLabel: TLabel
-      Left = 16
-      Top = 627
-      Width = 64
-      Height = 13
-      Caption = 'InfoURLLabel'
-      OnClick = InfoURLLabelClick
-    end
     object MountDialogGroupBox: TGroupBox
       Left = 16
       Top = 96

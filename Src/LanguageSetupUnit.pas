@@ -990,7 +990,6 @@ const NR_Author=1;
       NR_SetupFormDOSBoxCVSPrinter=43266;
       NR_SetupFormDOSBoxCVSNetworkGroup=43267;
       NR_SetupFormDOSBoxCVSNetworkNE2000=43268;
-      NR_SetupFormDOSBoxCVSInfo=43269;
       NR_SetupFormDOSBoxFREEDOSPath=43270;
       NR_SetupFormFreeDOSDir=43271;
       NR_SetupFormFreeDOS=43272;
@@ -1035,7 +1034,6 @@ const NR_Author=1;
       NR_SetupFormDOSBoxMapperFile=43403;
       NR_SetupFormDOSBoxMapperFileTitle=43404;
       NR_SetupFormDOSBoxMapperFileFilter=43405;
-      NR_SetupFormDOSBoxDownloadURL=43406;
       NR_SetupFormHideDOSBoxConsole=43407;
       NR_SetupFormMinimizeDFend=43408;
       NR_SetupFormRestoreWindow=43409;
@@ -3301,7 +3299,6 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property SetupFormDOSBoxMapperFile : String index NR_SetupFormDOSBoxMapperFile read GetString write SetString;
     property SetupFormDOSBoxMapperFileTitle : String index NR_SetupFormDOSBoxMapperFileTitle read GetString write SetString;
     property SetupFormDOSBoxMapperFileFilter : String index NR_SetupFormDOSBoxMapperFileFilter read GetString write SetString;
-    property SetupFormDOSBoxDownloadURL : String index NR_SetupFormDOSBoxDownloadURL read GetString write SetString;
     property SetupFormDOSBoxLang : String index NR_SetupFormDOSBoxLang read GetString write SetString;
     property SetupFormDOSBoxLangHint : String index NR_SetupFormDOSBoxLangHint read GetString write SetString;
     property SetupFormInstallerLang : String index NR_SetupFormInstallerLang read GetString write SetString;
@@ -3329,7 +3326,6 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property SetupFormDOSBoxCVSPrinter : String index NR_SetupFormDOSBoxCVSPrinter read GetString write SetString;
     property SetupFormDOSBoxCVSNetworkGroup : String index NR_SetupFormDOSBoxCVSNetworkGroup read GetString write SetString;
     property SetupFormDOSBoxCVSNetworkNE2000 : String index NR_SetupFormDOSBoxCVSNetworkNE2000 read GetString write SetString;
-    property SetupFormDOSBoxCVSInfo : String index NR_SetupFormDOSBoxCVSInfo read GetString write SetString;
     property SetupFormDOSBoxFREEDOSPath : String index NR_SetupFormDOSBoxFREEDOSPath read GetString write SetString;
     property SetupFormFreeDOSDir : String index NR_SetupFormFreeDOSDir read GetString write SetString;
     property SetupFormFreeDOS : String index NR_SetupFormFreeDOS read GetString write SetString;
@@ -5671,7 +5667,7 @@ begin
   AddStringRec(NR_SetupFormProgramsSheet,'SetupForm','ProgramsSheet','External programs');
   AddStringRec(NR_SetupFormDOSBoxSheet,'SetupForm','DOSBoxSheet','DOSBox');
   AddStringRec(NR_SetupFormDOSBoxGlobalSheet,'SetupForm','DOSBoxGlobalSheet','Global DOSBox settings');
-  AddStringRec(NR_SetupFormDOSBoxCVSSheet,'SetupForm','DOSBoxCVSSheet','DOSBox CVS features');
+  AddStringRec(NR_SetupFormDOSBoxCVSSheet,'SetupForm','DOSBoxCVSSheet','DOSBox Advanced Features');
   AddStringRec(NR_SetupFormScummVMSheet,'SetupForm','ScummVMSheet','ScummVM');
   AddStringRec(NR_SetupFormQBasicSheet,'SetupForm','QBasicSheet','QBasic');
   AddStringRec(NR_SetupFormSecuritySheet,'SetupForm','SecuritySheet','Security');
@@ -5732,7 +5728,7 @@ begin
   AddStringRec(NR_SetupFormDOSBoxDisableScreensaver,'SetupForm','DOSBoxDisableScreensaver','Disable screensaver when DOSBox is running');
   AddStringRec(NR_SetupFormDosBoxWaitOnError,'SetupForm','DOSBoxWaitOnError','Wait before closing the console if DOSBox has an error');
   AddStringRec(NR_SetupFormDOSBoxWebserverEnabled,'SetupForm','DOSBoxWebserverEnabled','Enable HTTP Internals API');
-  AddStringRec(NR_SetupFormDOSBoxCVSWarning,'SetupForm','DOSBoxCVS.Warning','Please do not activate this settings unless you use a CVS build of DOSBox supporting this things. Activating one of this features can result in profiles not runnable by normal DOSBox builds !');
+  AddStringRec(NR_SetupFormDOSBoxCVSWarning,'SetupForm','DOSBoxCVS.Warning','Please do not activate this settings unless you use a build of DOSBox that supports them. Activating one of this features can result in profiles not runnable by normal DOSBox builds !');
   AddStringRec(NR_SetupFormDOSBoxCVSMountGroup,'SetupForm','DOSBoxCVS.MountGroup','Mounts editor features');
   AddStringRec(NR_SetupFormDOSBoxCVSMultipleFloppyImages,'SetupForm','DOSBoxCVS.MultipleFloppyImages','Allow multiple floppy images per drive');
   AddStringRec(NR_SetupFormDOSBoxCVSPhysFS,'SetupForm','DOSBoxCVS.PhysFS','Activate PhysFS tab');
@@ -5750,7 +5746,6 @@ begin
   AddStringRec(NR_SetupFormDOSBoxCVSPrinter,'SetupForm','DOSBoxCVS.Printer','Activate printer settings');
   AddStringRec(NR_SetupFormDOSBoxCVSNetworkGroup,'SetupForm','DOSBoxCVS.NetworkGroup','Network setup features');
   AddStringRec(NR_SetupFormDOSBoxCVSNetworkNE2000,'SetupForm','DOSBoxCVS.NE2000','Activate NE2000 emulation settings');
-  AddStringRec(NR_SetupFormDOSBoxCVSInfo,'SetupForm','DOSBoxCVS.Info','You can download DOSBoxs supporting this features here:');
   AddStringRec(NR_SetupFormDOSBoxFREEDOSPath,'SetupForm','PathToFreeDOS','Path to FreeDOS');
   AddStringRec(NR_SetupFormFreeDOSDir,'SetupForm','FreeDOSDir','FreeDOS folder');
   AddStringRec(NR_SetupFormFreeDOS,'SetupForm','FreeDOS','FreeDOS');
@@ -5791,7 +5786,6 @@ begin
   AddStringRec(NR_SetupFormDOSBoxMapperFile,'SetupForm','DOSBoxKeymapper','Keymapper config file');
   AddStringRec(NR_SetupFormDOSBoxMapperFileTitle,'SetupForm','DOSBoxKeymapper.Title','Choose keymapper config file');
   AddStringRec(NR_SetupFormDOSBoxMapperFileFilter,'SetupForm','DOSBoxKeymapper.Filter','Text files (*.txt)|*.txt|All files (*.*)|*.*');
-  AddStringRec(NR_SetupFormDOSBoxDownloadURL,'SetupForm','DOSBoxDownloadURL','You can download DOSBox from');
   AddStringRec(NR_SetupFormHideDOSBoxConsole,'SetupForm','HideDOSBoxConsole','Hide DOSBox console');
   AddStringRec(NR_SetupFormMinimizeDFend,'SetupForm','MinimizeDFend','Minimize DFendX, when DOSBox starts');
   AddStringRec(NR_SetupFormRestoreWindow,'SetupForm','RestoreWindowWhenDOSBoxCloses','Restore program window when DOSBox is closed');
