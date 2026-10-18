@@ -121,12 +121,17 @@ begin
     Dest.Add('reelmagic_fcode='+S);
   end;
 
-  If PrgSetup.AllowVGAChipsetSettings and Game.IsDBX then begin
-    I:=Game.VideoRam;
-    if (I mod 1024)<>0 then I:=(I div 1024)+1 else I:=I div 1024;
+  If Game.IsDBX then begin
     Dest.Add('');
     Dest.Add('[video]');
-    Dest.Add('vmemsize='+IntToStr(I));
+    If PrgSetup.AllowVGAChipsetSettings then begin
+      I:=Game.VideoRam;
+      if (I mod 1024)<>0 then I:=(I div 1024)+1 else I:=I div 1024;
+      Dest.Add('vmemsize='+IntToStr(I));
+    end;
+    S:=Trim(Game.VideoComposite);
+    If S='' then S:='default';
+    Dest.Add('composite='+S);
   end;
 end;
 
@@ -393,6 +398,16 @@ begin
     Dest.Add('sbwarmup='+IntToStr(Game.SBWarmup));
   end;
 
+  If Game.IsDBX and SameText(Game.SBType,'awe32') then begin
+    Dest.Add('');
+    Dest.Add('[emu8k]');
+    S:=Trim(Game.AWE32MemorySize);
+    If S='' then S:='512';
+    Dest.Add('memsize='+S);
+    S:=Trim(Game.AWE32RomFile);
+    If S<>'' then Dest.Add('rompath='+S);
+  end;
+
   Dest.Add('');
   Dest.Add('[gus]');
   Dest.Add('gus='+BoolToStr(Game.GUS));
@@ -426,6 +441,7 @@ begin
     S:=Trim(Game.GUSMasterVolume);
     If S='' then S:='0';
     Dest.Add('gus master volume='+S);
+    Dest.Add('gusmixer='+BoolToStr(Game.GUSMixer));
   end;
 
   Dest.Add('');
@@ -941,6 +957,7 @@ begin
     S:=Trim(Game.LFN);
     If (S='') or SameText(S,'default') then S:='auto';
     Dest.Add('lfn='+S);
+    Dest.Add('utf8 file names='+BoolToStr(Game.DOSUTF8FileNames));
     Dest.Add('mountwarning=false');
     Dest.Add('int33='+BoolToStr(not Game.Ps2MouseEnabled));
     Dest.Add('vmware='+BoolToStr(Game.VMwareMouse));

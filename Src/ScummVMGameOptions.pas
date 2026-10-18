@@ -34,15 +34,23 @@ type
   end;
 
 const
-  ScummVMGameOptionTableCount = 151;
-  ScummVMGameOptionTable : array[0..150] of TScummVMGameOptionDef = (
+  ScummVMGameOptionTableCount = 191;
+  ScummVMGameOptionTable : array[0..190] of TScummVMGameOptionDef = (
+    (
+      Caption: '32 Bits';
+      Kind: sgokCheckbox;
+      IniKey: '32_bits';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'alcachofa:aventuradecine'
+    ),
     (
       Caption: 'More durable armor';
       Kind: sgokCheckbox;
       IniKey: 'DurableArmor';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'cloudsofxeen|darksideofxeen|swordsofxeen|worldofxeen'
+      GameIds: 'mm:cloudsofxeen|mm:darksideofxeen|mm:swordsofxeen|mm:worldofxeen'
     ),
     (
       Caption: 'Hitpoint bars';
@@ -50,7 +58,7 @@ const
       IniKey: 'ShowHpSpBars';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'cloudsofxeen|darksideofxeen|swordsofxeen|worldofxeen'
+      GameIds: 'mm:cloudsofxeen|mm:darksideofxeen|mm:swordsofxeen|mm:worldofxeen'
     ),
     (
       Caption: 'Show item costs in standard inventory mode';
@@ -58,7 +66,7 @@ const
       IniKey: 'ShowItemCosts';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'cloudsofxeen|darksideofxeen|swordsofxeen|worldofxeen'
+      GameIds: 'mm:cloudsofxeen|mm:darksideofxeen|mm:swordsofxeen|mm:worldofxeen'
     ),
     (
       Caption: 'Faithful AD&D rules';
@@ -66,7 +74,7 @@ const
       IniKey: 'addrules';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'eob|eob2'
+      GameIds: 'kyra:eob|kyra:eob2'
     ),
     (
       Caption: 'Alternative intro';
@@ -74,7 +82,7 @@ const
       IniKey: 'alt_intro';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'queen|sky'
+      GameIds: 'queen:queen|sky:sky'
     ),
     (
       Caption: 'Use an alternative palette';
@@ -82,7 +90,15 @@ const
       IniKey: 'altamigapalette';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'bc[]|ddp|goldrush[]|kq1[]|kq2[]|kq3|lsl1[]|mh1[]|mh2[]|mixedup|pq1[]|sq1[]|sq2[]|winnie'
+      GameIds: 'agi:bc[]|agi:ddp|agi:goldrush[]|agi:kq1[]|agi:kq2[]|agi:kq3|agi:lsl1[]|agi:mh1[]|agi:mh2[]|agi:mixedup|agi:pq1[]|agi:sq1[]|agi:sq2[]|agi:winnie'
+    ),
+    (
+      Caption: 'Alternate timing';
+      Kind: sgokCheckbox;
+      IniKey: 'alternate_timing';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'pelrock:pelrock'
     ),
     (
       Caption: 'Animated game interface';
@@ -90,7 +106,15 @@ const
       IniKey: 'animated_interface';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'nebular'
+      GameIds: 'mads:nebular'
+    ),
+    (
+      Caption: 'Annoying in-jokes';
+      Kind: sgokCheckbox;
+      IniKey: 'annoyingInJokes';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'twp:twp'
     ),
     (
       Caption: 'Use checkered cursor';
@@ -98,7 +122,7 @@ const
       IniKey: 'apple2e_cursor';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'hires1'
+      GameIds: 'adl:hires1'
     ),
     (
       Caption: 'Add speed menu';
@@ -106,7 +130,7 @@ const
       IniKey: 'apple2gs_speedmenu';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'bc[]|goldrush[]|kq1[]|kq2[]|kq3|kq4[]|lsl1[]|mixedup|pq1[]|sq1[]|sq2[]'
+      GameIds: 'agi:bc[]|agi:goldrush[]|agi:kq1[]|agi:kq2[]|agi:kq3|agi:kq4[]|agi:lsl1[]|agi:mixedup|agi:pq1[]|agi:sq1[]|agi:sq2[]'
     ),
     (
       Caption: 'Load modded audio';
@@ -114,7 +138,7 @@ const
       IniKey: 'audio_override';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'activity|airport|arttime|balloon|baseball|baseball2001|blues123time|bluesabctime|bluesbirthday|bluestreasurehunt|brstorm|catalog|chase|dog|farm|fbear|fbpack|football|freddi|freddi2|freddi3|freddi4|freddicove|freddisfunshop|funpack|jungle|lost|maze|mustard|pajama|pajama2|pajama3|pjgames|puttcircus|puttmoon|puttputt|puttrace|puttsfunshop|putttime|puttzoo|readtime|samsfunshop|soccer|soccermls|socks|spyfox|spyfox2|spyozon|thinker1|thinkerk|water'
+      GameIds: 'scumm:activity|scumm:airport|scumm:arttime|scumm:balloon|scumm:baseball|scumm:baseball2001|scumm:blues123time|scumm:bluesabctime|scumm:bluesbirthday|scumm:bluestreasurehunt|scumm:brstorm|scumm:catalog|scumm:chase|scumm:dog|scumm:farm|scumm:fbear|scumm:fbpack|scumm:football|scumm:freddi|scumm:freddi2|scumm:freddi3|scumm:freddi4|scumm:freddicove|scumm:freddisfunshop|scumm:funpack|scumm:jungle|scumm:lost|scumm:maze|scumm:mustard|scumm:pajama|scumm:pajama2|scumm:pajama3|scumm:pjgames|scumm:puttcircus|scumm:puttmoon|scumm:puttputt|scumm:puttrace|scumm:puttsfunshop|scumm:putttime|scumm:puttzoo|scumm:readtime|scumm:samsfunshop|scumm:soccer|scumm:soccermls|scumm:socks|scumm:spyfox|scumm:spyfox2|scumm:spyozon|scumm:thinker1|scumm:thinkerk|scumm:water'
     ),
     (
       Caption: 'Repair speech audio';
@@ -122,7 +146,15 @@ const
       IniKey: 'audio_popfix_enabled';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'gk1[cd]'
+      GameIds: 'sci:gk1[cd]'
+    ),
+    (
+      Caption: 'Auto Move';
+      Kind: sgokCheckbox;
+      IniKey: 'auto_move';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'nancy:nancy10|nancy:nancy11|nancy:nancy12|nancy:nancy13|nancy:nancy14|nancy:nancy15|nancy:nancy6|nancy:nancy7|nancy:nancy8|nancy:nancy9'
     ),
     (
       Caption: 'Suggest save names';
@@ -130,7 +162,7 @@ const
       IniKey: 'auto_savenames';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'lol'
+      GameIds: 'kyra:lol'
     ),
     (
       Caption: 'Automap (ScummVM feature)';
@@ -138,7 +170,7 @@ const
       IniKey: 'automap';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'eob|eob2'
+      GameIds: 'kyra:eob|kyra:eob2'
     ),
     (
       Caption: 'Automatic drilling';
@@ -146,7 +178,7 @@ const
       IniKey: 'automatic_drilling';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'driller'
+      GameIds: 'freescape:driller'
     ),
     (
       Caption: 'Backported music from C64 releases';
@@ -154,7 +186,15 @@ const
       IniKey: 'ay_music';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'castlemaster[]|totaleclipse|totaleclipse2'
+      GameIds: 'freescape:castlemaster[]|freescape:totaleclipse|freescape:totaleclipse2'
+    ),
+    (
+      Caption: 'Use PAL timing for SID audio';
+      Kind: sgokCheckbox;
+      IniKey: 'c64_sid_type';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'scumm:maniac[c64,c64 demo]'
     ),
     (
       Caption: 'Camera moves with Silencer';
@@ -162,7 +202,7 @@ const
       IniKey: 'camera_on_player';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'remorse'
+      GameIds: 'ultima:remorse'
     ),
     (
       Caption: 'Simulate loading times of old CD drives';
@@ -170,7 +210,15 @@ const
       IniKey: 'cdromdelay';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'myst'
+      GameIds: 'mohawk:myst'
+    ),
+    (
+      Caption: 'Character Speech';
+      Kind: sgokCheckbox;
+      IniKey: 'character_speech';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'nancy:nancy1|nancy:nancy2|nancy:nancy3|nancy:nancy4|nancy:nancy5|nancy:vampirediaries'
     ),
     (
       Caption: 'Enable cheats';
@@ -178,7 +226,7 @@ const
       IniKey: 'cheat';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'remorse|ultima8'
+      GameIds: 'ultima:remorse|ultima:ultima8'
     ),
     (
       Caption: 'Color graphics';
@@ -186,7 +234,7 @@ const
       IniKey: 'color';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'hires1'
+      GameIds: 'adl:hires1'
     ),
     (
       Caption: 'Pause when entering commands';
@@ -194,7 +242,7 @@ const
       IniKey: 'commandpromptwindow';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'bc|ddp|goldrush|kq1|kq2|kq3|kq4|lsl1|mh1|mh2|mickey|mixedup|pq1|sq1|sq2|troll|winnie'
+      GameIds: 'agi:bc|agi:ddp|agi:goldrush|agi:kq1|agi:kq2|agi:kq3|agi:kq4|agi:lsl1|agi:mh1|agi:mh2|agi:mickey|agi:mixedup|agi:pq1|agi:sq1|agi:sq2|agi:troll|agi:winnie'
     ),
     (
       Caption: 'Enable title and copy protection screens (if present)';
@@ -202,7 +250,15 @@ const
       IniKey: 'copy_protection';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'adibou1|anotherworld|atlantis[amiga,floppy,mac floppy]|cloudsofxeen|darksideofxeen|dreamweb|gob1|gob2|goldrush|ite|loom[demo,ega,mac,no adlib]|lure|maniac[remastered,v1,v2]|monkey2[]|monkey2[amiga,mac,se]|monkey[mac,vga]|nebular[]|nebular[fanmade,floppy]|simon1[aga floppy,floppy,infocom floppy,ocs floppy]|simon2[floppy]|swordsofxeen|tot[]|voyeur|waxworks[floppy]|worldofxeen|zak[v1,v2]'
+      GameIds: 'agi:goldrush|agos:simon1[aga floppy,floppy,infocom floppy,ocs floppy]|agos:simon2[floppy]|agos:waxworks[floppy]|awe:anotherworld|dreamweb:dreamweb|gob:adibou1|gob:gob1|gob:gob2|lure:lure|mads:nebular[]|mads:nebular[fanmade,floppy]|mm:cloudsofxeen|mm:darksideofxeen|mm:swordsofxeen|mm:worldofxeen|saga:ite|scumm:atlantis[amiga,floppy,mac floppy]|scumm:loom[demo,ega,mac,no adlib]|scumm:maniac[remastered,v1,v2]|scumm:monkey2[]|scumm:monkey2[amiga,mac,se]|scumm:monkey[mac,vga]|scumm:zak[v1,v2]|tot:tot[]|voyeur:voyeur'
+    ),
+    (
+      Caption: 'Correct movie aspect ratio';
+      Kind: sgokCheckbox;
+      IniKey: 'correct_movie_aspect';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'tetraedge:amerzone|tetraedge:syberia|tetraedge:syberia2'
     ),
     (
       Caption: 'Remove Black Bars';
@@ -210,7 +266,7 @@ const
       IniKey: 'crop_black_bars';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'dw2'
+      GameIds: 'tinsel:dw2'
     ),
     (
       Caption: 'Load user patch (unsupported)';
@@ -218,7 +274,7 @@ const
       IniKey: 'datausr_load';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'grim|monkey4'
+      GameIds: 'grim:grim|grim:monkey4'
     ),
     (
       Caption: 'Enable low latency audio mode';
@@ -226,7 +282,7 @@ const
       IniKey: 'dimuse_low_latency_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'comi|dig|ft'
+      GameIds: 'scumm:comi|scumm:dig|scumm:ft'
     ),
     (
       Caption: 'Skip EGA dithering pass (full color backgrounds)';
@@ -234,7 +290,7 @@ const
       IniKey: 'disable_dithering';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'astrochicken|camelot|fairytales[ega]|hoyle1|hoyle2|hoyle3[ega]|iceman|kq1sci|kq4sci|laurabow|lsl2|lsl3|mothergoose[ega]|pq2|qfg1|qfg2|sq3'
+      GameIds: 'sci:astrochicken|sci:camelot|sci:fairytales[ega]|sci:hoyle1|sci:hoyle2|sci:hoyle3[ega]|sci:iceman|sci:kq1sci|sci:kq4sci|sci:laurabow|sci:lsl2|sci:lsl3|sci:mothergoose[ega]|sci:pq2|sci:qfg1|sci:qfg2|sci:sq3'
     ),
     (
       Caption: 'Disable fade-out effects';
@@ -242,7 +298,15 @@ const
       IniKey: 'disable_fade_effects';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'simon1|simon2'
+      GameIds: 'agos:simon1|agos:simon2'
+    ),
+    (
+      Caption: 'Disable screensaver';
+      Kind: sgokCheckbox;
+      IniKey: 'disable_screensaver';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'pelrock:pelrock'
     ),
     (
       Caption: 'Disable McCoy''s quick stamina drain';
@@ -250,7 +314,15 @@ const
       IniKey: 'disable_stamina_drain';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'bladerunner[]|bladerunner[game not implemented]'
+      GameIds: 'bladerunner:bladerunner[]|bladerunner:bladerunner[game not implemented]'
+    ),
+    (
+      Caption: 'Show FPS';
+      Kind: sgokCheckbox;
+      IniKey: 'display_fps';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'ags:ashinaredwitch|ags:awakening|ags:blackwell1|ags:blackwell2|ags:blackwell3|ags:blackwell4|ags:blackwell5|ags:danewguys2|ags:dreamswitchhouse|ags:excavationhb|ags:footballgame|ags:forest|ags:four|ags:framed|ags:geminirue|ags:goldenwake|ags:jamesperis|ags:jamesperis2|ags:justignorethem|ags:kathyrain|ags:life|ags:maniacmansiondeluxe|ags:mybigsister|ags:mybigsisterrm|ags:oldskies|ags:one|ags:openquest|ags:primordia|ags:redbow|ags:resonance|ags:rosewater|ags:shadowgate|ags:shardlight|ags:shivah|ags:shivahkosher|ags:spacemadness|ags:sq45|ags:sqdote|ags:sqinc|ags:sqvsb|ags:strangeland|ags:sumatra|ags:technobabylon|ags:unavowed|ags:whispersofamachine'
     ),
     (
       Caption: 'Use DOS version music tempos';
@@ -258,7 +330,15 @@ const
       IniKey: 'dos_music_tempos';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'simon1[25th anniversary edition,cd,cd demo,floppy,infocom cd,infocom floppy]|simon1[]'
+      GameIds: 'agos:simon1[25th anniversary edition,cd,cd demo,floppy,infocom cd,infocom floppy]|agos:simon1[]'
+    ),
+    (
+      Caption: 'Double FPS';
+      Kind: sgokCheckbox;
+      IniKey: 'doublefps';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'zvision:zgi|zvision:znemesis'
     ),
     (
       Caption: 'Easier AI';
@@ -266,7 +346,7 @@ const
       IniKey: 'easier_ai';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'clandestiny[]|t7g[25th anniversary edition]|t7g[]|unclehenry'
+      GameIds: 'groovie:clandestiny[]|groovie:t7g[25th anniversary edition]|groovie:t7g[]|groovie:unclehenry'
     ),
     (
       Caption: 'Enable bearded musicians';
@@ -274,7 +354,7 @@ const
       IniKey: 'enable_bearded_musicians';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'sq1sci'
+      GameIds: 'sci:sq1sci'
     ),
     (
       Caption: 'Enable black-lined video';
@@ -282,7 +362,7 @@ const
       IniKey: 'enable_black_lined_video';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'gk2[]|lighthouse[]|lsl7[]|lsl7[fargus,softclub]|phantasmagoria|phantasmagoria2|pqswat[]|rama|shivers|sq6[]|torin[]'
+      GameIds: 'sci:gk2[]|sci:lighthouse[]|sci:lsl7[]|sci:lsl7[fargus,softclub]|sci:phantasmagoria|sci:phantasmagoria2|sci:pqswat[]|sci:rama|sci:shivers|sci:sq6[]|sci:torin[]'
     ),
     (
       Caption: 'Enable content censoring';
@@ -290,7 +370,7 @@ const
       IniKey: 'enable_censoring';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'phantasmagoria2'
+      GameIds: 'sci:phantasmagoria2'
     ),
     (
       Caption: 'Color Blind Mode';
@@ -298,7 +378,7 @@ const
       IniKey: 'enable_color_blind';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'sfinx|soltys'
+      GameIds: 'cge2:sfinx|cge:soltys'
     ),
     (
       Caption: 'Enable demo/kiosk mode';
@@ -306,7 +386,7 @@ const
       IniKey: 'enable_demo_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'maniac[remastered,v1]'
+      GameIds: 'scumm:maniac[remastered,v1]'
     ),
     (
       Caption: 'Gore Mode';
@@ -314,7 +394,7 @@ const
       IniKey: 'enable_gore';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'hopkins'
+      GameIds: 'hopkins:hopkins'
     ),
     (
       Caption: 'Enable high resolution graphics';
@@ -322,7 +402,7 @@ const
       IniKey: 'enable_high_resolution_graphics';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'castlebrain[]|freddypharkas[]|gk1[cd]|kq6[]|kq6[cd]|lsl1sci[sci]|lsl5[]|lsl6[]|pq4[cd]|qfg1vga[vga]|sq1sci[sci]'
+      GameIds: 'sci:castlebrain[]|sci:freddypharkas[]|sci:gk1[cd]|sci:kq6[]|sci:kq6[cd]|sci:lsl1sci[sci]|sci:lsl5[]|sci:lsl6[]|sci:pq4[cd]|sci:qfg1vga[vga]|sci:sq1sci[sci]'
     ),
     (
       Caption: 'Use high-quality video scaling';
@@ -330,7 +410,7 @@ const
       IniKey: 'enable_hq_video';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'gk1[cd]|gk2|kq7[]|lighthouse|lsl7[]|lsl7[fargus,softclub]|phantasmagoria|phantasmagoria2|pqswat[]|qfg4[cd]|rama|shivers|sq6[]|torin[]'
+      GameIds: 'sci:gk1[cd]|sci:gk2|sci:kq7[]|sci:lighthouse|sci:lsl7[]|sci:lsl7[fargus,softclub]|sci:phantasmagoria|sci:phantasmagoria2|sci:pqswat[]|sci:qfg4[cd]|sci:rama|sci:shivers|sci:sq6[]|sci:torin[]'
     ),
     (
       Caption: 'Host games over LAN';
@@ -338,7 +418,7 @@ const
       IniKey: 'enable_lan_broadcast';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'football2002|moonbase'
+      GameIds: 'scumm:football2002|scumm:moonbase'
     ),
     (
       Caption: 'Use high-quality "LarryScale" cel scaling';
@@ -346,7 +426,7 @@ const
       IniKey: 'enable_larryscale';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'lsl7'
+      GameIds: 'sci:lsl7'
     ),
     (
       Caption: 'Simulate Sega colors';
@@ -354,7 +434,7 @@ const
       IniKey: 'enable_sega_shadow_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'monkey[sega]'
+      GameIds: 'scumm:monkey[sega]'
     ),
     (
       Caption: 'Enable connection to Multiplayer Server';
@@ -362,7 +442,7 @@ const
       IniKey: 'enable_session_server';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'football2002|moonbase'
+      GameIds: 'scumm:football2002|scumm:moonbase'
     ),
     (
       Caption: 'Upscale videos';
@@ -370,7 +450,7 @@ const
       IniKey: 'enable_video_upscale';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'kq7[]|pqswat[]'
+      GameIds: 'sci:kq7[]|sci:pqswat[]'
     ),
     (
       Caption: 'Extended game resolution';
@@ -378,7 +458,7 @@ const
       IniKey: 'extended_viewport';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'carnival'
+      GameIds: 'bolt:carnival'
     ),
     (
       Caption: 'Pixellated scene transitions';
@@ -386,7 +466,7 @@ const
       IniKey: 'fade_style';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'scalpel'
+      GameIds: 'sherlock:scalpel'
     ),
     (
       Caption: 'Fast movie speed';
@@ -394,7 +474,23 @@ const
       IniKey: 'fast_movie_speed';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 't7g'
+      GameIds: 'groovie:t7g'
+    ),
+    (
+      Caption: 'Extend endgame timer';
+      Kind: sgokCheckbox;
+      IniKey: 'final_timer';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'nancy:nancy2'
+    ),
+    (
+      Caption: 'Better fit for dialog balloons';
+      Kind: sgokCheckbox;
+      IniKey: 'fit_dialog_balloons';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'eem:eem2'
     ),
     (
       Caption: 'Fix audio pops/clicks';
@@ -402,7 +498,7 @@ const
       IniKey: 'fix_audio_pops';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'arthur|arthurbday|beardark|bearfight|create|daniel|grandma|greeneggs|harryhh|lilmonster|newkid|noah|ruff|seussabc|sheila|stellaluna|tortoise'
+      GameIds: 'mohawk:arthur|mohawk:arthurbday|mohawk:beardark|mohawk:bearfight|mohawk:create|mohawk:daniel|mohawk:grandma|mohawk:greeneggs|mohawk:harryhh|mohawk:lilmonster|mohawk:newkid|mohawk:noah|mohawk:ruff|mohawk:seussabc|mohawk:sheila|mohawk:stellaluna|mohawk:tortoise'
     ),
     (
       Caption: 'Floating cursors';
@@ -410,7 +506,7 @@ const
       IniKey: 'floating_cursors';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'lol'
+      GameIds: 'kyra:lol'
     ),
     (
       Caption: 'Enable font anti-aliasing';
@@ -418,7 +514,7 @@ const
       IniKey: 'font_antialiasing';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'ultima8'
+      GameIds: 'ultima:ultima8'
     ),
     (
       Caption: 'Enable font replacement';
@@ -426,7 +522,7 @@ const
       IniKey: 'font_override';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'ultima8'
+      GameIds: 'ultima:ultima8'
     ),
     (
       Caption: 'Play foot step sounds';
@@ -434,7 +530,7 @@ const
       IniKey: 'footsteps';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'ultima8'
+      GameIds: 'ultima:ultima8'
     ),
     (
       Caption: 'Run in original 640 x 480 resolution';
@@ -442,7 +538,15 @@ const
       IniKey: 'force_fmtowns_hires_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'atlantis[fm-towns]|indy3[fm-towns]|indyloom|indyzak|loom[fm-towns]|monkey2[fm-towns]|zak[fm-towns]|zakloom'
+      GameIds: 'scumm:atlantis[fm-towns]|scumm:indy3[fm-towns]|scumm:indyloom|scumm:indyzak|scumm:loom[fm-towns]|scumm:monkey2[fm-towns]|scumm:zak[fm-towns]|scumm:zakloom'
+    ),
+    (
+      Caption: 'Force antialiased text';
+      Kind: sgokCheckbox;
+      IniKey: 'force_text_aa';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'ags:ashinaredwitch|ags:awakening|ags:blackwell1|ags:blackwell2|ags:blackwell3|ags:blackwell4|ags:blackwell5|ags:danewguys2|ags:dreamswitchhouse|ags:excavationhb|ags:footballgame|ags:forest|ags:four|ags:framed|ags:geminirue|ags:goldenwake|ags:jamesperis|ags:jamesperis2|ags:justignorethem|ags:kathyrain|ags:life|ags:maniacmansiondeluxe|ags:mybigsister|ags:mybigsisterrm|ags:oldskies|ags:one|ags:openquest|ags:primordia|ags:redbow|ags:resonance|ags:rosewater|ags:shadowgate|ags:shardlight|ags:shivah|ags:shivahkosher|ags:spacemadness|ags:sq45|ags:sqdote|ags:sqinc|ags:sqvsb|ags:strangeland|ags:sumatra|ags:technobabylon|ags:unavowed|ags:whispersofamachine'
     ),
     (
       Caption: 'Enable frame limiting';
@@ -450,7 +554,7 @@ const
       IniKey: 'frameLimit';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'remorse|ultima8'
+      GameIds: 'ultima:remorse|ultima:ultima8'
     ),
     (
       Caption: 'Enable frame skipping';
@@ -458,7 +562,7 @@ const
       IniKey: 'frameSkip';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'remorse|ultima8'
+      GameIds: 'ultima:remorse|ultima:ultima8'
     ),
     (
       Caption: 'Max frames per second limit';
@@ -466,7 +570,7 @@ const
       IniKey: 'frames_per_secondfl';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'bladerunner'
+      GameIds: 'bladerunner:bladerunner'
     ),
     (
       Caption: 'Improve Selenitic Age puzzle accessibility';
@@ -474,7 +578,7 @@ const
       IniKey: 'fuzzy_logic';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'myst[]|myst[masterpiece edition]'
+      GameIds: 'mohawk:myst[]|mohawk:myst[masterpiece edition]'
     ),
     (
       Caption: 'Generate random maps';
@@ -482,7 +586,7 @@ const
       IniKey: 'generate_random_maps';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'moonbase'
+      GameIds: 'scumm:moonbase'
     ),
     (
       Caption: 'Enable saving via the GMM';
@@ -490,7 +594,15 @@ const
       IniKey: 'gmm_save_enabled';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'astrochicken|camelot|castlebrain|ecoquest|ecoquest2|fairytales|freddypharkas|gk1|gk2|hoyle1|hoyle2|hoyle3|hoyle4|hoyle5|iceman|islandbrain|kq1sci|kq4sci|kq5|kq6|kq7|laurabow|laurabow2|lighthouse[]|longbow|lsl1sci|lsl2|lsl3|lsl5|lsl6|lsl6hires|lsl7[]|lsl7[fargus,softclub]|mothergoose|mothergoose256|pepper|phantasmagoria2|pq1sci|pq2|pq3|pq4|pqswat|qfg1[]|qfg1[demo]|qfg1vga|qfg2|qfg3|qfg4|shivers|slater|sq1sci|sq3|sq4|sq5|sq6|torin'
+      GameIds: 'sci:astrochicken|sci:camelot|sci:castlebrain|sci:ecoquest|sci:ecoquest2|sci:fairytales|sci:freddypharkas|sci:gk1|sci:gk2|sci:hoyle1|sci:hoyle2|sci:hoyle3|sci:hoyle4|sci:hoyle5|sci:iceman|sci:islandbrain|sci:kq1sci|sci:kq4sci|sci:kq5|sci:kq6|sci:kq7|sci:laurabow|sci:laurabow2|sci:lighthouse[]|sci:longbow|sci:lsl1sci|sci:lsl2|sci:lsl3|sci:lsl5|sci:lsl6|sci:lsl6hires|sci:lsl7[]|sci:lsl7[fargus,softclub]|sci:mothergoose|sci:mothergoose256|sci:pepper|sci:phantasmagoria2|sci:pq1sci|sci:pq2|sci:pq3|sci:pq4|sci:pqswat|sci:qfg1[]|sci:qfg1[demo]|sci:qfg1vga|sci:qfg2|sci:qfg3|sci:qfg4|sci:shivers|sci:slater|sci:sq1sci|sci:sq3|sci:sq4|sci:sq5|sci:sq6|sci:torin'
+    ),
+    (
+      Caption: 'Enable gore';
+      Kind: sgokCheckbox;
+      IniKey: 'gore';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'harvester:harvester'
     ),
     (
       Caption: 'Helium mode';
@@ -498,7 +610,7 @@ const
       IniKey: 'helium_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'kyra3'
+      GameIds: 'kyra:kyra3'
     ),
     (
       Caption: 'Don''t show hotspots when moving mouse';
@@ -506,7 +618,7 @@ const
       IniKey: 'help_style';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'rosetattoo|scalpel'
+      GameIds: 'sherlock:rosetattoo|sherlock:scalpel'
     ),
     (
       Caption: 'Use Hercules hires font';
@@ -514,7 +626,31 @@ const
       IniKey: 'herculesfont';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'bc|ddp|goldrush|kq1|kq2|kq3|kq4|lsl1|mh1|mh2|mickey|mixedup|pq1|sq1|sq2|troll|winnie'
+      GameIds: 'agi:bc|agi:ddp|agi:goldrush|agi:kq1|agi:kq2|agi:kq3|agi:kq4|agi:lsl1|agi:mh1|agi:mh2|agi:mickey|agi:mixedup|agi:pq1|agi:sq1|agi:sq2|agi:troll|agi:winnie'
+    ),
+    (
+      Caption: 'Hide the highlight boxes';
+      Kind: sgokCheckbox;
+      IniKey: 'hide_highlight_boxes';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'eem:eem2'
+    ),
+    (
+      Caption: 'High Quality';
+      Kind: sgokCheckbox;
+      IniKey: 'high_quality';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'alcachofa:aventuradecine'
+    ),
+    (
+      Caption: 'Enable high quality panoramas';
+      Kind: sgokCheckbox;
+      IniKey: 'highquality';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'zvision:zgi|zvision:znemesis'
     ),
     (
       Caption: 'HP bar graphs';
@@ -522,7 +658,23 @@ const
       IniKey: 'hpbargraphs';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'eob|eob2'
+      GameIds: 'kyra:eob|kyra:eob2'
+    ),
+    (
+      Caption: 'Classic Sentence';
+      Kind: sgokCheckbox;
+      IniKey: 'hudSentence';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'twp:twp'
+    ),
+    (
+      Caption: 'Enable cheat mode';
+      Kind: sgokCheckbox;
+      IniKey: 'hypercheat';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'hdb:hdb'
     ),
     (
       Caption: 'Improved mode';
@@ -530,7 +682,7 @@ const
       IniKey: 'improved';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'msn1|msn2'
+      GameIds: 'supernova:msn1|supernova:msn2'
     ),
     (
       Caption: 'Easy mouse interface';
@@ -538,7 +690,7 @@ const
       IniKey: 'interface_hotspots';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'nebular'
+      GameIds: 'mads:dragonsphere|mads:nebular|mads:phantom'
     ),
     (
       Caption: 'Play a digital soundtrack during the opening movie';
@@ -546,7 +698,7 @@ const
       IniKey: 'intro_music_digital';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'rtz'
+      GameIds: 'made:rtz'
     ),
     (
       Caption: 'Animated inventory items';
@@ -554,7 +706,15 @@ const
       IniKey: 'inventory_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'nebular'
+      GameIds: 'mads:nebular'
+    ),
+    (
+      Caption: 'Invert verb colors';
+      Kind: sgokCheckbox;
+      IniKey: 'invertVerbHighlight';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'twp:twp'
     ),
     (
       Caption: 'Overture Timing';
@@ -562,7 +722,7 @@ const
       IniKey: 'loom_overture_ticks';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'loom[demo,ega,mac,no adlib]'
+      GameIds: 'scumm:loom[demo,ega,mac,no adlib]'
     ),
     (
       Caption: 'Playback Adjust';
@@ -570,7 +730,7 @@ const
       IniKey: 'loom_playback_adjustment';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'loom[vga]'
+      GameIds: 'scumm:loom[vga]'
     ),
     (
       Caption: 'Intro Adjust';
@@ -578,7 +738,7 @@ const
       IniKey: 'mi1_intro_adjustment';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'monkey[cd,fm-towns,sega]'
+      GameIds: 'scumm:monkey[cd,fm-towns,sega]'
     ),
     (
       Caption: 'Outlook Adjust';
@@ -586,7 +746,7 @@ const
       IniKey: 'mi1_outlook_adjustment';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'monkey[cd,fm-towns,sega]'
+      GameIds: 'scumm:monkey[cd,fm-towns,sega]'
     ),
     (
       Caption: 'MIDI mode';
@@ -594,7 +754,7 @@ const
       IniKey: 'midi_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'astrochicken|camelot|castlebrain|ecoquest|ecoquest2|elvira1|fairytales|freddypharkas|hoyle1|hoyle2|hoyle3|hoyle4|iceman|islandbrain|jones|kq1sci|kq4sci|kq5|kq6|laurabow|laurabow2|longbow|lsl1sci|lsl2|lsl3|lsl5|lsl6|mothergoose|mothergoose256|pepper|pq1sci|pq2|pq3|qfg1|qfg1vga|qfg2|qfg3|slater|sq1sci|sq3|sq4|sq5'
+      GameIds: 'agos:elvira1|sci:astrochicken|sci:camelot|sci:castlebrain|sci:ecoquest|sci:ecoquest2|sci:fairytales|sci:freddypharkas|sci:hoyle1|sci:hoyle2|sci:hoyle3|sci:hoyle4|sci:iceman|sci:islandbrain|sci:jones|sci:kq1sci|sci:kq4sci|sci:kq5|sci:kq6|sci:laurabow|sci:laurabow2|sci:longbow|sci:lsl1sci|sci:lsl2|sci:lsl3|sci:lsl5|sci:lsl6|sci:mothergoose|sci:mothergoose256|sci:pepper|sci:pq1sci|sci:pq2|sci:pq3|sci:qfg1|sci:qfg1vga|sci:qfg2|sci:qfg3|sci:slater|sci:sq1sci|sci:sq3|sci:sq4|sci:sq5'
     ),
     (
       Caption: 'Use NES Classic Palette';
@@ -602,7 +762,7 @@ const
       IniKey: 'mm_nes_classic_palette';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'maniac[nes]'
+      GameIds: 'scumm:maniac[nes]'
     ),
     (
       Caption: 'Mono music';
@@ -610,7 +770,7 @@ const
       IniKey: 'mono_sound';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'kingdom'
+      GameIds: 'kingdom:kingdom'
     ),
     (
       Caption: 'Always use sharp monochrome text';
@@ -618,7 +778,7 @@ const
       IniKey: 'monotext';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'hires1'
+      GameIds: 'adl:hires1'
     ),
     (
       Caption: 'Fight Button L/R Swap';
@@ -626,7 +786,7 @@ const
       IniKey: 'mousebtswap';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'eob|eob2'
+      GameIds: 'kyra:eob|kyra:eob2'
     ),
     (
       Caption: 'Mouse support';
@@ -634,7 +794,7 @@ const
       IniKey: 'mousesupport';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'bc|ddp|goldrush|kq1|kq2|kq3|kq4|lsl1|mh1|mh2|mickey|mixedup|pq1|sq1|sq2|troll|winnie'
+      GameIds: 'agi:bc|agi:ddp|agi:goldrush|agi:kq1|agi:kq2|agi:kq3|agi:kq4|agi:lsl1|agi:mh1|agi:mh2|agi:mickey|agi:mixedup|agi:pq1|agi:sq1|agi:sq2|agi:troll|agi:winnie'
     ),
     (
       Caption: 'Enhanced thrown weapon reload';
@@ -642,7 +802,7 @@ const
       IniKey: 'mreload';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'eob|eob2'
+      GameIds: 'kyra:eob|kyra:eob2'
     ),
     (
       Caption: 'Autosave at progress points';
@@ -650,7 +810,7 @@ const
       IniKey: 'mtropolis_mod_auto_save_at_checkpoints';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'obsidian[cd]'
+      GameIds: 'mtropolis:obsidian[cd]'
     ),
     (
       Caption: '16:9 widescreen mod';
@@ -658,7 +818,7 @@ const
       IniKey: 'mtropolis_mod_obsidian_widescreen';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'obsidian'
+      GameIds: 'mtropolis:obsidian'
     ),
     (
       Caption: 'Enable subtitles for important sound effects';
@@ -666,7 +826,7 @@ const
       IniKey: 'mtropolis_mod_sound_gameplay_subtitles';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'obsidian[cd]'
+      GameIds: 'mtropolis:obsidian[cd]'
     ),
     (
       Caption: 'Naughty game mode';
@@ -674,7 +834,15 @@ const
       IniKey: 'naughtiness';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'nebular'
+      GameIds: 'mads:nebular'
+    ),
+    (
+      Caption: 'Disable animation while turning';
+      Kind: sgokCheckbox;
+      IniKey: 'noanimwhileturning';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'zvision:zgi|zvision:znemesis'
     ),
     (
       Caption: 'Frame limiter high performance mode';
@@ -682,7 +850,7 @@ const
       IniKey: 'nodelaymillisfl';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'bladerunner'
+      GameIds: 'bladerunner:bladerunner'
     ),
     (
       Caption: 'Fix Ileria and Beohram NPCs';
@@ -690,7 +858,7 @@ const
       IniKey: 'npcpatch';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'eob'
+      GameIds: 'kyra:eob'
     ),
     (
       Caption: 'TV emulation';
@@ -698,7 +866,7 @@ const
       IniKey: 'ntsc';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'hires1'
+      GameIds: 'adl:hires1'
     ),
     (
       Caption: 'Show Object Line';
@@ -706,7 +874,7 @@ const
       IniKey: 'object_labels';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'comi'
+      GameIds: 'scumm:comi'
     ),
     (
       Caption: 'Use ''high definition'' OGG music';
@@ -714,7 +882,7 @@ const
       IniKey: 'ogg_music';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'noctropolis'
+      GameIds: 'access:noctropolis'
     ),
     (
       Caption: 'AdLib OPL3 mode';
@@ -722,7 +890,7 @@ const
       IniKey: 'opl3_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'elvira1|elvira2|simon1[25th anniversary edition,cd,cd demo,floppy,floppy demo,infocom cd,infocom floppy]|simon1[]|tot|waxworks'
+      GameIds: 'agos:elvira1|agos:elvira2|agos:simon1[25th anniversary edition,cd,cd demo,floppy,floppy demo,infocom cd,infocom floppy]|agos:simon1[]|agos:waxworks|tot:tot'
     ),
     (
       Caption: 'Backported music from C64 releases (AdLib)';
@@ -730,7 +898,7 @@ const
       IniKey: 'opl_music';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'castlemaster[demo,virtual worlds]|darkside|driller[]|totaleclipse[]'
+      GameIds: 'freescape:castlemaster[demo,virtual worlds]|freescape:darkside|freescape:driller[]|freescape:totaleclipse[]'
     ),
     (
       Caption: 'Enable the original GUI and Menu';
@@ -738,7 +906,7 @@ const
       IniKey: 'original_gui';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'activity|atlantis|brstorm|comi|dig|fbear[he 62]|fbpack|ft|funpack|indy3|indyloom|indyzak|loom[demo,ega,fm-towns,mac,no adlib,steam,vga]|maniac|monkey|monkey2[]|monkey2[amiga,fm-towns,mac,se,se talkie]|pass|puttmoon[]|puttmoon[demo]|puttputt|samnmax|tentacle|zak|zakloom'
+      GameIds: 'scumm:activity|scumm:atlantis|scumm:brstorm|scumm:comi|scumm:dig|scumm:fbear[he 62]|scumm:fbpack|scumm:ft|scumm:funpack|scumm:indy3|scumm:indyloom|scumm:indyzak|scumm:loom[demo,ega,fm-towns,mac,no adlib,steam,vga]|scumm:maniac|scumm:monkey|scumm:monkey2[]|scumm:monkey2[amiga,fm-towns,mac,se,se talkie]|scumm:pass|scumm:puttmoon[]|scumm:puttmoon[demo]|scumm:puttputt|scumm:samnmax|scumm:tentacle|scumm:zak|scumm:zakloom'
     ),
     (
       Caption: 'Use original Macintosh menus (experimental)';
@@ -746,7 +914,7 @@ const
       IniKey: 'original_mac_menus';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'nebular[]'
+      GameIds: 'mads:nebular[]'
     ),
     (
       Caption: 'Use original save/load screens';
@@ -754,7 +922,7 @@ const
       IniKey: 'original_menus';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'chewy|nebular'
+      GameIds: 'chewy:chewy|macs2:sis|mads:dragonsphere|mads:forest|mads:nebular|mads:phantom|pelrock:pelrock'
     ),
     (
       Caption: 'Use original save/load screens';
@@ -762,7 +930,8 @@ const
       IniKey: 'originalsaveload';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'astrochicken|bc|camelot|castlebrain|clandestiny[]|ddp|ecoquest|ecoquest2|fairytales|freddypharkas|gk1|gk2[]|goldrush|hoyle1|hoyle2|hoyle3|hoyle4|hoyle5|iceman|islandbrain|kq1|kq1sci|kq2|kq3|kq4|kq4sci|kq5|kq6|laurabow|laurabow2|lighthouse[]|longbow|lsl1|lsl1sci|lsl2|lsl3|lsl5|lsl6|lsl6hires|lsl7[]|lsl7[fargus,softclub]|mh1|mh2|mickey|mixedup|mothergoose|mothergoose256|neverhood|pepper|phantasmagoria2|pq1|pq1sci|pq2|pq3|pq4|qfg1|qfg1vga|qfg2|qfg3|qfg4|rama[]|rosetattoo|scalpel|slater|sq1|sq1sci|sq2|sq3|sq4|sq5|sq6[]|t7g[25th anniversary edition]|t7g[]|toltecs|torin[]|tot|troll|ultima8|winnie'
+      GameIds: 'agi:bc|agi:ddp|agi:goldrush|agi:kq1|agi:kq2|agi:kq3|agi:kq4|agi:lsl1|agi:mh1|agi:mh2|agi:mickey|agi:mixedup|agi:pq1|agi:sq1|agi:sq2|agi:troll|agi:winnie|groovie:clandestiny[]|groovie:t7g[25th anniversary edition]|groovie:t7g[]|nancy:nancy1|nancy:nancy10|nancy:nancy11|nancy:nancy12|nancy:nancy13|nancy:nancy14|nancy:nancy15|nancy:nancy2|nancy:nancy3|nancy:nancy4|nancy:nancy5|nancy:nancy6|nancy:nancy7|nancy:nancy8|nancy:nancy9|nancy:vampirediaries|neverhood:neverhood|sci:astrochicken|sci:camelot|sci:castlebrain|sci:ecoquest|sci:ecoquest2|sci:fairytales|sci:freddypharkas|sci:gk1|sci:gk2[]|sci:hoyle1|sci:hoyle2|sci:hoyle3|sci:hoyle4|sci:hoyle5|sci:iceman|sci:islandbrain|sci:kq1sci|sci:kq4sci|sci:kq5|sci:kq6|sci:laurabow|sci:laurabow2|sci:lighthouse[]|sci:longbow|sci:lsl1sci|sci:lsl2|sci:lsl3|sci:lsl5|sci:lsl6|sci:lsl6hires|sci:lsl7[]|sci:lsl7[fargus,softclub]|sci:mothergoose' +
+               '|sci:mothergoose256|sci:pepper|sci:phantasmagoria2|sci:pq1sci|sci:pq2|sci:pq3|sci:pq4|sci:qfg1|sci:qfg1vga|sci:qfg2|sci:qfg3|sci:qfg4|sci:rama[]|sci:slater|sci:sq1sci|sci:sq3|sci:sq4|sci:sq5|sci:sq6[]|sci:torin[]|sherlock:rosetattoo|sherlock:scalpel|toltecs:toltecs|tot:tot|ultima:ultima8|zvision:zgi|zvision:znemesis'
     ),
     (
       Caption: 'Use per-resource modified palettes';
@@ -770,7 +939,23 @@ const
       IniKey: 'palette_mods';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'lsl2|sq3'
+      GameIds: 'sci:lsl2|sci:sq3'
+    ),
+    (
+      Caption: 'Play intro';
+      Kind: sgokCheckbox;
+      IniKey: 'play_intro';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'pelrock:pelrock'
+    ),
+    (
+      Caption: 'Player Speech';
+      Kind: sgokCheckbox;
+      IniKey: 'player_speech';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'nancy:nancy1|nancy:nancy2|nancy:nancy3|nancy:nancy4|nancy:nancy5|nancy:vampirediaries'
     ),
     (
       Caption: 'Play the Myst fly by movie';
@@ -778,7 +963,7 @@ const
       IniKey: 'playmystflyby';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'myst[]|myst[masterpiece edition]'
+      GameIds: 'mohawk:myst[]|mohawk:myst[masterpiece edition]'
     ),
     (
       Caption: 'Show character portraits';
@@ -786,7 +971,7 @@ const
       IniKey: 'portraits_on';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'scalpel'
+      GameIds: 'sherlock:scalpel'
     ),
     (
       Caption: 'Predictive Input Dialog on mouse click';
@@ -794,7 +979,7 @@ const
       IniKey: 'predictivedlgonmouseclick';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'bc|ddp|goldrush|kq1|kq2|kq3|kq4|lsl1|mh1|mh2|mickey|mixedup|pq1|sq1|sq2|troll|winnie'
+      GameIds: 'agi:bc|agi:ddp|agi:goldrush|agi:kq1|agi:kq2|agi:kq3|agi:kq4|agi:lsl1|agi:mh1|agi:mh2|agi:mickey|agi:mixedup|agi:pq1|agi:sq1|agi:sq2|agi:troll|agi:winnie'
     ),
     (
       Caption: 'Prefer digital sound effects';
@@ -802,7 +987,15 @@ const
       IniKey: 'prefer_digitalsfx';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'astrochicken|camelot|castlebrain|ecoquest|ecoquest2|elvira2|fairytales|freddypharkas|hoyle1|hoyle2|hoyle3|hoyle4|iceman|islandbrain|jones|kq1sci|kq4sci|kq5|kq6|laurabow|laurabow2|longbow|lsl1sci|lsl2|lsl3|lsl5|lsl6|mothergoose|mothergoose256|pepper|pq1sci|pq2|pq3|qfg1|qfg1vga|qfg2|qfg3|slater|sq1sci|sq3|sq4|sq5|waxworks'
+      GameIds: 'agos:elvira2|agos:waxworks|sci:astrochicken|sci:camelot|sci:castlebrain|sci:ecoquest|sci:ecoquest2|sci:fairytales|sci:freddypharkas|sci:hoyle1|sci:hoyle2|sci:hoyle3|sci:hoyle4|sci:iceman|sci:islandbrain|sci:jones|sci:kq1sci|sci:kq4sci|sci:kq5|sci:kq6|sci:laurabow|sci:laurabow2|sci:longbow|sci:lsl1sci|sci:lsl2|sci:lsl3|sci:lsl5|sci:lsl6|sci:mothergoose|sci:mothergoose256|sci:pepper|sci:pq1sci|sci:pq2|sci:pq3|sci:qfg1|sci:qfg1vga|sci:qfg2|sci:qfg3|sci:slater|sci:sq1sci|sci:sq3|sci:sq4|sci:sq5'
+    ),
+    (
+      Caption: 'Ransome *unbeeped* (DLC)';
+      Kind: sgokCheckbox;
+      IniKey: 'ransomeUnbeeped';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'twp:twp'
     ),
     (
       Caption: 'No damage';
@@ -810,7 +1003,7 @@ const
       IniKey: 'rebel1_no_damage';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'rebel1'
+      GameIds: 'scumm:rebel1'
     ),
     (
       Caption: 'Unlock all levels';
@@ -818,7 +1011,7 @@ const
       IniKey: 'rebel1_unlock_all';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'rebel1'
+      GameIds: 'scumm:rebel1'
     ),
     (
       Caption: 'High resolution mode';
@@ -826,7 +1019,7 @@ const
       IniKey: 'rebel2_hires';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'rebel2[]|rebel2[demo]'
+      GameIds: 'scumm:rebel2[]|scumm:rebel2[demo da1.06,demo db1.03,demo dg1.15,demo special edition,demo v1.0]'
     ),
     (
       Caption: 'No damage';
@@ -834,7 +1027,7 @@ const
       IniKey: 'rebel2_no_damage';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'rebel2'
+      GameIds: 'scumm:rebel2'
     ),
     (
       Caption: 'Unlock all levels';
@@ -842,7 +1035,7 @@ const
       IniKey: 'rebel2_unlock_all';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'rebel2'
+      GameIds: 'scumm:rebel2'
     ),
     (
       Caption: 'Yoda mode';
@@ -850,7 +1043,7 @@ const
       IniKey: 'rebel2_yoda_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'rebel2'
+      GameIds: 'scumm:rebel2'
     ),
     (
       Caption: 'Repeat useful Willie''s hint';
@@ -858,7 +1051,39 @@ const
       IniKey: 'repeatwilliehint';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'neverhood'
+      GameIds: 'neverhood:neverhood'
+    ),
+    (
+      Caption: 'Enable restored main menu content';
+      Kind: sgokCheckbox;
+      IniKey: 'restore_main_menu_content';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'mads:phantom[]|mads:phantom[cd]'
+    ),
+    (
+      Caption: 'Restore missing scenes';
+      Kind: sgokCheckbox;
+      IniKey: 'restore_scenes';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'tetraedge:syberia[]'
+    ),
+    (
+      Caption: 'Retro Fonts';
+      Kind: sgokCheckbox;
+      IniKey: 'retroFonts';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'twp:twp'
+    ),
+    (
+      Caption: 'Retro Verbs';
+      Kind: sgokCheckbox;
+      IniKey: 'retroVerbs';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'twp:twp'
     ),
     (
       Caption: 'Use RGB rendering';
@@ -866,7 +1091,7 @@ const
       IniKey: 'rgb_rendering';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'astrochicken|camelot|castlebrain|ecoquest|ecoquest2|fairytales|freddypharkas|hoyle1|hoyle2|hoyle3|hoyle4|iceman|islandbrain|jones|kq1sci|kq4sci|kq5|kq6|kquestions|laurabow|laurabow2|longbow|lsl1sci|lsl2|lsl3|lsl5|lsl6|mothergoose|mothergoose256|pepper|pq1sci|pq2|pq3|qfg1|qfg1vga|qfg2|qfg3|slater|sq1sci|sq3|sq4|sq5'
+      GameIds: 'sci:astrochicken|sci:camelot|sci:castlebrain|sci:ecoquest|sci:ecoquest2|sci:fairytales|sci:freddypharkas|sci:hoyle1|sci:hoyle2|sci:hoyle3|sci:hoyle4|sci:iceman|sci:islandbrain|sci:jones|sci:kq1sci|sci:kq4sci|sci:kq5|sci:kq6|sci:kquestions|sci:laurabow|sci:laurabow2|sci:longbow|sci:lsl1sci|sci:lsl2|sci:lsl3|sci:lsl5|sci:lsl6|sci:mothergoose|sci:mothergoose256|sci:pepper|sci:pq1sci|sci:pq2|sci:pq3|sci:qfg1|sci:qfg1vga|sci:qfg2|sci:qfg3|sci:slater|sci:sq1sci|sci:sq3|sci:sq4|sci:sq5'
     ),
     (
       Caption: 'Enable rock travel';
@@ -874,7 +1099,15 @@ const
       IniKey: 'rock_travel';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'castlemaster'
+      GameIds: 'freescape:castlemaster'
+    ),
+    (
+      Caption: 'Enable ScummVM save management';
+      Kind: sgokCheckbox;
+      IniKey: 'save_override';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'ags:ashinaredwitch[steam]|ags:blackwell1[gog.com,steam]|ags:blackwell2[gog.com,steam]|ags:blackwell3[gog.com,steam]|ags:blackwell4[gog.com,steam]|ags:blackwell5[gog.com,steam]|ags:dreamswitchhouse[gog.com,steam]|ags:excavationhb|ags:geminirue[gog.com]|ags:kathyrain[amazon games,gog.com,steam]|ags:mybigsister[steam]|ags:mybigsisterrm|ags:oldskies[gog.com,steam]|ags:primordia[gog.com,steam]|ags:redbow[steam,switch]|ags:rosewater[gog.com,steam]|ags:shardlight[gog.com,steam]|ags:shivahkosher[gog.com,steam]|ags:strangeland|ags:technobabylon[gog.com,steam]|ags:unavowed|ags:whispersofamachine'
     ),
     (
       Caption: 'Scale the making of videos to full screen';
@@ -882,7 +1115,7 @@ const
       IniKey: 'scalemakingofvideos';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'neverhood'
+      GameIds: 'neverhood:neverhood'
     ),
     (
       Caption: 'Show scanlines';
@@ -890,7 +1123,7 @@ const
       IniKey: 'scanlines';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'hires1'
+      GameIds: 'adl:hires1'
     ),
     (
       Caption: 'Show wait cursor when paused';
@@ -898,7 +1131,7 @@ const
       IniKey: 'sega_cd_wait_cursor_when_paused';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'monkey[sega]'
+      GameIds: 'scumm:monkey[sega]'
     ),
     (
       Caption: 'Allow semi-smooth scrolling';
@@ -906,7 +1139,7 @@ const
       IniKey: 'semi_smooth_scroll';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'loom[fm-towns]'
+      GameIds: 'scumm:loom[fm-towns]'
     ),
     (
       Caption: 'SFX mode';
@@ -914,7 +1147,7 @@ const
       IniKey: 'sfx_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'darkseed'
+      GameIds: 'darkseed:darkseed'
     ),
     (
       Caption: 'Shorty mode';
@@ -922,7 +1155,15 @@ const
       IniKey: 'shorty';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'bladerunner[]|bladerunner[game not implemented]'
+      GameIds: 'bladerunner:bladerunner[]|bladerunner:bladerunner[game not implemented]'
+    ),
+    (
+      Caption: 'Show CD change prompts';
+      Kind: sgokCheckbox;
+      IniKey: 'show_cd_change_prompts';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'harvester:harvester[]|harvester:harvester[european release]'
     ),
     (
       Caption: 'Show FPS';
@@ -930,7 +1171,7 @@ const
       IniKey: 'show_fps';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'grim|monkey4'
+      GameIds: 'grim:grim|grim:monkey4'
     ),
     (
       Caption: 'Use silver cursors';
@@ -938,7 +1179,7 @@ const
       IniKey: 'silver_cursors';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'sq4[cd]'
+      GameIds: 'sci:sq4[cd]'
     ),
     (
       Caption: 'Use lower quality single speed CD-ROM video';
@@ -946,7 +1187,7 @@ const
       IniKey: 'single_speed_videos';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'cpatrol|dwars|johnroc|lbhunter|maddog2|spirates'
+      GameIds: 'alg:cpatrol|alg:dwars|alg:johnroc|alg:lbhunter|alg:maddog2|alg:spirates'
     ),
     (
       Caption: 'Sitcom mode';
@@ -954,7 +1195,7 @@ const
       IniKey: 'sitcom';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'bladerunner[]|bladerunner[game not implemented]'
+      GameIds: 'bladerunner:bladerunner[]|bladerunner:bladerunner[game not implemented]'
     ),
     (
       Caption: 'Skip support';
@@ -962,7 +1203,7 @@ const
       IniKey: 'skip_support';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'kyra3'
+      GameIds: 'kyra:kyra3'
     ),
     (
       Caption: 'Skip the Hall of Records storyboard scenes';
@@ -970,7 +1211,7 @@ const
       IniKey: 'skiphallofrecordsscenes';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'neverhood'
+      GameIds: 'neverhood:neverhood'
     ),
     (
       Caption: 'Slim Left/Right Hotspots';
@@ -978,7 +1219,7 @@ const
       IniKey: 'slim_hotspots';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'clandestiny|t7g|tlc|unclehenry'
+      GameIds: 'groovie:clandestiny|groovie:t7g|groovie:tlc|groovie:unclehenry'
     ),
     (
       Caption: 'Smoother movement';
@@ -986,7 +1227,7 @@ const
       IniKey: 'smooth_movement';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'totaleclipse|totaleclipse2'
+      GameIds: 'freescape:totaleclipse|freescape:totaleclipse2'
     ),
     (
       Caption: 'Enable smooth scrolling';
@@ -994,7 +1235,7 @@ const
       IniKey: 'smooth_scroll';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'atlantis[fm-towns]|indy3[fm-towns]|indyloom|indyzak|loom[fm-towns]|monkey2[fm-towns]|zak[fm-towns]|zakloom'
+      GameIds: 'scumm:atlantis[fm-towns]|scumm:indy3[fm-towns]|scumm:indyloom|scumm:indyzak|scumm:loom[fm-towns]|scumm:monkey2[fm-towns]|scumm:zak[fm-towns]|scumm:zakloom'
     ),
     (
       Caption: 'Smooth scrolling';
@@ -1002,7 +1243,15 @@ const
       IniKey: 'smooth_scrolling';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'lol'
+      GameIds: 'kyra:lol'
+    ),
+    (
+      Caption: 'Fix softlocks';
+      Kind: sgokCheckbox;
+      IniKey: 'softlocks_fix';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'nancy:nancy2|nancy:nancy5|nancy:nancy6|nancy:nancy7'
     ),
     (
       Caption: 'Speedrun Mode';
@@ -1010,7 +1259,7 @@ const
       IniKey: 'speedrun_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'clandestiny|t7g|tlc|unclehenry'
+      GameIds: 'groovie:clandestiny|groovie:t7g|groovie:tlc|groovie:unclehenry'
     ),
     (
       Caption: 'Studio audience';
@@ -1018,7 +1267,7 @@ const
       IniKey: 'studio_audience';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'kyra3'
+      GameIds: 'kyra:kyra3'
     ),
     (
       Caption: 'Text language';
@@ -1026,7 +1275,7 @@ const
       IniKey: 'subtitles_language_override';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'sword1[25th anniversary,english speech,gog.com,rerelease,soldout rerelease,steam,tectoy]|sword1[]'
+      GameIds: 'sword1:sword1[25th anniversary,english speech,gog.com,rerelease,soldout rerelease,steam,tectoy]|sword1:sword1[]'
     ),
     (
       Caption: 'Enable jump to mouse position';
@@ -1034,7 +1283,23 @@ const
       IniKey: 'targetedjump';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'ultima8'
+      GameIds: 'ultima:ultima8'
+    ),
+    (
+      Caption: 'Filter textures';
+      Kind: sgokCheckbox;
+      IniKey: 'tex_filter';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'alcachofa:aventuradecine|alcachofa:terror|alcachofa:vaqueros'
+    ),
+    (
+      Caption: 'Toilet paper over';
+      Kind: sgokCheckbox;
+      IniKey: 'toiletPaperOver';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'twp:twp'
     ),
     (
       Caption: 'Transitions';
@@ -1042,7 +1307,7 @@ const
       IniKey: 'transition_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'riven'
+      GameIds: 'mohawk:riven'
     ),
     (
       Caption: 'Transitions Enabled';
@@ -1050,7 +1315,7 @@ const
       IniKey: 'transition_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'myst'
+      GameIds: 'mohawk:myst'
     ),
     (
       Caption: 'Disable scene transitions';
@@ -1058,7 +1323,7 @@ const
       IniKey: 'transitions_disable';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'tot'
+      GameIds: 'tot:tot'
     ),
     (
       Caption: 'Transparent windows';
@@ -1066,7 +1331,7 @@ const
       IniKey: 'transparent_windows';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'rosetattoo'
+      GameIds: 'sherlock:rosetattoo'
     ),
     (
       Caption: 'Trim FM-TOWNS games to 200 pixels height';
@@ -1074,7 +1339,7 @@ const
       IniKey: 'trim_fmtowns_to_200_pixels';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'atlantis[fm-towns]|indy3[fm-towns]|indyloom|indyzak|monkey2[fm-towns]|zak[fm-towns]|zakloom'
+      GameIds: 'scumm:atlantis[fm-towns]|scumm:indy3[fm-towns]|scumm:indyloom|scumm:indyzak|scumm:monkey2[fm-towns]|scumm:zak[fm-towns]|scumm:zakloom'
     ),
     (
       Caption: 'Enable Text to Speech';
@@ -1082,8 +1347,9 @@ const
       IniKey: 'tts_enabled';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'activity|airport|arttime|astrochicken|atlantis|balloon|baseball|baseball2003|basketball|bc|blues123time|bluesabctime|bluesbirthday|bluestreasurehunt|brstorm|camelot|castlebrain|catalog|chase|cloudsofxeen|comi|cruise|darksideofxeen|ddp|dig|dog|drascula|ecoquest2|ecoquest[demo,floppy]|efh|fairytales|farm|fbear|fbpack|freddi|freddi2|freddi3|freddi4|freddicove|freddisfunshop|freddypharkas[]|freddypharkas[demo,floppy]|ft|funpack|gk1[]|goldrush|got|griffon|hires1|hoyle1|hoyle2|hoyle3|hoyle4[demo]|hugo1|hugo2|hugo3|iceman|indy3|indyloom|indyzak|islandbrain[demo]|jones[]|jones[ega]|jungle|kq1|kq1sci|kq2|kq3|kq4|kq4sci|kq5[]|kq5[ega]|kq6[]|kq6[demo]|laurabow|laurabow2[]|laurabow2[demo]|longbow|loom|lost|lsl1|lsl1sci|lsl2|lsl3|lsl5|lsl6[]|maniac|maze|mh1|mh2|mickey|mixedup|mm1|monkey|monkey2|mortevielle|mothergoose|mothergoose256[]|mothergoose256[demo]|msn1|msn2|mustard|nippon|pajama|pajama2' +
-               '|pajama3|pass|pepper|pjgames|pq1|pq1sci|pq2|pq3|pq4[]|puttcircus|puttmoon|puttputt|puttrace|puttsfunshop|putttime|puttzoo|qfg1[]|qfg1[demo]|qfg1vga|qfg2|qfg3|qfg4[]|readtime|samnmax|samsfunshop|soccer|soccer2004|soccermls|socks|soltys|spyfox|spyfox2|spyozon|sq1|sq1sci|sq2|sq3|sq4[]|sq4[ega]|sq5|swordsofxeen|tentacle|thinker1|thinkerk|troll|water|winnie|worldofxeen|zak|zakloom'
+      GameIds: 'adl:hires1|agi:bc|agi:ddp|agi:goldrush|agi:kq1|agi:kq2|agi:kq3|agi:kq4|agi:lsl1|agi:mh1|agi:mh2|agi:mickey|agi:mixedup|agi:pq1|agi:sq1|agi:sq2|agi:troll|agi:winnie|cge:soltys|cruise:cruise|drascula:drascula|efh:efh|got:got|griffon:griffon|hugo:hugo1|hugo:hugo2|hugo:hugo3|macs2:sis|mm:cloudsofxeen|mm:darksideofxeen|mm:mm1|mm:swordsofxeen|mm:worldofxeen|mortevielle:mortevielle|parallaction:nippon|sci:astrochicken|sci:camelot|sci:castlebrain|sci:ecoquest2|sci:ecoquest[demo,floppy]|sci:fairytales|sci:freddypharkas[]|sci:freddypharkas[demo,floppy]|sci:gk1[]|sci:hoyle1|sci:hoyle2|sci:hoyle3|sci:hoyle4[demo]|sci:iceman|sci:islandbrain[demo]|sci:jones[]|sci:jones[ega]|sci:kq1sci|sci:kq4sci|sci:kq5[]|sci:kq5[ega]|sci:kq6[]|sci:kq6[demo]|sci:laurabow|sci:laurabow2[]|sci:laurabow2[demo]|sci:longbow|sci:lsl1sci|sci:lsl2|sci:lsl3|sci:lsl5|sci:lsl6[]|sci:mothergoose|sci:mothergoose256[]' +
+               '|sci:mothergoose256[demo]|sci:pepper|sci:pq1sci|sci:pq2|sci:pq3|sci:pq4[]|sci:qfg1[]|sci:qfg1[demo]|sci:qfg1vga|sci:qfg2|sci:qfg3|sci:qfg4[]|sci:sq1sci|sci:sq3|sci:sq4[]|sci:sq4[ega]|sci:sq5|scumm:activity|scumm:airport|scumm:arttime|scumm:atlantis|scumm:balloon|scumm:baseball|scumm:baseball2003|scumm:basketball|scumm:blues123time|scumm:bluesabctime|scumm:bluesbirthday|scumm:bluestreasurehunt|scumm:brstorm|scumm:catalog|scumm:chase|scumm:comi|scumm:dig|scumm:dog|scumm:farm|scumm:fbear|scumm:fbpack|scumm:freddi|scumm:freddi2|scumm:freddi3|scumm:freddi4|scumm:freddicove|scumm:freddisfunshop|scumm:ft|scumm:funpack|scumm:indy3|scumm:indyloom|scumm:indyzak|scumm:jungle|scumm:loom|scumm:lost|scumm:maniac|scumm:maze|scumm:monkey|scumm:monkey2|scumm:mustard|scumm:pajama|scumm:pajama2|scumm:pajama3|scumm:pass|scumm:pjgames|scumm:puttcircus|scumm:puttmoon|scumm:puttputt|scumm:puttrace' +
+               '|scumm:puttsfunshop|scumm:putttime|scumm:puttzoo|scumm:readtime|scumm:samnmax|scumm:samsfunshop|scumm:soccer|scumm:soccer2004|scumm:soccermls|scumm:socks|scumm:spyfox|scumm:spyfox2|scumm:spyozon|scumm:tentacle|scumm:thinker1|scumm:thinkerk|scumm:water|scumm:zak|scumm:zakloom|supernova:msn1|supernova:msn2'
     ),
     (
       Caption: 'Enable Text to Speech for Missing Voiceovers';
@@ -1091,7 +1357,7 @@ const
       IniKey: 'tts_enabled_missing_voice';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'prince'
+      GameIds: 'prince:prince'
     ),
     (
       Caption: 'Enable Text to Speech for Objects and Options';
@@ -1099,7 +1365,7 @@ const
       IniKey: 'tts_enabled_objects';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'draci|prince|sfinx|teenagent'
+      GameIds: 'cge2:sfinx|draci:draci|prince:prince|teenagent:teenagent'
     ),
     (
       Caption: 'Enable Text to Speech for Subtitles';
@@ -1107,7 +1373,7 @@ const
       IniKey: 'tts_enabled_speech';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'draci|prince[]|sfinx[demo,freeware v0.3]|teenagent[]|teenagent[alt demo,alt version,demo]'
+      GameIds: 'cge2:sfinx[demo,freeware v0.3]|draci:draci|prince:prince[]|teenagent:teenagent[]|teenagent:teenagent[alt demo,alt version,demo]'
     ),
     (
       Caption: 'TTS Narrator';
@@ -1115,7 +1381,7 @@ const
       IniKey: 'tts_narrator';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'lure[ega,konami vga,vga]|nebular[]|nebular[floppy]|scalpel'
+      GameIds: 'lure:lure[ega,konami vga,vga]|mads:nebular[]|mads:nebular[floppy]|sherlock:scalpel'
     ),
     (
       Caption: 'Use CD audio';
@@ -1123,7 +1389,7 @@ const
       IniKey: 'use_cdaudio';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'jones[cd]'
+      GameIds: 'sci:jones[cd]'
     ),
     (
       Caption: 'Show subtitles during text crawl';
@@ -1131,7 +1397,7 @@ const
       IniKey: 'use_crawl_subs';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'bladerunner[]|bladerunner[game not implemented]'
+      GameIds: 'bladerunner:bladerunner[]|bladerunner:bladerunner[game not implemented]'
     ),
     (
       Caption: 'Use floppy version music';
@@ -1139,7 +1405,15 @@ const
       IniKey: 'use_floppy_music';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'darkseed'
+      GameIds: 'darkseed:darkseed'
+    ),
+    (
+      Caption: 'Use Italian speech pack';
+      Kind: sgokCheckbox;
+      IniKey: 'use_it_voices';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'wintermute:sotv1|wintermute:sotv2'
     ),
     (
       Caption: 'Use Pro Audio Spectrum 16 instead of AdLib';
@@ -1147,7 +1421,7 @@ const
       IniKey: 'use_pas';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'nebular[]|nebular[demo,floppy]'
+      GameIds: 'mads:dragonsphere[]|mads:dragonsphere[cd,demo]|mads:nebular[]|mads:nebular[demo,floppy]|mads:phantom[]|mads:phantom[cd,demo]'
     ),
     (
       Caption: 'Use remastered audio';
@@ -1155,7 +1429,15 @@ const
       IniKey: 'use_remastered_audio';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'monkey2[se]|monkey[se]|tentacle[remastered]'
+      GameIds: 'scumm:monkey2[se]|scumm:monkey[se]|scumm:tentacle[remastered]'
+    ),
+    (
+      Caption: 'Run SD version (1280x800)';
+      Kind: sgokCheckbox;
+      IniKey: 'use_sd_assets';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'wintermute:sotv1|wintermute:sotv2'
     ),
     (
       Caption: 'Use original Acorn system cursor';
@@ -1163,7 +1445,7 @@ const
       IniKey: 'use_system_cursor';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'simon1[cd,cd demo,floppy,floppy demo]'
+      GameIds: 'agos:simon1[cd,cd demo,floppy,floppy demo]'
     ),
     (
       Caption: 'Use Windows interface';
@@ -1171,7 +1453,7 @@ const
       IniKey: 'use_windows_interface';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'hugo1|hugo2|hugo3'
+      GameIds: 'hugo:hugo1|hugo:hugo2|hugo:hugo3'
     ),
     (
       Caption: 'Enable high resolution';
@@ -1179,7 +1461,7 @@ const
       IniKey: 'usehighres';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'remorse|ultima8'
+      GameIds: 'ultima:remorse|ultima:ultima8'
     ),
     (
       Caption: 'Faster video decoder (lower quality)';
@@ -1187,7 +1469,15 @@ const
       IniKey: 'vcruise_fast_video_decoder';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'schizm'
+      GameIds: 'vcruise:schizm'
+    ),
+    (
+      Caption: 'Enable Venus';
+      Kind: sgokCheckbox;
+      IniKey: 'venusenabled';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'zvision:znemesis'
     ),
     (
       Caption: 'WASD controls';
@@ -1195,7 +1485,7 @@ const
       IniKey: 'wasd_controls';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'castlemaster|totaleclipse|totaleclipse2'
+      GameIds: 'freescape:castlemaster|freescape:totaleclipse|freescape:totaleclipse2'
     ),
     (
       Caption: 'Water Effect Enabled';
@@ -1203,7 +1493,31 @@ const
       IniKey: 'water_effects';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'riven'
+      GameIds: 'mohawk:riven'
+    ),
+    (
+      Caption: 'Underwater base shooter enhancements';
+      Kind: sgokCheckbox;
+      IniKey: 'wbase_enhancements';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'hopkins:hopkins[]'
+    ),
+    (
+      Caption: 'Underwater base shooter Forced Autoplay';
+      Kind: sgokCheckbox;
+      IniKey: 'wbase_forced_autoplay';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'hopkins:hopkins[]'
+    ),
+    (
+      Caption: 'Enable widescreen support';
+      Kind: sgokCheckbox;
+      IniKey: 'widescreen';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'zvision:zgi|zvision:znemesis'
     ),
     (
       Caption: 'Slide dialogs into view';
@@ -1211,7 +1525,7 @@ const
       IniKey: 'window_style';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'scalpel'
+      GameIds: 'sherlock:scalpel'
     ),
     (
       Caption: 'Simulate the audio engine from the Windows executable';
@@ -1219,7 +1533,7 @@ const
       IniKey: 'windows_audio_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'sword1'
+      GameIds: 'sword1:sword1'
     ),
     (
       Caption: 'Use Windows cursors';
@@ -1227,7 +1541,7 @@ const
       IniKey: 'windows_cursors';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'ecoquest2[cd]|kq5[cd]|kq6[]|kq6[cd]|laurabow2[cd]|pepper[]|rodney|sq4[cd]'
+      GameIds: 'made:rodney|sci:ecoquest2[cd]|sci:kq5[cd]|sci:kq6[]|sci:kq6[cd]|sci:laurabow2[cd]|sci:pepper[]|sci:sq4[cd]'
     ),
     (
       Caption: 'Zip Mode Activated';
@@ -1235,7 +1549,15 @@ const
       IniKey: 'zip_mode';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'myst[]|myst[masterpiece edition]|riven'
+      GameIds: 'mohawk:myst[]|mohawk:myst[masterpiece edition]|mohawk:riven'
+    ),
+    (
+      Caption: 'macs2-enhancements';
+      Kind: sgokSpecial;
+      IniKey: 'enhancements';
+      DefaultBool: False;
+      DefaultInt: 0;
+      GameIds: 'macs2:sis'
     ),
     (
       Caption: 'scumm-enhancements';
@@ -1243,7 +1565,7 @@ const
       IniKey: 'enhancements';
       DefaultBool: False;
       DefaultInt: 0;
-      GameIds: 'atlantis|comi|dig[]|dig[steam]|freddi3[]|freddi4|ft[]|ft[remastered]|indy3|loom[demo,ega,fm-towns,mac,no adlib,pcengine,vga]|maniac[apple ii,nes,remastered,v1,v2]|monkey2[]|monkey2[amiga,demo,fm-towns,mac,se]|monkey[cd,ega,fm-towns,mac,no adlib,se,sega,vga]|samnmax|tentacle|zak[fm-towns]'
+      GameIds: 'scumm:atlantis|scumm:comi|scumm:dig[]|scumm:dig[steam]|scumm:freddi3[]|scumm:freddi4|scumm:ft[]|scumm:ft[remastered]|scumm:indy3|scumm:loom[demo,ega,fm-towns,mac,no adlib,pcengine,vga]|scumm:maniac[apple ii,nes,remastered,v1,v2]|scumm:monkey2[]|scumm:monkey2[amiga,demo,fm-towns,mac,se]|scumm:monkey[cd,ega,fm-towns,mac,no adlib,se,sega,vga]|scumm:rebel1[demo]|scumm:rebel2[demo da1.06,demo v1.0]|scumm:samnmax|scumm:tentacle|scumm:zak[fm-towns]'
     )
   );
 
@@ -1254,639 +1576,807 @@ type
   end;
 
 const
-  ScummVMGameIdVariantMapCount = 158;
-  ScummVMGameIdVariantMap : array[0..157] of TScummVMGameIdVariantsDef = (
+  ScummVMGameIdVariantMapCount = 200;
+  ScummVMGameIdVariantMap : array[0..199] of TScummVMGameIdVariantsDef = (
     (
-      GameId: '11h';
-      Variants: 'Installed|Interactive Demo|Non-Interactive Demo'
-    ),
-    (
-      GameId: 'adibou1';
-      Variants: 'Adi Jnr|Adi Jnr.|ADIBOU 1 Environnement 4-7 ans'
-    ),
-    (
-      GameId: 'anotherworld';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'arthur';
-      Variants: 'Demo|Demo v1.1|Super Living Books'
-    ),
-    (
-      GameId: 'arthurbday';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'atlantis';
-      Variants: 'Amiga|Floppy|FM-TOWNS|Mac|Mac Floppy|Steam'
-    ),
-    (
-      GameId: 'bc';
-      Variants: 'updated'
-    ),
-    (
-      GameId: 'beardark';
-      Variants: '32-bit'
-    ),
-    (
-      GameId: 'bladerunner';
-      Variants: 'Game not implemented|Non-Interactive Demo'
-    ),
-    (
-      GameId: 'bluesbirthday';
-      Variants: 'Red|Yellow'
-    ),
-    (
-      GameId: 'camelot';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'carnival';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'castlebrain';
-      Variants: 'Demo|EGA'
-    ),
-    (
-      GameId: 'castlemaster';
-      Variants: 'CD release|Demo|Domark PC Collection|Virtual Worlds'
-    ),
-    (
-      GameId: 'clandestiny';
-      Variants: 'Demo|Trailer'
-    ),
-    (
-      GameId: 'comi';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'create';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'cruise';
-      Variants: '16 colors|256 colors|Fanmade'
-    ),
-    (
-      GameId: 'daniel';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'darkseed';
-      Variants: 'CD'
-    ),
-    (
-      GameId: 'dig';
-      Variants: 'Demo|Steam'
-    ),
-    (
-      GameId: 'dreamweb';
-      Variants: 'CD|Installer'
-    ),
-    (
-      GameId: 'driller';
-      Variants: 'Demo|Not implemented yet|Rolling Demo'
-    ),
-    (
-      GameId: 'dw2';
-      Variants: 'CD|Demo'
-    ),
-    (
-      GameId: 'ecoquest';
-      Variants: 'CD|Demo|Floppy'
-    ),
-    (
-      GameId: 'ecoquest2';
-      Variants: 'CD|Demo|Floppy'
-    ),
-    (
-      GameId: 'elvira1';
-      Variants: 'Floppy|Non-Interactive Demo'
-    ),
-    (
-      GameId: 'elvira2';
-      Variants: 'Floppy'
-    ),
-    (
-      GameId: 'fairytales';
-      Variants: 'Demo|EGA'
-    ),
-    (
-      GameId: 'fbear';
-      Variants: 'HE 62|HE 70'
-    ),
-    (
-      GameId: 'freddi';
-      Variants: 'HE 71|HE 73'
-    ),
-    (
-      GameId: 'freddi3';
-      Variants: 'HE 99'
-    ),
-    (
-      GameId: 'freddi4';
-      Variants: 'HE 99|unenc'
-    ),
-    (
-      GameId: 'freddicove';
-      Variants: 'HE 100|unenc'
-    ),
-    (
-      GameId: 'freddypharkas';
-      Variants: 'CD|CD Demo|Demo|Floppy'
-    ),
-    (
-      GameId: 'ft';
-      Variants: 'Demo|Remastered'
-    ),
-    (
-      GameId: 'gk1';
-      Variants: 'CD'
-    ),
-    (
-      GameId: 'gk2';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'gob1';
-      Variants: 'EGA|VGA'
-    ),
-    (
-      GameId: 'gob2';
-      Variants: 'v1.02|v1.03'
-    ),
-    (
-      GameId: 'goldrush';
-      Variants: 'updated'
-    ),
-    (
-      GameId: 'grandma';
-      Variants: 'Demo|Demo v1.0|Demo v1.1|Demo v1.2|v1.0|v1.1|v2.0'
-    ),
-    (
-      GameId: 'greeneggs';
-      Variants: '32-bit|Game not implemented'
-    ),
-    (
-      GameId: 'grim';
-      Variants: '7Wolf|Demo|ENPY|Fanmade|Fargus|Remastered'
-    ),
-    (
-      GameId: 'harryhh';
-      Variants: 'Demo|Super Living Books|v1.0|v1.1'
-    ),
-    (
-      GameId: 'hires1';
-      Variants: 'Malibu Microcomputing [A]|Malibu Microcomputing [B]|On-Line Systems [A]|On-Line Systems [B]|On-Line Systems [C]|Public Domain'
-    ),
-    (
-      GameId: 'hopkins';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'hoyle1';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'hoyle3';
-      Variants: 'Demo|EGA'
-    ),
-    (
-      GameId: 'hoyle4';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'iceman';
-      Variants: 'Debug Build|Demo'
-    ),
-    (
-      GameId: 'indy3';
-      Variants: 'EGA|FM-TOWNS|Mac|No AdLib|Steam|VGA'
-    ),
-    (
-      GameId: 'indyloom';
-      Variants: 'FM-TOWNS'
-    ),
-    (
-      GameId: 'indyzak';
-      Variants: 'FM-TOWNS'
-    ),
-    (
-      GameId: 'islandbrain';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'ite';
-      Variants: 'AGA Floppy|CD|ECS Floppy|Floppy|Floppy Packed'
-    ),
-    (
-      GameId: 'jones';
-      Variants: 'CD|EGA'
-    ),
-    (
-      GameId: 'kq1';
-      Variants: 'fixed|updated'
-    ),
-    (
-      GameId: 'kq1sci';
-      Variants: 'SCI'
-    ),
-    (
-      GameId: 'kq2';
-      Variants: 'fixed|updated'
-    ),
-    (
-      GameId: 'kq4';
-      Variants: 'Demo|updated'
-    ),
-    (
-      GameId: 'kq4sci';
-      Variants: 'SCI'
-    ),
-    (
-      GameId: 'kq5';
-      Variants: 'CD|EGA'
-    ),
-    (
-      GameId: 'kq6';
-      Variants: 'CD|Demo'
-    ),
-    (
-      GameId: 'kq7';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'laurabow';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'laurabow2';
-      Variants: 'CD|Demo'
-    ),
-    (
-      GameId: 'lbhunter';
-      Variants: 'demo'
-    ),
-    (
-      GameId: 'lighthouse';
-      Variants: 'Demo|Glider Demo|Non-interactive Demo'
-    ),
-    (
-      GameId: 'lilmonster';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'lol';
-      Variants: 'CD|Extracted'
-    ),
-    (
-      GameId: 'longbow';
-      Variants: 'Demo|EGA'
-    ),
-    (
-      GameId: 'loom';
-      Variants: 'Demo|EGA|FM-TOWNS|Mac|No AdLib|pcengine|Steam|VGA'
-    ),
-    (
-      GameId: 'lsl1';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'lsl1sci';
-      Variants: 'SCI'
-    ),
-    (
-      GameId: 'lsl2';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'lsl3';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'lsl5';
-      Variants: 'Demo|EGA'
-    ),
-    (
-      GameId: 'lsl6';
-      Variants: 'CD'
-    ),
-    (
-      GameId: 'lsl6hires';
-      Variants: 'Hi-res'
-    ),
-    (
-      GameId: 'lsl7';
-      Variants: 'Demo|Fargus|Softclub'
-    ),
-    (
-      GameId: 'lure';
-      Variants: 'EGA|Konami VGA|VGA'
-    ),
-    (
-      GameId: 'maniac';
-      Variants: 'Apple II|C64|C64 Demo|NES|Remastered|V1|V1 Demo|V2|V2 Demo'
-    ),
-    (
-      GameId: 'mh1';
-      Variants: 'updated'
-    ),
-    (
-      GameId: 'mh2';
-      Variants: 'updated'
-    ),
-    (
-      GameId: 'monkey';
-      Variants: 'CD|Demo|EGA|FM-TOWNS|Mac|No AdLib|SE|SE Talkie|SEGA|VGA|VGA Demo'
-    ),
-    (
-      GameId: 'monkey2';
-      Variants: 'Amiga|Demo|FM-TOWNS|Mac|SE|SE Talkie'
-    ),
-    (
-      GameId: 'monkey4';
-      Variants: 'CD Demo|Demo|Fanmade|Web Demo'
-    ),
-    (
-      GameId: 'moonbase';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'mothergoose';
-      Variants: 'EGA'
-    ),
-    (
-      GameId: 'mothergoose256';
-      Variants: 'CD|Demo'
-    ),
-    (
-      GameId: 'myst';
-      Variants: 'Demo|Masterpiece Edition'
-    ),
-    (
-      GameId: 'nebular';
-      Variants: 'Demo|Fanmade|floppy'
-    ),
-    (
-      GameId: 'neverhood';
-      Variants: 'Big Demo|Demo|DR|Fargus|Stream'
-    ),
-    (
-      GameId: 'newkid';
-      Variants: 'Demo|Demo v1.0|Demo v1.1'
-    ),
-    (
-      GameId: 'nippon';
-      Variants: 'Demo|Multi-lingual|Multi-lingual alt'
-    ),
-    (
-      GameId: 'noctropolis';
+      GameId: 'access:noctropolis';
       Variants: 'Rerelease'
     ),
     (
-      GameId: 'obsidian';
-      Variants: 'CD|Demo'
+      GameId: 'adl:hires1';
+      Variants: 'Malibu Microcomputing [A]|Malibu Microcomputing [B]|On-Line Systems [A]|On-Line Systems [B]|On-Line Systems [C]|Public Domain'
     ),
     (
-      GameId: 'pajama2';
-      Variants: 'HE 99'
-    ),
-    (
-      GameId: 'pepper';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'phantasmagoria';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'pq1';
+      GameId: 'agi:bc';
       Variants: 'updated'
     ),
     (
-      GameId: 'pq1sci';
-      Variants: 'SCI'
+      GameId: 'agi:goldrush';
+      Variants: 'updated'
     ),
     (
-      GameId: 'pq2';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'pq3';
-      Variants: 'Demo|EGA'
-    ),
-    (
-      GameId: 'pq4';
-      Variants: 'CD'
-    ),
-    (
-      GameId: 'pqswat';
-      Variants: 'demo'
-    ),
-    (
-      GameId: 'prince';
-      Variants: 'Ksiaze i Tchorz'
-    ),
-    (
-      GameId: 'private-eye';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'puttmoon';
-      Variants: 'Demo|HE 70'
-    ),
-    (
-      GameId: 'puttputt';
-      Variants: 'Demo|HE 60|HE 61|HE 62'
-    ),
-    (
-      GameId: 'puttrace';
-      Variants: 'HE 98|HE 99'
-    ),
-    (
-      GameId: 'puttzoo';
-      Variants: 'HE 100|HE 72|HE 99'
-    ),
-    (
-      GameId: 'qfg1';
-      Variants: '16 Colors|8 Colors|Demo'
-    ),
-    (
-      GameId: 'qfg1vga';
-      Variants: 'VGA'
-    ),
-    (
-      GameId: 'qfg2';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'qfg3';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'qfg4';
-      Variants: 'CD'
-    ),
-    (
-      GameId: 'queen';
-      Variants: 'CD|GOG.com'
-    ),
-    (
-      GameId: 'rama';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'rebel2';
-      Variants: 'Demo|PlayStation'
-    ),
-    (
-      GameId: 'remorse';
-      Variants: 'Demo|Fan Translation'
-    ),
-    (
-      GameId: 'riven';
-      Variants: '25th Anniversary|Demo|DVD'
-    ),
-    (
-      GameId: 'rosetattoo';
-      Variants: 'CD'
-    ),
-    (
-      GameId: 'rtz';
-      Variants: 'CD|Demo CD'
-    ),
-    (
-      GameId: 'ruff';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'samnmax';
-      Variants: 'Floppy'
-    ),
-    (
-      GameId: 'schizm';
-      Variants: 'English CD|English Digital|English DVD|French Digital|German Digital|German DVD|Hungarian Digital|Italian Digital|Japanese DVD|Polish Digital|Polish DVD|Russian Digital|Spanish Digital'
-    ),
-    (
-      GameId: 'seussabc';
-      Variants: '32-bit|Demo'
-    ),
-    (
-      GameId: 'sfinx';
-      Variants: 'Demo|Freeware|Freeware v0.3|Freeware v1.0|Freeware v1.1'
-    ),
-    (
-      GameId: 'shivers';
-      Variants: 'CD Demo|Demo|Non-interactive Demo'
-    ),
-    (
-      GameId: 'simon1';
-      Variants: '25th Anniversary Edition|AGA Floppy|CD|CD Demo|CD32|CD32 Demo|Floppy|Floppy Demo|Infocom CD|Infocom Floppy|OCS Demo|OCS Floppy'
-    ),
-    (
-      GameId: 'simon2';
-      Variants: '25th Anniversary Edition|Amiga CD - Original Release|CD|CD Demo|CD Non-Interactive Demo|Floppy'
-    ),
-    (
-      GameId: 'slater';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'soltys';
-      Variants: 'Freeware|Freeware v1.0|Game not implemented|Russian fan-translation v1.0|Russian fan-translation v1.1'
-    ),
-    (
-      GameId: 'sq1';
+      GameId: 'agi:kq1';
       Variants: 'fixed|updated'
     ),
     (
-      GameId: 'sq1sci';
-      Variants: 'SCI'
+      GameId: 'agi:kq2';
+      Variants: 'fixed|updated'
     ),
     (
-      GameId: 'sq2';
+      GameId: 'agi:kq4';
+      Variants: 'Demo|updated'
+    ),
+    (
+      GameId: 'agi:lsl1';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'agi:mh1';
       Variants: 'updated'
     ),
     (
-      GameId: 'sq3';
-      Variants: 'Demo'
+      GameId: 'agi:mh2';
+      Variants: 'updated'
     ),
     (
-      GameId: 'sq4';
-      Variants: 'CD|EGA'
+      GameId: 'agi:pq1';
+      Variants: 'updated'
     ),
     (
-      GameId: 'sq6';
-      Variants: 'Demo'
+      GameId: 'agi:sq1';
+      Variants: 'fixed|updated'
     ),
     (
-      GameId: 'stellaluna';
-      Variants: '32-bit'
+      GameId: 'agi:sq2';
+      Variants: 'updated'
     ),
     (
-      GameId: 'sword1';
-      Variants: '25th Anniversary|Akella|Demo|English speech|English speech and DXA cutscenes|GOG.com|Mediahauz|Novy Disk|Rerelease|SoldOut rerelease|Steam|TecToy'
-    ),
-    (
-      GameId: 't7g';
-      Variants: '25th Anniversary Edition|demo'
-    ),
-    (
-      GameId: 'teenagent';
-      Variants: 'Alt Demo|Alt version|CD|Demo'
-    ),
-    (
-      GameId: 'tentacle';
-      Variants: 'Floppy|Remastered'
-    ),
-    (
-      GameId: 'tlc';
-      Variants: 'CD|Game not implemented'
-    ),
-    (
-      GameId: 'toltecs';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'torin';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'tortoise';
-      Variants: 'Demo|Demo v1.0|Demo v1.1|Super Living Books|Wanderful'
-    ),
-    (
-      GameId: 'tot';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'totaleclipse';
-      Variants: 'Demo'
-    ),
-    (
-      GameId: 'ultima8';
-      Variants: 'Gold Edition'
-    ),
-    (
-      GameId: 'voyeur';
-      Variants: 'Demo|German Fan Made Version'
-    ),
-    (
-      GameId: 'waxworks';
+      GameId: 'agos:elvira1';
       Variants: 'Floppy|Non-Interactive Demo'
     ),
     (
-      GameId: 'worldofxeen';
+      GameId: 'agos:elvira2';
+      Variants: 'Floppy'
+    ),
+    (
+      GameId: 'agos:simon1';
+      Variants: '25th Anniversary Edition|AGA Floppy|CD|CD Demo|CD32|CD32 Demo|Floppy|Floppy Demo|Infocom CD|Infocom Floppy|OCS Demo|OCS Floppy'
+    ),
+    (
+      GameId: 'agos:simon2';
+      Variants: '25th Anniversary Edition|Amiga CD - Original Release|CD|CD Demo|CD Non-Interactive Demo|Floppy'
+    ),
+    (
+      GameId: 'agos:waxworks';
+      Variants: 'Floppy|Non-Interactive Demo'
+    ),
+    (
+      GameId: 'ags:ashinaredwitch';
+      Variants: 'Demo|Steam'
+    ),
+    (
+      GameId: 'ags:blackwell1';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:blackwell2';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:blackwell3';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:blackwell4';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:blackwell5';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:danewguys2';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'ags:dreamswitchhouse';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:excavationhb';
+      Variants: 'GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:footballgame';
+      Variants: 'Steam|Switch'
+    ),
+    (
+      GameId: 'ags:geminirue';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:gobliiins5-1';
+      Variants: 'Steam'
+    ),
+    (
+      GameId: 'ags:goldenwake';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:jamesperis2';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'ags:justignorethem';
+      Variants: 'Demo|Steam'
+    ),
+    (
+      GameId: 'ags:kathyrain';
+      Variants: 'Amazon Games|Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:mybigsister';
+      Variants: 'Demo|Steam|Switch'
+    ),
+    (
+      GameId: 'ags:mybigsisterrm';
+      Variants: 'Steam'
+    ),
+    (
+      GameId: 'ags:oldskies';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:primordia';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:redbow';
+      Variants: 'Demo|Steam|Switch'
+    ),
+    (
+      GameId: 'ags:resonance';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:rosewater';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:shardlight';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:shivah';
+      Variants: 'Demo|MAGS'
+    ),
+    (
+      GameId: 'ags:shivahkosher';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:strangeland';
+      Variants: 'GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:sumatra';
+      Variants: 'GOG.com|Steam|Switch'
+    ),
+    (
+      GameId: 'ags:technobabylon';
+      Variants: 'Demo|GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:unavowed';
+      Variants: 'GOG.com|Steam'
+    ),
+    (
+      GameId: 'ags:whispersofamachine';
+      Variants: 'Amazon Games|GOG.com|Steam'
+    ),
+    (
+      GameId: 'alg:lbhunter';
+      Variants: 'demo'
+    ),
+    (
+      GameId: 'awe:anotherworld';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'bladerunner:bladerunner';
+      Variants: 'Game not implemented|Non-Interactive Demo'
+    ),
+    (
+      GameId: 'bolt:carnival';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'cge2:sfinx';
+      Variants: 'Demo|Freeware|Freeware v0.3|Freeware v1.0|Freeware v1.1'
+    ),
+    (
+      GameId: 'cge:soltys';
+      Variants: 'Freeware|Freeware v1.0|Game not implemented|Russian fan-translation v1.0|Russian fan-translation v1.1'
+    ),
+    (
+      GameId: 'cruise:cruise';
+      Variants: '16 colors|256 colors|Fanmade'
+    ),
+    (
+      GameId: 'darkseed:darkseed';
+      Variants: 'CD'
+    ),
+    (
+      GameId: 'dreamweb:dreamweb';
+      Variants: 'CD|Installer'
+    ),
+    (
+      GameId: 'eem:eem2';
+      Variants: 'CD'
+    ),
+    (
+      GameId: 'freescape:castlemaster';
+      Variants: 'CD release|Demo|Domark PC Collection|Virtual Worlds'
+    ),
+    (
+      GameId: 'freescape:driller';
+      Variants: 'Demo|Not implemented yet|Rolling Demo'
+    ),
+    (
+      GameId: 'freescape:totaleclipse';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'gob:adibou1';
+      Variants: 'Adi Jnr|Adi Jnr.|ADIBOU 1 Environnement 4-7 ans'
+    ),
+    (
+      GameId: 'gob:gob1';
+      Variants: 'EGA|VGA'
+    ),
+    (
+      GameId: 'gob:gob2';
+      Variants: 'v1.02|v1.03'
+    ),
+    (
+      GameId: 'grim:grim';
+      Variants: '7Wolf|Demo|ENPY|Fanmade|Fargus|Remastered'
+    ),
+    (
+      GameId: 'grim:monkey4';
+      Variants: 'CD Demo|Demo|Fanmade|Web Demo'
+    ),
+    (
+      GameId: 'groovie:11h';
+      Variants: 'Installed|Interactive Demo|Non-Interactive Demo'
+    ),
+    (
+      GameId: 'groovie:clandestiny';
+      Variants: 'Demo|Trailer'
+    ),
+    (
+      GameId: 'groovie:t7g';
+      Variants: '25th Anniversary Edition|demo'
+    ),
+    (
+      GameId: 'groovie:tlc';
+      Variants: 'CD|Game not implemented'
+    ),
+    (
+      GameId: 'harvester:harvester';
+      Variants: 'Demo|European Release'
+    ),
+    (
+      GameId: 'hdb:hdb';
+      Variants: 'Demo|Handango Demo'
+    ),
+    (
+      GameId: 'hopkins:hopkins';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'kyra:lol';
+      Variants: 'CD|Extracted'
+    ),
+    (
+      GameId: 'lure:lure';
+      Variants: 'EGA|Konami VGA|VGA'
+    ),
+    (
+      GameId: 'macs2:sis';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'made:rtz';
+      Variants: 'CD|Demo CD'
+    ),
+    (
+      GameId: 'mads:dragonsphere';
+      Variants: 'CD|CD Installer|Demo'
+    ),
+    (
+      GameId: 'mads:nebular';
+      Variants: 'Demo|Fanmade|floppy'
+    ),
+    (
+      GameId: 'mads:phantom';
+      Variants: 'CD|CD Installer|Demo'
+    ),
+    (
+      GameId: 'mm:worldofxeen';
       Variants: 'CD|Monster Spawn Mod v1.0'
     ),
     (
-      GameId: 'zak';
+      GameId: 'mohawk:arthur';
+      Variants: 'Demo|Demo v1.1|Super Living Books'
+    ),
+    (
+      GameId: 'mohawk:arthurbday';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'mohawk:beardark';
+      Variants: '32-bit'
+    ),
+    (
+      GameId: 'mohawk:create';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'mohawk:daniel';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'mohawk:grandma';
+      Variants: 'Demo|Demo v1.0|Demo v1.1|Demo v1.2|v1.0|v1.1|v2.0'
+    ),
+    (
+      GameId: 'mohawk:greeneggs';
+      Variants: '32-bit|Game not implemented'
+    ),
+    (
+      GameId: 'mohawk:harryhh';
+      Variants: 'Demo|Super Living Books|v1.0|v1.1'
+    ),
+    (
+      GameId: 'mohawk:lilmonster';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'mohawk:myst';
+      Variants: 'Demo|Masterpiece Edition'
+    ),
+    (
+      GameId: 'mohawk:newkid';
+      Variants: 'Demo|Demo v1.0|Demo v1.1'
+    ),
+    (
+      GameId: 'mohawk:riven';
+      Variants: '25th Anniversary|Demo|DVD'
+    ),
+    (
+      GameId: 'mohawk:ruff';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'mohawk:seussabc';
+      Variants: '32-bit|Demo'
+    ),
+    (
+      GameId: 'mohawk:stellaluna';
+      Variants: '32-bit'
+    ),
+    (
+      GameId: 'mohawk:tortoise';
+      Variants: 'Demo|Demo v1.0|Demo v1.1|Super Living Books|Wanderful'
+    ),
+    (
+      GameId: 'mtropolis:obsidian';
+      Variants: 'CD|Demo'
+    ),
+    (
+      GameId: 'neverhood:neverhood';
+      Variants: 'Big Demo|Demo|DR|Fargus|Stream'
+    ),
+    (
+      GameId: 'parallaction:nippon';
+      Variants: 'Demo|Multi-lingual|Multi-lingual alt'
+    ),
+    (
+      GameId: 'prince:prince';
+      Variants: 'Ksiaze i Tchorz'
+    ),
+    (
+      GameId: 'private:private-eye';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'queen:queen';
+      Variants: 'CD|GOG.com'
+    ),
+    (
+      GameId: 'saga:ite';
+      Variants: 'AGA Floppy|CD|ECS Floppy|Floppy|Floppy Packed'
+    ),
+    (
+      GameId: 'sci:camelot';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:castlebrain';
+      Variants: 'Demo|EGA'
+    ),
+    (
+      GameId: 'sci:ecoquest';
+      Variants: 'CD|Demo|Floppy'
+    ),
+    (
+      GameId: 'sci:ecoquest2';
+      Variants: 'CD|Demo|Floppy'
+    ),
+    (
+      GameId: 'sci:fairytales';
+      Variants: 'Demo|EGA'
+    ),
+    (
+      GameId: 'sci:freddypharkas';
+      Variants: 'CD|CD Demo|Demo|Floppy'
+    ),
+    (
+      GameId: 'sci:gk1';
+      Variants: 'CD'
+    ),
+    (
+      GameId: 'sci:gk2';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:hoyle1';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:hoyle3';
+      Variants: 'Demo|EGA'
+    ),
+    (
+      GameId: 'sci:hoyle4';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:iceman';
+      Variants: 'Debug Build|Demo'
+    ),
+    (
+      GameId: 'sci:islandbrain';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:jones';
+      Variants: 'CD|EGA'
+    ),
+    (
+      GameId: 'sci:kq1sci';
+      Variants: 'SCI'
+    ),
+    (
+      GameId: 'sci:kq4sci';
+      Variants: 'SCI'
+    ),
+    (
+      GameId: 'sci:kq5';
+      Variants: 'CD|EGA'
+    ),
+    (
+      GameId: 'sci:kq6';
+      Variants: 'CD|Demo'
+    ),
+    (
+      GameId: 'sci:kq7';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:laurabow';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:laurabow2';
+      Variants: 'CD|Demo'
+    ),
+    (
+      GameId: 'sci:lighthouse';
+      Variants: 'Demo|Glider Demo|Non-interactive Demo'
+    ),
+    (
+      GameId: 'sci:longbow';
+      Variants: 'Demo|EGA'
+    ),
+    (
+      GameId: 'sci:lsl1sci';
+      Variants: 'SCI'
+    ),
+    (
+      GameId: 'sci:lsl2';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:lsl3';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:lsl5';
+      Variants: 'Demo|EGA'
+    ),
+    (
+      GameId: 'sci:lsl6';
+      Variants: 'CD'
+    ),
+    (
+      GameId: 'sci:lsl6hires';
+      Variants: 'Hi-res'
+    ),
+    (
+      GameId: 'sci:lsl7';
+      Variants: 'Demo|Fargus|Softclub'
+    ),
+    (
+      GameId: 'sci:mothergoose';
+      Variants: 'EGA'
+    ),
+    (
+      GameId: 'sci:mothergoose256';
+      Variants: 'CD|Demo'
+    ),
+    (
+      GameId: 'sci:pepper';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:phantasmagoria';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:pq1sci';
+      Variants: 'SCI'
+    ),
+    (
+      GameId: 'sci:pq2';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:pq3';
+      Variants: 'Demo|EGA'
+    ),
+    (
+      GameId: 'sci:pq4';
+      Variants: 'CD'
+    ),
+    (
+      GameId: 'sci:pqswat';
+      Variants: 'demo'
+    ),
+    (
+      GameId: 'sci:qfg1';
+      Variants: '16 Colors|8 Colors|Demo'
+    ),
+    (
+      GameId: 'sci:qfg1vga';
+      Variants: 'VGA'
+    ),
+    (
+      GameId: 'sci:qfg2';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:qfg3';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:qfg4';
+      Variants: 'CD'
+    ),
+    (
+      GameId: 'sci:rama';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:shivers';
+      Variants: 'CD Demo|Demo|Non-interactive Demo'
+    ),
+    (
+      GameId: 'sci:slater';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:sq1sci';
+      Variants: 'SCI'
+    ),
+    (
+      GameId: 'sci:sq3';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:sq4';
+      Variants: 'CD|EGA'
+    ),
+    (
+      GameId: 'sci:sq6';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'sci:torin';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'scumm:atlantis';
+      Variants: 'Amiga|Floppy|FM-TOWNS|Mac|Mac Floppy|Steam'
+    ),
+    (
+      GameId: 'scumm:bluesbirthday';
+      Variants: 'Red|Yellow'
+    ),
+    (
+      GameId: 'scumm:comi';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'scumm:dig';
+      Variants: 'Demo|Steam'
+    ),
+    (
+      GameId: 'scumm:fbear';
+      Variants: 'HE 62|HE 70'
+    ),
+    (
+      GameId: 'scumm:freddi';
+      Variants: 'HE 71|HE 73'
+    ),
+    (
+      GameId: 'scumm:freddi3';
+      Variants: 'HE 99'
+    ),
+    (
+      GameId: 'scumm:freddi4';
+      Variants: 'HE 99|unenc'
+    ),
+    (
+      GameId: 'scumm:freddicove';
+      Variants: 'HE 100|unenc'
+    ),
+    (
+      GameId: 'scumm:ft';
+      Variants: 'Demo|Remastered'
+    ),
+    (
+      GameId: 'scumm:indy3';
+      Variants: 'EGA|FM-TOWNS|Mac|No AdLib|Steam|VGA'
+    ),
+    (
+      GameId: 'scumm:indyloom';
+      Variants: 'FM-TOWNS'
+    ),
+    (
+      GameId: 'scumm:indyzak';
+      Variants: 'FM-TOWNS'
+    ),
+    (
+      GameId: 'scumm:loom';
+      Variants: 'Demo|EGA|FM-TOWNS|Mac|No AdLib|pcengine|Steam|VGA'
+    ),
+    (
+      GameId: 'scumm:maniac';
+      Variants: 'Apple II|C64|C64 Demo|NES|Remastered|V1|V1 Demo|V2|V2 Demo'
+    ),
+    (
+      GameId: 'scumm:monkey';
+      Variants: 'CD|Demo|EGA|FM-TOWNS|Mac|No AdLib|SE|SE Talkie|SEGA|VGA|VGA Demo'
+    ),
+    (
+      GameId: 'scumm:monkey2';
+      Variants: 'Amiga|Demo|FM-TOWNS|Mac|SE|SE Talkie'
+    ),
+    (
+      GameId: 'scumm:moonbase';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'scumm:pajama2';
+      Variants: 'HE 99'
+    ),
+    (
+      GameId: 'scumm:puttmoon';
+      Variants: 'Demo|HE 70'
+    ),
+    (
+      GameId: 'scumm:puttputt';
+      Variants: 'Demo|HE 60|HE 61|HE 62'
+    ),
+    (
+      GameId: 'scumm:puttrace';
+      Variants: 'HE 98|HE 99'
+    ),
+    (
+      GameId: 'scumm:puttzoo';
+      Variants: 'HE 100|HE 72|HE 99'
+    ),
+    (
+      GameId: 'scumm:rebel1';
+      Variants: 'Demo|Demo v1.0|Demo v1.02c|Demo v1.5|Demo v1.51'
+    ),
+    (
+      GameId: 'scumm:rebel2';
+      Variants: 'Demo DA1.06|Demo DB1.03|Demo DG1.15|Demo Special Edition|Demo v1.0|PlayStation'
+    ),
+    (
+      GameId: 'scumm:samnmax';
+      Variants: 'Floppy'
+    ),
+    (
+      GameId: 'scumm:tentacle';
+      Variants: 'Floppy|Remastered'
+    ),
+    (
+      GameId: 'scumm:zak';
       Variants: 'FM-TOWNS|V1|V2'
     ),
     (
-      GameId: 'zakloom';
+      GameId: 'scumm:zakloom';
       Variants: 'FM-TOWNS'
+    ),
+    (
+      GameId: 'sherlock:rosetattoo';
+      Variants: 'CD'
+    ),
+    (
+      GameId: 'sword1:sword1';
+      Variants: '25th Anniversary|Akella|Demo|English speech|English speech and DXA cutscenes|GOG.com|Mediahauz|Novy Disk|Rerelease|SoldOut rerelease|Steam|TecToy'
+    ),
+    (
+      GameId: 'teenagent:teenagent';
+      Variants: 'Alt Demo|Alt version|CD|Demo'
+    ),
+    (
+      GameId: 'tetraedge:syberia';
+      Variants: 'Extracted'
+    ),
+    (
+      GameId: 'tetraedge:syberia2';
+      Variants: 'Extracted'
+    ),
+    (
+      GameId: 'tinsel:dw2';
+      Variants: 'CD|Demo'
+    ),
+    (
+      GameId: 'toltecs:toltecs';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'tot:tot';
+      Variants: 'Demo'
+    ),
+    (
+      GameId: 'ultima:remorse';
+      Variants: 'Demo|Fan Translation'
+    ),
+    (
+      GameId: 'ultima:ultima8';
+      Variants: 'Gold Edition'
+    ),
+    (
+      GameId: 'vcruise:schizm';
+      Variants: 'English CD|English Digital|English DVD|French Digital|German Digital|German DVD|Hungarian Digital|Italian Digital|Japanese DVD|Polish Digital|Polish DVD|Russian Digital|Spanish Digital'
+    ),
+    (
+      GameId: 'voyeur:voyeur';
+      Variants: 'Demo|German Fan Made Version'
+    ),
+    (
+      GameId: 'zvision:zgi';
+      Variants: 'CD|Demo|DVD'
+    ),
+    (
+      GameId: 'zvision:znemesis';
+      Variants: 'Demo|Game not implemented'
     )
   );
 
@@ -1900,14 +2390,51 @@ begin
   end;
 end;
 
+procedure SplitScummVMGameToken(const S: String; out Eng, Bare, Inside: String; out HasBr: Boolean);
+var
+  T: String;
+  PColon, PBr: Integer;
+begin
+  Eng := '';
+  Bare := '';
+  Inside := '';
+  HasBr := False;
+  T := LowerCase(Trim(S));
+  PBr := Pos('[', T);
+  if PBr > 0 then begin
+    HasBr := True;
+    if (Length(T) > 0) and (T[Length(T)] = ']') then
+      Inside := Copy(T, PBr + 1, Length(T) - PBr - 1)
+    else
+      Inside := Copy(T, PBr + 1, MaxInt);
+    T := Copy(T, 1, PBr - 1);
+  end;
+  PColon := Pos(':', T);
+  if PColon > 0 then begin
+    Eng := Copy(T, 1, PColon - 1);
+    Bare := Copy(T, PColon + 1, MaxInt);
+  end else
+    Bare := T;
+end;
+
+function ScummVMEngineAndIdMatch(const TokEng, TokBare, QEng, QBare: String): Boolean;
+begin
+  Result := False;
+  if TokBare <> QBare then Exit;
+  if (QEng <> '') and (TokEng <> '') and (QEng <> TokEng) then Exit;
+  Result := True;
+end;
+
 function OptionAppliesTo(const GameIds, GameId, Variant : String) : Boolean;
 var
-  Id, VarTok, Token, Inside, List : String;
-  P : Integer;
+  QEng, QBare, QInside, TokEng, TokBare, TokInside, VarTok, Token, List: String;
+  QHasBr, TokHasBr: Boolean;
+  P: Integer;
 begin
-  Id := LowerCase(Trim(GameId));
+  SplitScummVMGameToken(GameId, QEng, QBare, QInside, QHasBr);
   VarTok := LowerCase(Trim(Variant));
   Result := False;
+  if QBare = '' then Exit;
   List := GameIds;
   while List <> '' do begin
     P := Pos('|', List);
@@ -1915,21 +2442,17 @@ begin
     else begin Token := Copy(List, 1, P - 1); Delete(List, 1, P); end;
     Token := Trim(Token);
     if Token = '' then Continue;
-    { Bare gameid = all variants }
-    if Token = Id then begin Result := True; Exit; end;
-    if Token = Id + '[]' then begin
+    SplitScummVMGameToken(Token, TokEng, TokBare, TokInside, TokHasBr);
+    if not ScummVMEngineAndIdMatch(TokEng, TokBare, QEng, QBare) then Continue;
+    if not TokHasBr then begin Result := True; Exit; end;
+    if TokInside = '' then begin
       if VarTok = '' then begin Result := True; Exit; end;
       Continue;
     end;
-    if (Length(Token) > Length(Id) + 2) and
-       (Copy(Token, 1, Length(Id) + 1) = Id + '[') and
-       (Token[Length(Token)] = ']') then begin
-      if VarTok = '' then Continue;
-      Inside := Copy(Token, Length(Id) + 2, Length(Token) - Length(Id) - 2);
-      Inside := ',' + LowerCase(Inside) + ',';
-      if Pos(',' + VarTok + ',', Inside) > 0 then begin
-        Result := True; Exit;
-      end;
+    if VarTok = '' then Continue;
+    TokInside := ',' + TokInside + ',';
+    if Pos(',' + VarTok + ',', TokInside) > 0 then begin
+      Result := True; Exit;
     end;
   end;
 end;
@@ -1962,19 +2485,21 @@ end;
 procedure GetScummVMGameIdVariants(const GameId : String; const Dest : TStrings);
 var
   I, P : Integer;
-  Id, List, One : String;
+  QEng, QBare, QInside, MEng, MBare, MInside, List, One : String;
+  QHasBr, MHasBr : Boolean;
   Tmp : TStringList;
 begin
   if Dest = nil then Exit;
   Dest.Clear;
-  Id := LowerCase(Trim(GameId));
-  if Id = '' then Exit;
+  SplitScummVMGameToken(GameId, QEng, QBare, QInside, QHasBr);
+  if QBare = '' then Exit;
   Tmp := TStringList.Create;
   try
     Tmp.Sorted := True;
     Tmp.Duplicates := dupIgnore;
     for I := 0 to ScummVMGameIdVariantMapCount - 1 do begin
-      if LowerCase(ScummVMGameIdVariantMap[I].GameId) <> Id then Continue;
+      SplitScummVMGameToken(ScummVMGameIdVariantMap[I].GameId, MEng, MBare, MInside, MHasBr);
+      if not ScummVMEngineAndIdMatch(MEng, MBare, QEng, QBare) then Continue;
       List := ScummVMGameIdVariantMap[I].Variants;
       while List <> '' do begin
         P := Pos('|', List);
@@ -1984,7 +2509,6 @@ begin
         if One <> '' then
           Tmp.Add(One);
       end;
-      Break;
     end;
     Dest.Assign(Tmp);
   finally

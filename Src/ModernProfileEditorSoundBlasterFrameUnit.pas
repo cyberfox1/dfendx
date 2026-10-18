@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
-  Dialogs, StdCtrls, Spin, GameDBUnit, ModernProfileEditorFormUnit, PrgConsts;
+  Dialogs, StdCtrls, Spin, ExtCtrls, Buttons, Vcl.Mask, GameDBUnit, ModernProfileEditorFormUnit, PrgConsts;
 
 type
   TModernProfileEditorSoundBlasterFrame = class(TFrame, IModernProfileEditorFrame)
@@ -22,24 +22,32 @@ type
     OplModeLabel: TLabel;
     OplSampleRateComboBox: TComboBox;
     OplSampleRateLabel: TLabel;
-    UseMixerCheckBox: TCheckBox;
     OplEmuComboBox: TComboBox;
     OplEmuLabel: TLabel;
-    ActivateCMSCheckBox: TCheckBox;
-    GoldplayCheckBox: TCheckBox;
     FilterLabel: TLabel;
     FilterComboBox: TComboBox;
     FilterAlwaysOnCheckBox: TCheckBox;
     WarmupLabel: TLabel;
     WarmupEdit: TSpinEdit;
+    emu8kSettings: TGroupBox;
+    AWE32MemSizeLabel: TLabel;
+    AWE32MemSizeComboBox: TComboBox;
+    AWE32RomFileEdit: TLabeledEdit;
+    AWE32RomFileButton: TSpeedButton;
+    sbFeatures: TGroupBox;
+    UseMixerCheckBox: TCheckBox;
+    ActivateCMSCheckBox: TCheckBox;
+    GoldplayCheckBox: TCheckBox;
+    procedure TypeComboBoxChange(Sender: TObject);
+    procedure AWE32RomFileButtonClick(Sender: TObject);
   private
     { Private-Deklarationen }
     FTempGame : TGame;
     FSblasterConfOpt, FSblasterStagingConfOpt, FSblasterXConfOpt : String;
     FOplmodeConfOpt, FOplmodeStagingConfOpt, FOplmodeXConfOpt : String;
     FOplEmuConfOpt, FOplEmuXConfOpt, FOplEmuPureConfOpt : String;
-    FSBFilterStagingConfOpt : String;
-    FLoadedSBType, FLoadedOplMode, FLoadedOplEmu, FLoadedSBFilter : String;
+    FSBFilterStagingConfOpt, FAWE32MemSizeConfOpt : String;
+    FLoadedSBType, FLoadedOplMode, FLoadedOplEmu, FLoadedSBFilter, FLoadedAWE32MemSize : String;
     function GetSelectedDosBoxKind : TDOSBoxKind;
     procedure ApplyLists;
     procedure ApplyVisibility;
@@ -55,7 +63,7 @@ type
 
 implementation
 
-uses VistaToolsUnit, LanguageSetupUnit, CommonHelpers, HelpConsts;
+uses VistaToolsUnit, LanguageSetupUnit, CommonHelpers, HelpConsts, PrgSetupUnit;
 
 {$R *.dfm}
 
@@ -84,6 +92,10 @@ begin
   NoFlicker(FilterComboBox);
   NoFlicker(FilterAlwaysOnCheckBox);
   NoFlicker(WarmupEdit);
+  NoFlicker(emu8kSettings);
+  NoFlicker(sbFeatures);
+  NoFlicker(AWE32MemSizeComboBox);
+  NoFlicker(AWE32RomFileEdit);
 
   FSblasterConfOpt:=InitData.GameDB.ConfOpt.Sblaster;
   FSblasterStagingConfOpt:=InitData.GameDB.ConfOpt.SblasterStaging;
@@ -95,6 +107,7 @@ begin
   FOplEmuXConfOpt:=InitData.GameDB.ConfOpt.OplEmuX;
   FOplEmuPureConfOpt:=InitData.GameDB.ConfOpt.OplEmuPure;
   FSBFilterStagingConfOpt:=InitData.GameDB.ConfOpt.SBFilterStaging;
+  FAWE32MemSizeConfOpt:=InitData.GameDB.ConfOpt.AWE32MemSize;
   InitData.OnShowFrame:=ShowFrame;
   InitData.OnInvalidate:=Invalidate;
 
@@ -111,12 +124,18 @@ begin
   OplEmuLabel.Caption:=LanguageSetup.GameOplemu;
   OplSampleRateLabel.Caption:=LanguageSetup.ProfileEditorSoundSBOplRate;
   St:=ValueToList(InitData.GameDB.ConfOpt.OPLRate,';,'); try OplSampleRateComboBox.Items.AddStrings(St); finally St.Free; end;
+  sbFeatures.Caption:=LanguageSetup.ProfileEditorSoundSBExtraFeatures;
   UseMixerCheckBox.Caption:=LanguageSetup.ProfileEditorSoundSBUseMixer;
   ActivateCMSCheckBox.Caption:=LanguageSetup.ProfileEditorSoundSBCMS;
   GoldplayCheckBox.Caption:=LanguageSetup.ProfileEditorSoundSBGoldplay;
   FilterLabel.Caption:=LanguageSetup.ProfileEditorSoundSBFilter;
   FilterAlwaysOnCheckBox.Caption:=LanguageSetup.ProfileEditorSoundSBFilterAlwaysOn;
   WarmupLabel.Caption:=LanguageSetup.ProfileEditorSoundSBWarmup;
+  emu8kSettings.Caption:=LanguageSetup.ProfileEditorSoundSBAWE32Settings;
+  AWE32MemSizeLabel.Caption:=LanguageSetup.ProfileEditorSoundSBAWE32MemSize;
+  AWE32RomFileEdit.EditLabel.Caption:=LanguageSetup.ProfileEditorSoundSBAWE32RomFile;
+  AWE32RomFileButton.Hint:=LanguageSetup.ChooseFile;
+  RebuildComboFromConfOpt(AWE32MemSizeComboBox,FAWE32MemSizeConfOpt,'');
 
   AddDefaultValueHint(TypeComboBox);
   AddDefaultValueHint(AddressComboBox);
@@ -127,6 +146,7 @@ begin
   AddDefaultValueHint(OplEmuComboBox);
   AddDefaultValueHint(OplSampleRateComboBox);
   AddDefaultValueHint(FilterComboBox);
+  AddDefaultValueHint(AWE32MemSizeComboBox);
 
   HelpContext:=ID_ProfileEditSoundSoundBlaster;
 end;
@@ -195,13 +215,20 @@ begin
   FilterAlwaysOnCheckBox.Visible:=Staging;
   WarmupLabel.Visible:=Staging;
   WarmupEdit.Visible:=Staging;
+  emu8kSettings.Visible:=SameText(Trim(TypeComboBox.Text),'awe32');
   If not Staging then SetComboNoSelect(FilterComboBox);
+end;
+
+procedure TModernProfileEditorSoundBlasterFrame.TypeComboBoxChange(Sender: TObject);
+begin
+  ApplyVisibility;
 end;
 
 procedure TModernProfileEditorSoundBlasterFrame.ShowFrame(Sender: TObject);
 begin
   ApplyLists;
   ReloadComboFromConfOpt(FilterComboBox,FSBFilterStagingConfOpt,True,FLoadedSBFilter);
+  ReloadComboFromConfOpt(AWE32MemSizeComboBox,FAWE32MemSizeConfOpt,True,FLoadedAWE32MemSize);
   ApplyVisibility;
 end;
 
@@ -211,6 +238,7 @@ begin
   OplModeComboBox.ItemIndex:=-1;
   OplEmuComboBox.ItemIndex:=-1;
   FilterComboBox.ItemIndex:=-1;
+  AWE32MemSizeComboBox.ItemIndex:=-1;
 end;
 
 procedure TModernProfileEditorSoundBlasterFrame.SetGame(const Game: TGame; const LoadFromTemplate: Boolean);
@@ -229,6 +257,8 @@ begin
   GoldplayCheckBox.Checked:=Game.SBGoldplay;
   FilterAlwaysOnCheckBox.Checked:=Game.SBFilterAlwaysOn;
   WarmupEdit.Value:=Game.SBWarmup;
+  FLoadedAWE32MemSize:=Trim(Game.AWE32MemorySize);
+  AWE32RomFileEdit.Text:=Game.AWE32RomFile;
   ShowFrame(nil);
 end;
 
@@ -262,6 +292,39 @@ begin
       Game.SBFilter:=FilterComboBox.Text;
     Game.SBFilterAlwaysOn:=FilterAlwaysOnCheckBox.Checked;
     Game.SBWarmup:=WarmupEdit.Value;
+  end;
+  If AWE32MemSizeComboBox.ItemIndex>=0 then
+    Game.AWE32MemorySize:=AWE32MemSizeComboBox.Text;
+  Game.AWE32RomFile:=Trim(AWE32RomFileEdit.Text);
+end;
+
+procedure TModernProfileEditorSoundBlasterFrame.AWE32RomFileButtonClick(Sender: TObject);
+Var S: String;
+    OD: TOpenDialog;
+begin
+  S:=Trim(AWE32RomFileEdit.Text);
+  If S='' then S:=PrgSetup.BaseDir else S:=MakeAbsPath(S,PrgSetup.BaseDir);
+  OD:=TOpenDialog.Create(Self);
+  try
+    OD.Title:=LanguageSetup.ChooseFile;
+    OD.DefaultExt:='raw';
+    OD.Filter:='AWE32 ROM (*.raw)|*.raw|All files (*.*)|*.*';
+    OD.Options:=OD.Options+[ofFileMustExist,ofPathMustExist,ofHideReadOnly];
+    If FileExists(S) then begin
+      OD.InitialDir:=ExtractFilePath(S);
+      OD.FileName:=ExtractFileName(S);
+    end else If DirectoryExists(S) then
+      OD.InitialDir:=S
+    else If DirectoryExists(ExtractFilePath(S)) then
+      OD.InitialDir:=ExtractFilePath(S)
+    else
+      OD.InitialDir:=PrgSetup.BaseDir;
+    if not OD.Execute then exit;
+    S:=MakeAbsPath(OD.FileName,PrgSetup.BaseDir);
+    If S='' then exit;
+    AWE32RomFileEdit.Text:=S;
+  finally
+    OD.Free;
   end;
 end;
 

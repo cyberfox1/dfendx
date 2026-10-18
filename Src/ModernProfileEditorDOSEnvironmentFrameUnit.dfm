@@ -24,14 +24,14 @@ object ModernProfileEditorDOSEnvironmentFrame: TModernProfileEditorDOSEnvironmen
   end
   object CustomSetsEnvLabel: TLabel
     Left = 25
-    Top = 181
+    Top = 203
     Width = 120
     Height = 15
     Caption = 'Environment variables:'
   end
   object Use4DOSInfoLabel: TLabel
     Left = 40
-    Top = 111
+    Top = 133
     Width = 480
     Height = 64
     AutoSize = False
@@ -54,8 +54,8 @@ object ModernProfileEditorDOSEnvironmentFrame: TModernProfileEditorDOSEnvironmen
     Visible = False
   end
   object Use4DOSCheckBox: TCheckBox
-    Left = 24
-    Top = 88
+    Left = 29
+    Top = 110
     Width = 496
     Height = 17
     Anchors = [akLeft, akTop, akRight]
@@ -64,9 +64,9 @@ object ModernProfileEditorDOSEnvironmentFrame: TModernProfileEditorDOSEnvironmen
   end
   object CustomSetsValueListEditor: TValueListEditor
     Left = 24
-    Top = 200
+    Top = 224
     Width = 501
-    Height = 219
+    Height = 195
     Anchors = [akLeft, akTop, akRight, akBottom]
     KeyOptions = [keyEdit]
     TabOrder = 3
@@ -122,5 +122,15 @@ object ModernProfileEditorDOSEnvironmentFrame: TModernProfileEditorDOSEnvironmen
     NumGlyphs = 2
     TabOrder = 5
     OnClick = ButtonWork
+  end
+  object utf8FileName: TCheckBox
+    Left = 29
+    Top = 80
+    Width = 496
+    Height = 17
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 'utf8FileName'
+    TabOrder = 6
+    Visible = False
   end
 end

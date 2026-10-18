@@ -65,14 +65,14 @@ object ModernProfileEditorSoundBlasterFrame: TModernProfileEditorSoundBlasterFra
   end
   object FilterLabel: TLabel
     Left = 24
-    Top = 376
+    Top = 247
     Width = 54
     Height = 15
     Caption = 'FilterLabel'
   end
   object WarmupLabel: TLabel
-    Left = 24
-    Top = 464
+    Left = 120
+    Top = 247
     Width = 74
     Height = 15
     Caption = 'WarmupLabel'
@@ -84,6 +84,7 @@ object ModernProfileEditorSoundBlasterFrame: TModernProfileEditorSoundBlasterFra
     Height = 23
     Style = csDropDownList
     TabOrder = 0
+    OnChange = TypeComboBoxChange
   end
   object AddressComboBox: TComboBox
     Left = 24
@@ -133,58 +134,31 @@ object ModernProfileEditorSoundBlasterFrame: TModernProfileEditorSoundBlasterFra
     Style = csDropDownList
     TabOrder = 7
   end
-  object UseMixerCheckBox: TCheckBox
-    Left = 24
-    Top = 256
-    Width = 553
-    Height = 17
-    Anchors = [akLeft, akTop, akRight]
-    Caption = 'UseMixerCheckBox'
-    TabOrder = 8
-  end
-  object ActivateCMSCheckBox: TCheckBox
-    Left = 24
-    Top = 288
-    Width = 553
-    Height = 17
-    Anchors = [akLeft, akTop, akRight]
-    Caption = 'Activate CMS'
-    TabOrder = 9
-  end
-  object GoldplayCheckBox: TCheckBox
-    Left = 24
-    Top = 344
-    Width = 553
-    Height = 17
-    Anchors = [akLeft, akTop, akRight]
-    Caption = 'Activate Goldplay'
-    TabOrder = 10
-  end
   object FilterComboBox: TComboBox
     Left = 24
-    Top = 395
+    Top = 268
     Width = 81
     Height = 23
     Style = csDropDownList
-    TabOrder = 11
+    TabOrder = 8
   end
   object FilterAlwaysOnCheckBox: TCheckBox
     Left = 24
-    Top = 432
+    Top = 304
     Width = 553
     Height = 17
     Anchors = [akLeft, akTop, akRight]
     Caption = 'FilterAlwaysOnCheckBox'
-    TabOrder = 12
+    TabOrder = 9
   end
   object WarmupEdit: TSpinEdit
-    Left = 24
-    Top = 483
+    Left = 120
+    Top = 268
     Width = 81
     Height = 24
     MaxValue = 100
     MinValue = 0
-    TabOrder = 13
+    TabOrder = 10
     Value = 100
   end
   object OplEmuComboBox: TComboBox
@@ -194,5 +168,112 @@ object ModernProfileEditorSoundBlasterFrame: TModernProfileEditorSoundBlasterFra
     Height = 23
     Style = csDropDownList
     TabOrder = 6
+  end
+  object emu8kSettings: TGroupBox
+    Left = 24
+    Top = 340
+    Width = 553
+    Height = 123
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 'AWE32 Settings'
+    TabOrder = 11
+    Visible = False
+    DesignSize = (
+      553
+      123)
+    object AWE32MemSizeLabel: TLabel
+      Left = 16
+      Top = 20
+      Width = 112
+      Height = 15
+      Caption = 'AWE32MemSizeLabel'
+    end
+    object AWE32RomFileButton: TSpeedButton
+      Left = 512
+      Top = 86
+      Width = 25
+      Height = 23
+      Anchors = [akTop, akRight]
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        04000000000000010000120B0000120B00001000000000000000000000000000
+        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00555555555555
+        5555555555555555555555555555555555555555555555555555555555555555
+        555555555555555555555555555555555555555FFFFFFFFFF555550000000000
+        55555577777777775F55500B8B8B8B8B05555775F555555575F550F0B8B8B8B8
+        B05557F75F555555575F50BF0B8B8B8B8B0557F575FFFFFFFF7F50FBF0000000
+        000557F557777777777550BFBFBFBFB0555557F555555557F55550FBFBFBFBF0
+        555557F555555FF7555550BFBFBF00055555575F555577755555550BFBF05555
+        55555575FFF75555555555700007555555555557777555555555555555555555
+        5555555555555555555555555555555555555555555555555555}
+      NumGlyphs = 2
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = AWE32RomFileButtonClick
+      ExplicitLeft = 320
+    end
+    object AWE32MemSizeComboBox: TComboBox
+      Left = 16
+      Top = 39
+      Width = 145
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 0
+    end
+    object AWE32RomFileEdit: TLabeledEdit
+      Left = 16
+      Top = 86
+      Width = 494
+      Height = 23
+      Anchors = [akLeft, akTop, akRight]
+      EditLabel.Width = 46
+      EditLabel.Height = 15
+      EditLabel.Caption = 'ROM file'
+      TabOrder = 1
+      Text = ''
+      ExplicitWidth = 302
+    end
+  end
+  object sbFeatures: TGroupBox
+    Left = 253
+    Top = 43
+    Width = 281
+    Height = 105
+    Caption = 'Extra Features'
+    TabOrder = 12
+    DesignSize = (
+      281
+      105)
+    object UseMixerCheckBox: TCheckBox
+      Left = 16
+      Top = 27
+      Width = 201
+      Height = 17
+      Anchors = [akLeft, akTop, akRight]
+      Caption = 'UseMixerCheckBox'
+      TabOrder = 0
+      ExplicitWidth = 153
+    end
+    object ActivateCMSCheckBox: TCheckBox
+      Left = 16
+      Top = 50
+      Width = 201
+      Height = 17
+      Anchors = [akLeft, akTop, akRight]
+      Caption = 'Activate CMS'
+      TabOrder = 1
+      ExplicitWidth = 153
+    end
+    object GoldplayCheckBox: TCheckBox
+      Left = 16
+      Top = 73
+      Width = 225
+      Height = 17
+      Anchors = [akLeft, akTop, akRight]
+      Caption = 'Activate Goldplay'
+      TabOrder = 2
+      ExplicitWidth = 177
+    end
   end
 end

@@ -309,7 +309,7 @@ procedure TModernProfileEditorScummVMSettingsFrame.ApplyGameId(const GameId, Pre
 var
   Id: String;
 begin
-  Id := ScummVMSettingsBareGameId(GameId);
+  Id := Trim(GameId);
   if ResetStoredIfDifferent and (not SameText(FData.GameId, Id)) then
     FStoredExtra := '';
   LastGameName := LowerCase(Id);

@@ -225,7 +225,7 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
       Caption = 'PixelShaderLabel'
     end
     object ShaderPresetLabel: TLabel
-      Left = 418
+      Left = 332
       Top = 148
       Width = 88
       Height = 15
@@ -269,15 +269,15 @@ object ModernProfileEditorGraphicsFrame: TModernProfileEditorGraphicsFrame
     object PixelShaderComboBox: TComboBox
       Left = 16
       Top = 169
-      Width = 385
+      Width = 310
       Height = 23
       TabOrder = 4
       OnChange = PixelShaderComboBoxChange
     end
     object ShaderPresetComboBox: TComboBox
-      Left = 414
+      Left = 332
       Top = 169
-      Width = 126
+      Width = 208
       Height = 23
       TabOrder = 5
       OnChange = PixelShaderComboBoxChange

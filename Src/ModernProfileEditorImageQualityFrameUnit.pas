@@ -29,6 +29,8 @@ type
     SaturationEdit: TSpinEdit;
     ColorTemperatureLabel: TLabel;
     ColorTemperatureComboBox: TComboBox;
+    CompositeComboBox: TComboBox;
+    CompositeLabel: TLabel;
     procedure ImageAdjustmentsCheckBoxClick(Sender: TObject);
   private
     FTempGame: TGame;
@@ -112,9 +114,10 @@ end;
 
 procedure TModernProfileEditorImageQualityFrame.ApplyKindEnable;
 var
-  OnNew: Boolean;
+  OnNew, DBX: Boolean;
 begin
   OnNew := IsNewStaging;
+  DBX := GetSelectedDosBoxKind = dbkX;
   DeinterlacingLabel.Enabled := OnNew;
   DeinterlacingComboBox.Enabled := OnNew;
   DeditheringLabel.Enabled := OnNew;
@@ -126,6 +129,8 @@ begin
   IntegerScalingLabel.Enabled := OnNew;
   IntegerScalingComboBox.Enabled := OnNew;
   ImageAdjustmentsCheckBox.Enabled := OnNew;
+  CompositeLabel.Enabled := DBX;
+  CompositeComboBox.Enabled := DBX;
   if not OnNew then begin
     SetComboNoSelect(DeinterlacingComboBox);
     SetComboNoSelect(DeditheringComboBox);
@@ -145,6 +150,10 @@ begin
     if IntegerScalingComboBox.ItemIndex < 0 then
       SelectQualityCombo(IntegerScalingComboBox, FTempGame.IntegerScaling);
   end;
+  if not DBX then
+    SetComboNoSelect(CompositeComboBox)
+  else if (FTempGame <> nil) and (CompositeComboBox.ItemIndex < 0) then
+    SelectQualityCombo(CompositeComboBox, FTempGame.VideoComposite);
   ApplyAdjustEnable;
 end;
 
@@ -172,6 +181,7 @@ begin
   NoFlicker(IntegerScalingComboBox);
   NoFlicker(ImageAdjustmentsCheckBox);
   NoFlicker(ColorTemperatureComboBox);
+  NoFlicker(CompositeComboBox);
 
   FDeinterlacingConfOpt := InitData.GameDB.ConfOpt.DeinterlacingStaging;
   FDeditheringConfOpt := InitData.GameDB.ConfOpt.DeditheringStaging;
@@ -191,6 +201,7 @@ begin
   ContrastLabel.Caption := LanguageSetup.ProfileEditorImageQualityContrast;
   SaturationLabel.Caption := LanguageSetup.ProfileEditorImageQualitySaturation;
   ColorTemperatureLabel.Caption := LanguageSetup.ProfileEditorImageQualityColorTemperature;
+  CompositeLabel.Caption := LanguageSetup.ProfileEditorImageQualityComposite;
 
   RebuildComboFromConfOpt(DeinterlacingComboBox, FDeinterlacingConfOpt, '');
   RebuildComboFromConfOpt(DeditheringComboBox, FDeditheringConfOpt, '');
@@ -198,6 +209,11 @@ begin
   RebuildComboFromConfOpt(ColorSpaceComboBox, FColorSpaceConfOpt, '');
   RebuildComboFromConfOpt(IntegerScalingComboBox, FIntegerScalingConfOpt, '');
   RebuildComboFromConfOpt(ColorTemperatureComboBox, FColorTemperatureConfOpt, '');
+  CompositeComboBox.Items.Clear;
+  CompositeComboBox.Items.Add('default');
+  CompositeComboBox.Items.Add('auto');
+  CompositeComboBox.Items.Add('on');
+  CompositeComboBox.Items.Add('off');
 
   InitData.OnShowFrame := ShowFrame;
   InitData.OnInvalidate := Invalidate;
@@ -224,6 +240,7 @@ begin
   ContrastEdit.Value := Min(100, Max(0, Game.ImageContrast));
   SaturationEdit.Value := Min(50, Max(-50, Game.ImageSaturation));
   SelectQualityCombo(ColorTemperatureComboBox, Game.ImageColorTemperature);
+  SelectQualityCombo(CompositeComboBox, Game.VideoComposite);
   ApplyKindEnable;
 end;
 
@@ -245,6 +262,8 @@ begin
   Game.ImageSaturation := Min(50, Max(-50, SaturationEdit.Value));
   if ColorTemperatureComboBox.ItemIndex >= 0 then
     Game.ImageColorTemperature := Trim(ColorTemperatureComboBox.Text);
+  if (GetSelectedDosBoxKind = dbkX) and (CompositeComboBox.ItemIndex >= 0) then
+    Game.VideoComposite := Trim(CompositeComboBox.Text);
 end;
 
 end.

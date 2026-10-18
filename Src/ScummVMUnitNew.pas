@@ -833,6 +833,7 @@ begin
 
       ScummVMSettingsParseGameToken(Game.ScummVMGame, GameId, GameVariant);
       If Trim(GameId) = '' then GameId := Trim(Game.ScummVMGame);
+      GameId := ScummVMSettingsBareGameId(GameId);
 
       { 2) Launch with a short CLI that only points at that config }
       ScummVMHandle := RunScummVM(

@@ -673,7 +673,7 @@ begin
     If not DirectoryExists(S) then
       If DirectoryExists(ExtractFilePath(S)) then S:=ExtractFilePath(S) else S:=PrgSetup.BaseDir;
     If not SelectDirectory(Handle,LanguageSetup.ChooseFolder,S) then exit;
-    S:=MakeRelPath(IncludeTrailingPathDelimiter(S),PrgSetup.BaseDir);
+    S:=MakeAbsPath(IncludeTrailingPathDelimiter(S),PrgSetup.BaseDir);
     If S='' then exit;
     FluidSynthPathBox.Text:=S;
     If SameText(Trim(DeviceComboBox.Text),'mt32') then
@@ -699,7 +699,7 @@ begin
     else
       OD.InitialDir:=PrgSetup.BaseDir;
     if not OD.Execute then exit;
-    S:=MakeRelPath(OD.FileName,PrgSetup.BaseDir);
+    S:=MakeAbsPath(OD.FileName,PrgSetup.BaseDir);
     If S='' then exit;
     FluidSynthPathBox.Text:=S;
   finally

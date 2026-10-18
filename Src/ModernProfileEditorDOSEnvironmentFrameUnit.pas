@@ -18,6 +18,7 @@ type
     CustomSetsEnvAdd: TBitBtn;
     CustomSetsEnvDel: TBitBtn;
     Use4DOSInfoLabel: TLabel;
+    utf8FileName: TCheckBox;
     procedure ButtonWork(Sender: TObject);
   private
     FTempGame : TGame;
@@ -52,6 +53,7 @@ begin
   NoFlicker(ReportedDOSVersionComboBox);
   NoFlicker(LFNComboBox);
   NoFlicker(Use4DOSCheckBox);
+  NoFlicker(utf8FileName);
   NoFlicker(CustomSetsValueListEditor);
   NoFlicker(CustomSetsEnvAdd);
   NoFlicker(CustomSetsEnvDel);
@@ -63,6 +65,7 @@ begin
   InitData.OnShowFrame:=ShowFrame;
   InitData.OnInvalidate:=Invalidate;
   Use4DOSCheckBox.Caption:=LanguageSetup.ProfileEditorAutoexecUse4DOS;
+  utf8FileName.Caption:=LanguageSetup.GameUTF8FileNames;
   Use4DOSInfoLabel.Caption:=LanguageSetup.ProfileEditorNeedFreeDOS;
   If DirectoryExists(IncludeTrailingPathDelimiter(MakeAbsPath(PrgSetup.PathToFREEDOS,PrgSetup.BaseDir))) then begin
     Use4DOSInfoLabel.Font.Color:=clGrayText;
@@ -90,6 +93,7 @@ begin
   Vis:=(FTempGame<>nil) and (FTempGame.DosBoxKind=dbkX);
   LFNLabel.Visible:=Vis;
   LFNComboBox.Visible:=Vis;
+  utf8FileName.Visible:=Vis;
 end;
 
 procedure TModernProfileEditorDOSEnvironmentFrame.ShowFrame(Sender : TObject);
@@ -108,6 +112,7 @@ Var St : TStringList;
 begin
   ReportedDOSVersionComboBox.Text:=Game.ReportedDOSVersion;
   LFNComboBox.Text:=Game.LFN;
+  utf8FileName.Checked:=Game.DOSUTF8FileNames;
   ApplyLFNVisible;
   Use4DOSCheckBox.Checked:=Game.Use4DOS;
   CustomSetsValueListEditor.Strings.Clear;
@@ -138,6 +143,7 @@ Var St : TStringList;
 begin
   Game.ReportedDOSVersion:=ReportedDOSVersionComboBox.Text;
   If LFNComboBox.Visible then Game.LFN:=LFNComboBox.Text;
+  If utf8FileName.Visible then Game.DOSUTF8FileNames:=utf8FileName.Checked;
   Game.Use4DOS:=Use4DOSCheckBox.Checked;
   St:=TStringList.Create;
   try

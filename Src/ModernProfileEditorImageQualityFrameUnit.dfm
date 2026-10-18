@@ -10,7 +10,7 @@ object ModernProfileEditorImageQualityFrame: TModernProfileEditorImageQualityFra
   object DeinterlacingLabel: TLabel
     Left = 24
     Top = 16
-    Width = 90
+    Width = 98
     Height = 15
     Caption = 'DeinterlacingLabel'
   end
@@ -31,16 +31,23 @@ object ModernProfileEditorImageQualityFrame: TModernProfileEditorImageQualityFra
   object ColorSpaceLabel: TLabel
     Left = 200
     Top = 80
-    Width = 84
+    Width = 88
     Height = 15
     Caption = 'ColorSpaceLabel'
   end
   object IntegerScalingLabel: TLabel
     Left = 376
     Top = 80
-    Width = 102
+    Width = 103
     Height = 15
     Caption = 'IntegerScalingLabel'
+  end
+  object CompositeLabel: TLabel
+    Left = 24
+    Top = 379
+    Width = 86
+    Height = 15
+    Caption = 'CompositeLabel'
   end
   object DeinterlacingComboBox: TComboBox
     Left = 24
@@ -98,33 +105,32 @@ object ModernProfileEditorImageQualityFrame: TModernProfileEditorImageQualityFra
     Width = 512
     Height = 185
     Anchors = [akLeft, akTop, akRight]
-    Caption = ''
     TabOrder = 6
     object BrightnessLabel: TLabel
       Left = 16
       Top = 24
-      Width = 84
+      Width = 83
       Height = 15
       Caption = 'BrightnessLabel'
     end
     object ContrastLabel: TLabel
       Left = 176
       Top = 24
-      Width = 74
+      Width = 73
       Height = 15
       Caption = 'ContrastLabel'
     end
     object SaturationLabel: TLabel
       Left = 336
       Top = 24
-      Width = 84
+      Width = 82
       Height = 15
       Caption = 'SaturationLabel'
     end
     object ColorTemperatureLabel: TLabel
       Left = 16
       Top = 96
-      Width = 122
+      Width = 124
       Height = 15
       Caption = 'ColorTemperatureLabel'
     end
@@ -166,5 +172,13 @@ object ModernProfileEditorImageQualityFrame: TModernProfileEditorImageQualityFra
       Style = csDropDownList
       TabOrder = 3
     end
+  end
+  object CompositeComboBox: TComboBox
+    Left = 24
+    Top = 400
+    Width = 160
+    Height = 23
+    Style = csDropDownList
+    TabOrder = 7
   end
 end

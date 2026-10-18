@@ -147,4 +147,13 @@ object ModernProfileEditorGUSFrame: TModernProfileEditorGUSFrame
     Height = 23
     TabOrder = 9
   end
+  object UseMixerCheckBox: TCheckBox
+    Left = 24
+    Top = 400
+    Width = 569
+    Height = 17
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 'UseMixerCheckBox'
+    TabOrder = 10
+  end
 end

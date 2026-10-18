@@ -3472,6 +3472,7 @@ begin
         end;
         ScummVMSettingsParseGameToken(Game.ScummVMGame, GameId, GameVariant);
         If Trim(GameId)='' then GameId:=Trim(Game.ScummVMGame);
+        GameId:=ScummVMSettingsBareGameId(GameId);
         T:=GetScummVMCommandLine(S,GameId,T,Game.ScummVMRenderMode,Game.ScummVMPlatform);
       end else begin
         I:=GetDOSBoxNr(Game);

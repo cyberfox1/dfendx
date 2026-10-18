@@ -154,6 +154,7 @@ begin
   AddString(P1+LanguageSetup.ProfileEditorSoundMiscPCSpeakerMode+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.PCSpeakerStaging);
   AddString(P1+LanguageSetup.ProfileEditorSoundMiscLptDac+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.LptDacStaging);
   AddString(P1+LanguageSetup.ProfileEditorSoundSBFilter+' ('+DosBoxKindDisplayStaging+')',GameDB.ConfOpt.SBFilterStaging);
+  AddString(P1+S1+LanguageSetup.ProfileEditorSoundSBAWE32MemSize,GameDB.ConfOpt.AWE32MemSize);
   AddString(P1+LanguageSetup.ProfileEditorSoundSBOplRate,GameDB.ConfOpt.OPLRate);
 
   AddString(P1+S2+LanguageSetup.ProfileEditorSoundGUSAddress,GameDB.ConfOpt.GUSBase);
@@ -294,6 +295,7 @@ begin
   GameDB.ConfOpt.PCSpeakerStaging:=GetString;
   GameDB.ConfOpt.LptDacStaging:=GetString;
   GameDB.ConfOpt.SBFilterStaging:=GetString;
+  GameDB.ConfOpt.AWE32MemSize:=GetString;
   GameDB.ConfOpt.OPLRate:=GetString;
 
   GameDB.ConfOpt.GUSBase:=GetString;
@@ -450,6 +452,7 @@ begin
   Work(DefaultValuesPCSpeakerStaging);
   Work(DefaultValuesLptDacStaging);
   Work(DefaultValuesSBFilterStaging);
+  Work(DefaultValuesAWE32MemSize);
   Work(DefaultValuesOPLRate);
 
   Work(DefaultValuesGUSBase);

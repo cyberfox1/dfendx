@@ -103,10 +103,10 @@ begin
   if S = '' then Exit;
   P := Pos('[', S);
   if P <= 0 then begin
-    GameId := ScummVMSettingsBareGameId(S);
+    GameId := S;
     Exit;
   end;
-  GameId := ScummVMSettingsBareGameId(Copy(S, 1, P - 1));
+  GameId := Trim(Copy(S, 1, P - 1));
   Q := Length(S);
   if (Q > P) and (S[Q] = ']') then
     Variant := Copy(S, P + 1, Q - P - 1)
@@ -119,7 +119,7 @@ function ScummVMSettingsFormatGameToken(const GameId, Variant: String): String;
 var
   Id, VarTok: String;
 begin
-  Id := ScummVMSettingsBareGameId(GameId);
+  Id := Trim(GameId);
   VarTok := Trim(Variant);
   if Id = '' then begin
     Result := '';
@@ -139,12 +139,12 @@ end;
 
 procedure ScummVMSettingsCollectVariants(const GameId: String; const Dest: TStrings);
 begin
-  GetScummVMGameIdVariants(ScummVMSettingsBareGameId(GameId), Dest);
+  GetScummVMGameIdVariants(Trim(GameId), Dest);
 end;
 
 function ScummVMSettingsLoadOptions(const GameId: String; const Variant: String = ''): TScummVMGameOptionArray;
 begin
-  Result := GetScummVMGameOptions(ScummVMSettingsBareGameId(GameId), Trim(Variant));
+  Result := GetScummVMGameOptions(Trim(GameId), Trim(Variant));
 end;
 
 function ScummVMSettingsEncodeOptions(
@@ -300,7 +300,7 @@ var
   Id: String;
 begin
   if ComboResolved then
-    Id := ScummVMSettingsBareGameId(ComboGameId)
+    Id := Trim(ComboGameId)
   else
     Id := Data.GameId;
   OutData.GameId := Id;

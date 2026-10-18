@@ -212,6 +212,10 @@ begin
     S:=Trim(INI.ReadString('dos','lfn','auto'));
     If (S='') or SameText(S,'default') then S:='auto';
     AGame.LFN:=S;
+    AGame.DOSUTF8FileNames:=StrToBool(INI.ReadString('dos','utf8 file names','false'));
+    S:=Trim(INI.ReadString('video','composite','default'));
+    If S='' then S:='default';
+    AGame.VideoComposite:=S;
 
     AGame.MixerNosound:=StrToBool(INI.ReadString('mixer','nosound','false'));
     AGame.MixerRate:=Ini.ReadInteger('mixer','rate',22050);
@@ -242,6 +246,10 @@ begin
     AGame.SBFilter:=Ini.ReadString('sblaster','sb_filter','modern');
     AGame.SBFilterAlwaysOn:=StrToBool(INI.ReadString('sblaster','sb_filter_always_on','false'));
     AGame.SBWarmup:=Ini.ReadInteger('sblaster','sbwarmup',100);
+    S:=Trim(Ini.ReadString('emu8k','memsize',''));
+    If S='' then S:='512';
+    AGame.AWE32MemorySize:=S;
+    AGame.AWE32RomFile:=Ini.ReadString('emu8k','rompath','');
 
     AGame.GUS:=StrToBool(INI.ReadString('gus','gus','true'));
     AGame.GUSRate:=Ini.ReadInteger('gus','gusrate',22050);
@@ -255,6 +263,7 @@ begin
     AGame.GUSMemSize:=S;
     AGame.GUSType:=Ini.ReadString('gus','gustype','classic');
     AGame.GUSMasterVolume:=Ini.ReadString('gus','gus master volume','0');
+    AGame.GUSMixer:=StrToBool(Ini.ReadString('gus','gusmixer','true'));
 
     AGame.MIDIType:=Ini.ReadString('midi','mpu401','intelligent');
     AGame.MIDIDevice:=Ini.ReadString('midi','device','default');

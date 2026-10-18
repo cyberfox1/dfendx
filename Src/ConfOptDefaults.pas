@@ -138,6 +138,7 @@ Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x48
       DefaultValuesSBFilterStaging='auto,sb1,sb2,sbpro1,sbpro2,sb16,modern,off';
       DefaultValuesGUSFilterStaging='on,off';
       DefaultValuesGUSMemSizeX='256,512,1024,2048,4096,8192';
+      DefaultValuesAWE32MemSize='0,512,2048,8192,28672';
       DefaultValuesGUSTypeX='classic,classic37,max,interwave';
       DefaultValuesGUSMasterVolumeX='6,0,-3,-6,-12,-24';
       DefaultValuesCrossfeedStaging='off,on,light,normal,strong';

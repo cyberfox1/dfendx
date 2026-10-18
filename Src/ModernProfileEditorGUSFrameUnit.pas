@@ -26,6 +26,7 @@ type
     MemSizeComboBox: TComboBox;
     MasterVolumeLabel: TLabel;
     MasterVolumeComboBox: TComboBox;
+    UseMixerCheckBox: TCheckBox;
   private
     { Private-Deklarationen }
     FTempGame : TGame;
@@ -78,6 +79,7 @@ begin
   MemSizeComboBox.Enabled:=DBX;
   MasterVolumeLabel.Enabled:=DBX;
   MasterVolumeComboBox.Enabled:=DBX;
+  UseMixerCheckBox.Enabled:=DBX;
   If not Staging then SetComboNoSelect(FilterComboBox);
   If not DBX then begin
     SetComboNoSelect(TypeComboBox);
@@ -120,6 +122,7 @@ begin
   NoFlicker(TypeComboBox);
   NoFlicker(MemSizeComboBox);
   NoFlicker(MasterVolumeComboBox);
+  NoFlicker(UseMixerCheckBox);
 
   FGUSFilterStagingConfOpt:=InitData.GameDB.ConfOpt.GUSFilterStaging;
   FGUSMemSizeXConfOpt:=InitData.GameDB.ConfOpt.GUSMemSizeX;
@@ -144,6 +147,7 @@ begin
   TypeLabel.Caption:=LanguageSetup.ProfileEditorSoundGUSType;
   MemSizeLabel.Caption:=LanguageSetup.ProfileEditorSoundGUSMemSize;
   MasterVolumeLabel.Caption:=LanguageSetup.ProfileEditorSoundGUSMasterVolume;
+  UseMixerCheckBox.Caption:=LanguageSetup.ProfileEditorSoundGUSUseMixer;
 
   AddDefaultValueHint(AddressComboBox);
   AddDefaultValueHint(SampleRateComboBox);
@@ -186,6 +190,7 @@ begin
   FLoadedGUSType:=Game.GUSType;
   FLoadedGUSMemSize:=Trim(Game.GUSMemSize);
   FLoadedGUSMasterVolume:=Game.GUSMasterVolume;
+  UseMixerCheckBox.Checked:=Game.GUSMixer;
   ShowFrame(nil);
 end;
 
@@ -210,6 +215,7 @@ begin
       Game.GUSMemSize:=MemSizeComboBox.Text;
     If MasterVolumeComboBox.ItemIndex>=0 then
       Game.GUSMasterVolume:=Trim(MasterVolumeComboBox.Text);
+    Game.GUSMixer:=UseMixerCheckBox.Checked;
   end;
 end;
 

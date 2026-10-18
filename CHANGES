@@ -1,5 +1,15 @@
 DFendX Changelog
 
+Version 2.6.5 (10/18/2026)
+==========================
+- AWE32 Romdir and RAM size options
+- Gus mixer option
+- CGA/PCJr composite video option
+- DOS UTF8 filenames support
+- ScummVM game options update
+- various UI tweaks
+
+
 Version 2.6.4 (10/11/2026)
 ==========================
 - DOSBox Pure SoundCanvas SC-55 support
