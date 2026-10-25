@@ -6750,6 +6750,13 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
         RadioItem = True
         OnClick = MenuWork
       end
+      object MenuViewsCoverImages: TMenuItem
+        Tag = 2018
+        Caption = 'Cover Images'
+        GroupIndex = 1
+        RadioItem = True
+        OnClick = MenuWork
+      end
       object N18: TMenuItem
         Caption = '-'
         GroupIndex = 1
@@ -7531,6 +7538,13 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
       object PopupScreenshots: TMenuItem
         Tag = 2012
         Caption = 'Screenshtos'
+        GroupIndex = 1
+        RadioItem = True
+        OnClick = MenuWork
+      end
+      object PopupCoverImages: TMenuItem
+        Tag = 2018
+        Caption = 'Cover Images'
         GroupIndex = 1
         RadioItem = True
         OnClick = MenuWork
@@ -9491,6 +9505,12 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
       ImageIndex = 28
       OnClick = ScreenshotMenuWork
     end
+    object ScreenshotPopupSetAsCoverImage: TMenuItem
+      Tag = 13
+      Caption = 'Set as &cover image'
+      ImageIndex = 46
+      OnClick = ScreenshotMenuWork
+    end
   end
   object ScreenshotSaveDialog: TSaveDialog
     DefaultExt = 'png'
@@ -9832,6 +9852,13 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
     Masked = False
     Width = 100
     Left = 400
+    Top = 96
+  end
+  object ListviewCoverImageList: TImageList
+    Height = 200
+    Masked = False
+    Width = 150
+    Left = 440
     Top = 96
   end
   object XPManifest: TXPManifest

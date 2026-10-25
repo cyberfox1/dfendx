@@ -68,7 +68,7 @@ begin
   ShowToolbarCheckBox.Checked:=PrgSetup.ShowToolbar;
   ShowToolbarCaptionsCheckBox.Checked:=PrgSetup.ShowToolbarTexts;
 
-  If ButtonsListBox.Items.Count=0 then for I:=0 to 7 do ButtonsListBox.Items.Add('');
+  If ButtonsListBox.Items.Count=0 then for I:=0 to 8 do ButtonsListBox.Items.Add('');
   ButtonsListBox.Checked[0]:=PrgSetup.ShowToolbarButtonClose;
   ButtonsListBox.Checked[1]:=PrgSetup.ShowToolbarButtonRun;
   ButtonsListBox.Checked[2]:=PrgSetup.ShowToolbarButtonRunSetup;
@@ -77,6 +77,7 @@ begin
   ButtonsListBox.Checked[5]:=PrgSetup.ShowToolbarButtonDelete;
   ButtonsListBox.Checked[6]:=PrgSetup.ShowSearchBox;
   ButtonsListBox.Checked[7]:=PrgSetup.ShowToolbarButtonHelp;
+  ButtonsListBox.Checked[8]:=PrgSetup.ShowToolbarButtonAutoplay;
 
   AddButtonFunctionComboBox.ItemIndex:=Min(2,Max(0,PrgSetup.AddButtonFunction));
   ToolbarImageCheckBox.Checked:=Trim(PrgSetup.ToolbarBackground)<>'';
@@ -94,7 +95,7 @@ begin
   ShowToolbarCheckBox.Caption:=LanguageSetup.SetupFormShowToolbar;
   ShowToolbarCaptionsCheckBox.Caption:=LanguageSetup.SetupFormShowToolbarCaptions;
   ButtonsLabel.Caption:=LanguageSetup.SetupFormShowToolbarButtons;
-  If ButtonsListBox.Items.Count=0 then for I:=0 to 6 do ButtonsListBox.Items.Add('');
+  If ButtonsListBox.Items.Count=0 then for I:=0 to 8 do ButtonsListBox.Items.Add('');
   ButtonsListBox.Items[0]:=RemoveUnderline(LanguageSetup.ButtonClose);
   ButtonsListBox.Items[1]:=RemoveUnderline(LanguageSetup.ButtonRun);
   ButtonsListBox.Items[2]:=RemoveUnderline(LanguageSetup.ButtonRunSetup);
@@ -103,6 +104,7 @@ begin
   ButtonsListBox.Items[5]:=RemoveUnderline(LanguageSetup.ButtonDelete);
   ButtonsListBox.Items[6]:=RemoveUnderline(LanguageSetup.MenuViewShowSearchBox);
   ButtonsListBox.Items[7]:=RemoveUnderline(LanguageSetup.ButtonHelp);
+  ButtonsListBox.Items[8]:=RemoveUnderline(LanguageSetup.ButtonAutoplay);
   AddButtonFunctionLabel.Caption:=LanguageSetup.SetupFormAddButtonFunctionLabel;
   I:=AddButtonFunctionComboBox.ItemIndex;
   AddButtonFunctionComboBox.Items[0]:=LanguageSetup.SetupFormAddButtonFunctionAdd;
@@ -140,6 +142,7 @@ begin
   ButtonsListBox.Checked[5]:=True;
   ButtonsListBox.Checked[6]:=True;
   ButtonsListBox.Checked[7]:=True;
+  ButtonsListBox.Checked[8]:=True;
   AddButtonFunctionComboBox.ItemIndex:=2;
   ToolbarImageCheckBox.Checked:=False;
   ToolbarImageEdit.Text:='';
@@ -171,6 +174,7 @@ begin
   PrgSetup.ShowToolbarButtonDelete:=ButtonsListBox.Checked[5];
   PrgSetup.ShowSearchBox:=ButtonsListBox.Checked[6];
   PrgSetup.ShowToolbarButtonHelp:=ButtonsListBox.Checked[7];
+  PrgSetup.ShowToolbarButtonAutoplay:=ButtonsListBox.Checked[8];
   PrgSetup.AddButtonFunction:=AddButtonFunctionComboBox.ItemIndex;
   If ToolbarImageCheckBox.Checked then PrgSetup.ToolbarBackground:=ToolbarImageEdit.Text else PrgSetup.ToolbarBackground:='';
   PrgSetup.ToolbarFontSize:=ToolbarFontSizeEdit.Value;

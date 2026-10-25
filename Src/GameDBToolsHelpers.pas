@@ -38,6 +38,8 @@ function ProgramInstallDir: String;
 function ImageIsPortrait(const ImageW, ImageH: Integer): Boolean;
 function DetermineImagePriority(const FileNameOrPath: String; const IsPortrait: Boolean;
   const ImageW, ImageH: Integer): Integer;
+function DetermineCoverImagePriority(const FileNameOrPath: String; const IsPortrait: Boolean;
+  const ImageW, ImageH: Integer): Integer;
 function BuildScreenshotPaneSortKey(const Prio: Integer; const FileSize: Int64; const FilePath: String;
   const ImageW, ImageH: Integer): String;
 function ExtractPathFromScreenshotPaneSortKey(const SortKey: String): String;
@@ -460,6 +462,56 @@ begin
   else if Words.IndexOf('cover') >= 0 then
     Prio := 1
   else if (Words.IndexOf('box') >= 0) and (Words.IndexOf('front') >= 0) then
+    Prio := 2
+  else if Words.IndexOf('poster') >= 0 then
+    Prio := 3;
+
+  if (Prio > -1) and (not IsPortrait) then
+    Prio := Prio + 4;
+
+  if Prio < 0 then begin
+    if (Words.IndexOf('gameplay') >= 0) or (Words.IndexOf('screenshot') >= 0) then
+      Prio := 8
+    else
+      Prio := 9;
+  end;
+
+  Words.Free;
+  Result := Prio;
+end;
+
+function DetermineCoverImagePriority(const FileNameOrPath: String; const IsPortrait: Boolean;
+  const ImageW, ImageH: Integer): Integer;
+var
+  Name: String;
+  Words: TStringList;
+  I: Integer;
+  Prio: Integer;
+  HasCoverOrBox, HasFront, HasRearOrBack: Boolean;
+begin
+  if (ImageW < 1) or (ImageH < 1) or (ImageW + ImageH < 300) then begin
+    Result := 9;
+    Exit;
+  end;
+
+  Name := AnsiLowerCase(FileNameOrPath);
+  for I := 1 to Length(Name) do
+    if not (Name[I] in ['a'..'z']) then
+      Name[I] := ' ';
+
+  Words := TStringList.Create;
+  Words.AddStrings(Name.Split([' ', #9, '(', ')', ',', '-'], TStringSplitOptions.ExcludeEmpty));
+
+  HasCoverOrBox := (Words.IndexOf('cover') >= 0) or (Words.IndexOf('box') >= 0);
+  HasFront := Words.IndexOf('front') >= 0;
+  HasRearOrBack := (Words.IndexOf('rear') >= 0) or (Words.IndexOf('back') >= 0);
+
+  Prio := -1;
+  if HasCoverOrBox and HasFront then
+    Prio := 0
+  else if HasCoverOrBox and (not HasFront) and (not HasRearOrBack) then
+    Prio := 1
+  else if (Words.IndexOf('title') >= 0) and (not HasRearOrBack) then
     Prio := 2
   else if Words.IndexOf('poster') >= 0 then
     Prio := 3;

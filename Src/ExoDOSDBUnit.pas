@@ -342,12 +342,15 @@ begin
     Q.ParamByName('cat').AsString := Cat;
     if Prefix <> '' then
       Q.ParamByName('filter').AsString := Filter;
-    Q.Open;
-    while not Q.Eof do begin
-      result.Add(Q.FieldByName('FilePath').AsString);
-      Q.Next;
+    try
+      Q.Open;
+      while not Q.Eof do begin
+        result.Add(Q.FieldByName('FilePath').AsString);
+        Q.Next;
+      end;
+      Q.Close;
+    except
     end;
-    Q.Close;
   finally
     Q.Free;
   end;

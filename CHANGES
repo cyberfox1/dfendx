@@ -1,5 +1,16 @@
 DFendX Changelog
 
+Version 2.6.6 (10/25/2026)
+==========================
+- Cover Images main list view
+- Set as cover image context menu
+- Autoplay visibility option
+- Hide title pane when maximized
+- Monitor port option (X)
+- [Fix] Previous selected profile on startup
+- [Fix] List view column width
+
+
 Version 2.6.5 (10/18/2026)
 ==========================
 - AWE32 Romdir and RAM size options

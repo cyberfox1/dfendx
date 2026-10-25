@@ -265,6 +265,7 @@ const NR_Author=1;
       NR_MenuViewSmallIcons=31015;
       NR_MenuViewIcons=31016;
       NR_MenuViewScreenshots=31017;
+      NR_MenuViewCoverImages=31020;
       NR_MenuViewQuickStarter=31018;
       NR_MenuViewShowScreenshotPane=31019;
       NR_MenuRun=32001;
@@ -450,6 +451,7 @@ const NR_Author=1;
       NR_ScreenshotPopupDeleteAll=38114;
       NR_ScreenshotPopupUseAsBackground=38115;
       NR_ScreenshotPopupSetAsTitleImage=38117;
+      NR_ScreenshotPopupSetAsCoverImage=38116;
 
       NR_SoundsPopupOpenExternal=38151;
       NR_SoundsPopupSaveMp3=38152;
@@ -978,6 +980,7 @@ const NR_Author=1;
       NR_SetupFormDOSBoxDisableScreensaver=43212;
       NR_SetupFormDosBoxWaitOnError=43213;
       NR_SetupFormDOSBoxWebserverEnabled=43214;
+      NR_SetupFormDOSBoxMonitorPortEnabled=43215;
       NR_SetupFormDOSBoxCVSWarning=43251;
       NR_SetupFormDOSBoxCVSMountGroup=43252;
       NR_SetupFormDOSBoxCVSMultipleFloppyImages=43253;
@@ -1154,6 +1157,8 @@ const NR_Author=1;
       NR_FontStyleForFavoritesUnderline=43937;
       NR_ScreenshotListViewWidth=43938;
       NR_ScreenshotListViewHeight=43939;
+      NR_CoverListViewWidth=43940;
+      NR_CoverListViewHeight=43941;
       NR_SetupFormShowGridLines=43942;
       NR_SetupFormUseWindowsExeIcons=43943;
       NR_SetupFormNoteLinesInTooltips=43944;
@@ -1175,6 +1180,7 @@ const NR_Author=1;
       NR_SetupFormTextMediaViewerCustom=43960;
       NR_SetupFormTextMediaViewerCustomOpenCaption=43961;
       NR_SetupFormTextMediaViewerModal=43962;
+      NR_ScreenshotListViewShowCaptions=43963;
 
       NR_SetupFormWine=44001;
       NR_SetupFormWineEnable=44002;
@@ -2621,6 +2627,7 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property MenuViewSmallIcons : String index NR_MenuViewSmallIcons read GetString write SetString;
     property MenuViewIcons : String index NR_MenuViewIcons read GetString write SetString;
     property MenuViewScreenshots : String index NR_MenuViewScreenshots read GetString write SetString;
+    property MenuViewCoverImages : String index NR_MenuViewCoverImages read GetString write SetString;
     property MenuViewShowSearchBox : String index NR_MenuViewShowSearchBox read GetString write SetString;
     property MenuViewShowTooltips : String index NR_MenuViewShowTooltips read GetString write SetString;
     property MenuViewShowScreenshotPane : String index NR_MenuViewShowScreenshotPane read GetString write SetString;
@@ -2806,6 +2813,7 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property ScreenshotPopupDeleteAll : String index NR_ScreenshotPopupDeleteAll read GetString write SetString;
     property ScreenshotPopupUseAsBackground : String index NR_ScreenshotPopupUseAsBackground read GetString write SetString;
     property ScreenshotPopupSetAsTitleImage : String index NR_ScreenshotPopupSetAsTitleImage read GetString write SetString;
+    property ScreenshotPopupSetAsCoverImage : String index NR_ScreenshotPopupSetAsCoverImage read GetString write SetString;
     property SoundsPopupOpenExternal : String index NR_SoundsPopupOpenExternal read GetString write SetString;
 
     property SoundsPopupSaveMp3 : String index NR_SoundsPopupSaveMp3 read GetString write SetString;
@@ -3321,6 +3329,7 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property SetupFormDOSBoxDisableScreensaver : String index NR_SetupFormDOSBoxDisableScreensaver read GetString write SetString;
     property SetupFormDosBoxWaitOnError : String index NR_SetupFormDosBoxWaitOnError read GetString write SetString;
     property SetupFormDOSBoxWebserverEnabled : String index NR_SetupFormDOSBoxWebserverEnabled read GetString write SetString;
+    property SetupFormDOSBoxMonitorPortEnabled : String index NR_SetupFormDOSBoxMonitorPortEnabled read GetString write SetString;
     property SetupFormDOSBoxCVSWarning : String index NR_SetupFormDOSBoxCVSWarning read GetString write SetString;
     property SetupFormDOSBoxCVSMountGroup : String index NR_SetupFormDOSBoxCVSMountGroup read GetString write SetString;
     property SetupFormDOSBoxCVSMultipleFloppyImages : String index NR_SetupFormDOSBoxCVSMultipleFloppyImages read GetString write SetString;
@@ -3488,6 +3497,8 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property FontStyleForFavoritesUnderline : String index NR_FontStyleForFavoritesUnderline read GetString write SetString;
     property ScreenshotListViewWidth : String index NR_ScreenshotListViewWidth read GetString write SetString;
     property ScreenshotListViewHeight : String index NR_ScreenshotListViewHeight read GetString write SetString;
+    property CoverListViewWidth : String index NR_CoverListViewWidth read GetString write SetString;
+    property CoverListViewHeight : String index NR_CoverListViewHeight read GetString write SetString;
     property SetupFormShowGridLines : String index NR_SetupFormShowGridLines read GetString write SetString;
     property SetupFormUseWindowsExeIcons : String index NR_SetupFormUseWindowsExeIcons read GetString write SetString;
     property SetupFormNoteLinesInTooltips : String index NR_SetupFormNoteLinesInTooltips read GetString write SetString;
@@ -3509,6 +3520,7 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property SetupFormTextMediaViewerCustom : String index NR_SetupFormTextMediaViewerCustom read GetString write SetString;
     property SetupFormTextMediaViewerCustomOpenCaption : String index NR_SetupFormTextMediaViewerCustomOpenCaption read GetString write SetString;
     property SetupFormTextMediaViewerModal : String index NR_SetupFormTextMediaViewerModal read GetString write SetString;
+    property ScreenshotListViewShowCaptions : String index NR_ScreenshotListViewShowCaptions read GetString write SetString;
 
     property SetupFormWine : String index NR_SetupFormWine read GetString write SetString;
     property SetupFormWineEnable : String index NR_SetupFormWineEnable read GetString write SetString;
@@ -5049,6 +5061,7 @@ begin
   AddStringRec(NR_MenuViewSmallIcons,'Menu','View.SmallIcons','Small icons');
   AddStringRec(NR_MenuViewIcons,'Menu','View.Icons','Icons');
   AddStringRec(NR_MenuViewScreenshots,'Menu','View.Screenshots','Screenshots');
+  AddStringRec(NR_MenuViewCoverImages,'Menu','View.CoverImages','Cover Images');
   AddStringRec(NR_MenuViewQuickStarter,'Menu','View.QuickStarter','Show quick starter window');
   AddStringRec(NR_MenuRun,'Menu','Run','&Run');
   AddStringRec(NR_MenuRunGame,'Menu','Run.Game','Run &program');
@@ -5234,6 +5247,7 @@ begin
   AddStringRec(NR_ScreenshotPopupDeleteAll,'Menu','ScreenshotPopup.DeleteAll','Delete &all');
   AddStringRec(NR_ScreenshotPopupUseAsBackground,'Menu','ScreenshotPopup.UseAsBackground','Use as &background...');
   AddStringRec(NR_ScreenshotPopupSetAsTitleImage,'Menu','ScreenshotPopup.SetAsTitleImage','Set as &title image');
+  AddStringRec(NR_ScreenshotPopupSetAsCoverImage,'Menu','ScreenshotPopup.SetAsCoverImage','Set as &cover image');
   AddStringRec(NR_SoundsPopupOpenExternal,'Menu','SoundsPopup.OpenExternal','Open in default media player...');
   AddStringRec(NR_SoundsPopupSaveMp3,'Menu','SoundsPopup.SaveMp3','Save as &mp3 file...');
   AddStringRec(NR_SoundsPopupSaveOgg,'Menu','SoundsPopup.SaveOgg','Save as &ogg file...');
@@ -5748,6 +5762,7 @@ begin
   AddStringRec(NR_SetupFormDOSBoxDisableScreensaver,'SetupForm','DOSBoxDisableScreensaver','Disable screensaver when DOSBox is running');
   AddStringRec(NR_SetupFormDosBoxWaitOnError,'SetupForm','DOSBoxWaitOnError','Wait before closing the console if DOSBox has an error');
   AddStringRec(NR_SetupFormDOSBoxWebserverEnabled,'SetupForm','DOSBoxWebserverEnabled','Enable HTTP Internals API');
+  AddStringRec(NR_SetupFormDOSBoxMonitorPortEnabled,'SetupForm','DOSBoxMonitorPortEnabled','Enable Monitor Port');
   AddStringRec(NR_SetupFormDOSBoxCVSWarning,'SetupForm','DOSBoxCVS.Warning','Please do not activate this settings unless you use a build of DOSBox that supports them. Activating one of this features can result in profiles not runnable by normal DOSBox builds !');
   AddStringRec(NR_SetupFormDOSBoxCVSMountGroup,'SetupForm','DOSBoxCVS.MountGroup','Mounts editor features');
   AddStringRec(NR_SetupFormDOSBoxCVSMultipleFloppyImages,'SetupForm','DOSBoxCVS.MultipleFloppyImages','Allow multiple floppy images per drive');
@@ -5881,7 +5896,7 @@ begin
   AddStringRec(NR_SetupFormUpdateCheats2,'SetupForm','Update.Cheats2','Daily');
   AddStringRec(NR_SetupFormListViewSheet1,'SetupForm','GamesListGUI.Columns','Columns in the games list');
   AddStringRec(NR_SetupFormListViewSheet2,'SetupForm','GamesListGUI.ListAppearance','Games list');
-  AddStringRec(NR_SetupFormListViewSheet2b,'SetupForm','GamesListGUI.ListAppearanceScreenshotMode','List in screenshot mode');
+  AddStringRec(NR_SetupFormListViewSheet2b,'SetupForm','GamesListGUI.ListAppearanceScreenshotMode','List in images mode');
   AddStringRec(NR_SetupFormListViewSheet3,'SetupForm','GamesListGUI.TreeAppearance','Tree structure');
   AddStringRec(NR_SetupFormListViewSheet4,'SetupForm','GamesListGUI.ScreenshotListAppearance','Media preview');
   AddStringRec(NR_SetupFormBackgroundColorDefault,'SetupForm','BackgroundColor.Default','Default background color');
@@ -5918,6 +5933,8 @@ begin
   AddStringRec(NR_FontStyleForFavoritesUnderline,'SetupForm','FontStyleForFavorites.Underline','Underline');
   AddStringRec(NR_ScreenshotListViewWidth,'SetupForm','ScreenshotsModeListViewWidth','Width of the screenshots');
   AddStringRec(NR_ScreenshotListViewHeight,'SetupForm','ScreenshotsModeListViewHeight','Height of the screenshots');
+  AddStringRec(NR_CoverListViewWidth,'SetupForm','ScreenshotsModeListViewCoverWidth','Width of cover images');
+  AddStringRec(NR_CoverListViewHeight,'SetupForm','ScreenshotsModeListViewCoverHeight','Height of cover images');
   AddStringRec(NR_SetupFormShowGridLines,'SetupForm','ShowGridLinesInDetailsMode','Show grid lines in view style "report"');
   AddStringRec(NR_SetupFormUseWindowsExeIcons,'SetupForm','UseWindowsExeIcons','Use program file icon for Windows games profiles');
   AddStringRec(NR_SetupFormNoteLinesInTooltips,'SetupForm','NoteLinesInTooltips','Number of note lines in the tooltips in the games list');
@@ -5939,6 +5956,7 @@ begin
   AddStringRec(NR_SetupFormTextMediaViewerCustom,'SetupForm','MediaViewer.Custom','Use custom program');
   AddStringRec(NR_SetupFormTextMediaViewerCustomOpenCaption,'SetupForm','MediaViewer.Custom.OpenCaption','Select viewer to be used');
   AddStringRec(NR_SetupFormTextMediaViewerModal,'SetupForm','MediaViewer.Images.Modal','Show internal image viewer as modal window');
+  AddStringRec(NR_ScreenshotListViewShowCaptions,'SetupForm','ScreenshotsModeListViewShowCaptions','Show titles');
 end;
 
 Procedure TLanguageSetup.SetupLanguageStrings3;

@@ -15,10 +15,10 @@ Type TSortListBy=(slbName=1, slbSetup=2, slbGenre=3, slbDeveloper=4, slbPublishe
 Procedure InitTreeViewForGamesList(const ATreeView : TTreeView; const GameDB : TGameDB);
 Procedure InitListViewForGamesList(const AListView : TListView; const ShowExtraInfo : Boolean);
 
-Procedure AddGameToList(const AListView : TListView; var ItemsUsed : Integer; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const Game : TGame; const ShowExtraInfo : Boolean; const O,V : String; const VUserSt : TStringList; const T : String; const ScreenshotViewMode, ScummVMTemplate : Boolean; const UseBackgroundColor : Boolean; const BackgroundColor : TColor); overload;
-Procedure AddGameToList(const AListView : TListView; var ItemsUsed : Integer; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const Game : TGame; const ShowExtraInfo, ScreenshotViewMode, ScummVMTemplate : Boolean; const UseBackgroundColor : Boolean; const BackgroundColor : TColor); overload;
-Procedure AddGamesToList(const AListView : TListView; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const GameDB : TGameDB; const Group, SubGroup, SearchString : String; const ShowExtraInfo : Boolean; const SortBy : TSortListBy; const ReverseOrder, HideScummVMProfiles, HideWindowsProfiles, HideDefaultProfile, ScreenshotViewMode : Boolean); overload;
-Procedure AddGamesToList(const AListView : TListView; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const GameDB : TGameDB; const Game : TGame; const Group, SubGroup, SearchString : String; const ShowExtraInfo : Boolean; const SortBy : TSortListBy; const ReverseOrder, HideScummVMProfiles, HideWindowsProfiles, HideDefaultProfile, ScreenshotViewMode : Boolean); overload;
+Procedure AddGameToList(const AListView : TListView; var ItemsUsed : Integer; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const Game : TGame; const ShowExtraInfo : Boolean; const O,V : String; const VUserSt : TStringList; const T : String; const ScreenshotViewMode, ScummVMTemplate : Boolean; const UseBackgroundColor : Boolean; const BackgroundColor : TColor; const CoverViewMode : Boolean = False); overload;
+Procedure AddGameToList(const AListView : TListView; var ItemsUsed : Integer; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const Game : TGame; const ShowExtraInfo, ScreenshotViewMode, ScummVMTemplate : Boolean; const UseBackgroundColor : Boolean; const BackgroundColor : TColor; const CoverViewMode : Boolean = False); overload;
+Procedure AddGamesToList(const AListView : TListView; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const GameDB : TGameDB; const Group, SubGroup, SearchString : String; const ShowExtraInfo : Boolean; const SortBy : TSortListBy; const ReverseOrder, HideScummVMProfiles, HideWindowsProfiles, HideDefaultProfile, ScreenshotViewMode : Boolean; const CoverViewMode : Boolean = False); overload;
+Procedure AddGamesToList(const AListView : TListView; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const GameDB : TGameDB; const Game : TGame; const Group, SubGroup, SearchString : String; const ShowExtraInfo : Boolean; const SortBy : TSortListBy; const ReverseOrder, HideScummVMProfiles, HideWindowsProfiles, HideDefaultProfile, ScreenshotViewMode : Boolean; const CoverViewMode : Boolean = False); overload;
 Procedure GamesListSaveColWidths(const AListView : TListView);
 Procedure GamesListLoadColWidths(const AListView : TListView);
 Function GamesListSaveColWidthsToString(const AListView : TListView) : String;
@@ -171,6 +171,8 @@ var
   FKindIconCacheInited: Boolean = False;
   FScummListIconList: TImageList = nil;
   FScummListIconIndex: Integer = -1;
+  CoverPickMediaDB: TExoDOSMediaDB = nil;
+  CoverPickGamesDB: TExoDOSDB = nil;
 
   { Lazy-loaded embedded assets for list / editor UI. }
   FTooBigThumb: TBitmap = nil;
@@ -911,23 +913,32 @@ begin
   end;
 end;
 
-function AddEmbeddedIconToImageList(const ResName: String; const ImageList: TImageList): Boolean;
+function AddEmbeddedIconToImageList(const ResName: String; const ImageList: TImageList;
+  const UseBackgroundColor: Boolean = False; const BackgroundColor: TColor = clWhite): Boolean;
 var
   Ico: TIcon;
+  Side: Integer;
 begin
   Result := False;
   if ImageList = nil then Exit;
-  Ico := LoadEmbeddedIconResource(ResName, ImageList.Width, ImageList.Height);
+  if (ImageList.Width<=0) or (ImageList.Height<=0) then Exit;
+  Side:=ImageList.Width;
+  if ImageList.Height<Side then Side:=ImageList.Height;
+  Ico := LoadEmbeddedIconResource(ResName, Side, Side);
   if Ico = nil then Exit;
   try
-    ImageList.AddIcon(Ico);
+    if ImageList.Width=ImageList.Height then
+      ImageList.AddIcon(Ico)
+    else
+      ScaleGraphicToImageList(Ico, ImageList, True, UseBackgroundColor, BackgroundColor);
     Result := True;
   finally
     Ico.Free;
   end;
 end;
 
-function AddScummListIcon(const AListViewImageList, AListViewIconImageList: TImageList): Integer;
+function AddScummListIcon(const AListViewImageList, AListViewIconImageList: TImageList;
+  const UseBackgroundColor: Boolean; const BackgroundColor: TColor): Integer;
 begin
   Result := -1;
   if not FKindIconCacheInited then
@@ -937,8 +948,8 @@ begin
     Result := FScummListIconIndex;
     Exit;
   end;
-  if not AddEmbeddedIconToImageList('SCUMMVM', AListViewImageList) then Exit;
-  if not AddEmbeddedIconToImageList('SCUMMVM', AListViewIconImageList) then Exit;
+  if not AddEmbeddedIconToImageList('SCUMMVM', AListViewImageList, UseBackgroundColor, BackgroundColor) then Exit;
+  if not AddEmbeddedIconToImageList('SCUMMVM', AListViewIconImageList, UseBackgroundColor, BackgroundColor) then Exit;
   Result := AListViewIconImageList.Count - 1;
   FScummListIconList := AListViewIconImageList;
   FScummListIconIndex := Result;
@@ -951,7 +962,6 @@ function AddDosBoxKindIconsToList(const Kind: TDOSBoxKind;
 { Returns image index in AListViewIconImageList, or -1 if no icon loaded.
   Uses multi-size ICON resources — no runtime bitmap scale. }
 var
-  Ico: TIcon;
   ResName: String;
 begin
   Result := -1;
@@ -968,21 +978,8 @@ begin
 
   ResName := DOSBoxKindToResourceName(Kind);
 
-  Ico := LoadEmbeddedIconResource(ResName, AListViewImageList.Width, AListViewImageList.Height);
-  if Ico = nil then Exit;
-  try
-    AListViewImageList.AddIcon(Ico);
-  finally
-    Ico.Free;
-  end;
-
-  Ico := LoadEmbeddedIconResource(ResName, AListViewIconImageList.Width, AListViewIconImageList.Height);
-  if Ico = nil then Exit;
-  try
-    AListViewIconImageList.AddIcon(Ico);
-  finally
-    Ico.Free;
-  end;
+  if not AddEmbeddedIconToImageList(ResName, AListViewImageList, UseBackgroundColor, BackgroundColor) then Exit;
+  if not AddEmbeddedIconToImageList(ResName, AListViewIconImageList, UseBackgroundColor, BackgroundColor) then Exit;
 
   Result := AListViewIconImageList.Count - 1;
   FKindIconList := AListViewIconImageList;
@@ -1036,9 +1033,145 @@ begin
   end;
 end;
 
-Procedure AddGameToList(const AListView : TListView; var ItemsUsed : Integer; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const Game : TGame; const ShowExtraInfo : Boolean; const O,V : String; const VUserSt : TStringList; const T : String; const ScreenshotViewMode, ScummVMTemplate : Boolean; const UseBackgroundColor : Boolean; const BackgroundColor : TColor);
+Function ResolveSelectedCoverImagePath(const Game : TGame) : String;
+Var Candidate, CaptureDir : String;
+begin
+  result:='';
+  if Game=nil then exit;
+  Candidate:=Trim(Game.SelectedCoverImage);
+  if Candidate='' then exit;
+
+  CaptureDir:=Trim(Game.CaptureFolder);
+  if CaptureDir<>'' then CaptureDir:=MakeAbsPath(CaptureDir,PrgSetup.BaseDir);
+
+  if Pos('\',Candidate)=0 then begin
+    if CaptureDir<>'' then
+      Candidate:=IncludeTrailingPathDelimiter(CaptureDir)+Candidate
+    else
+      Candidate:=MakeAbsPath(Candidate,PrgSetup.BaseDir);
+  end else
+    Candidate:=MakeAbsPath(Candidate,PrgSetup.BaseDir);
+
+  if FileExists(Candidate) then result:=Candidate;
+end;
+
+Function PickCoverImageForGame(const Game : TGame; const TW, TH : Integer) : String;
+Var
+  Keys, St : TStringList;
+  ExtraRootPath, CaptureDir : String;
+
+  procedure ConsiderPath(const Path : String);
+  Var B : TBitmap;
+      Sz : Int64;
+      OW, OH, Prio : Integer;
+      IsPortrait : Boolean;
+  begin
+    if Path='' then exit;
+    if not Assigned(ScreenshotsCache) then exit;
+    if (TW<=0) or (TH<=0) then exit;
+    if not ScreenshotsCache.GetCachedMeta(Path,TW,TH,Sz,OW,OH) then begin
+      Sz:=GetFileSize(Path);
+      if (Sz<=0) or (Sz>MaxThumbSourceBytes) then exit;
+      B:=ScreenshotsCache.GetThumbnail(Path,TW,TH);
+      if B=nil then exit;
+      B.Free;
+      if not ScreenshotsCache.GetCachedMeta(Path,TW,TH,Sz,OW,OH) then exit;
+    end;
+    IsPortrait:=ImageIsPortrait(OW,OH);
+    Prio:=DetermineCoverImagePriority(Path,IsPortrait,OW,OH);
+    Keys.Add(BuildScreenshotPaneSortKey(Prio,Sz,Path,OW,OH));
+  end;
+
+  procedure ConsiderList(const List : TStringList);
+  Var I : Integer;
+  begin
+    if List=nil then exit;
+    for I:=0 to List.Count-1 do ConsiderPath(List[I]);
+  end;
+
+begin
+  Result:='';
+  if Game=nil then exit;
+  if not Assigned(ScreenshotsCache) then exit;
+  Keys:=TStringList.Create;
+  try
+    Keys.Sorted:=False;
+    St:=TStringList.Create;
+    try
+      CaptureDir:=Trim(Game.CaptureFolder);
+      if CaptureDir<>'' then CaptureDir:=MakeAbsPath(CaptureDir,PrgSetup.BaseDir);
+      if CaptureDir<>'' then
+        CollectMedia(IncludeTrailingPathDelimiter(CaptureDir), ImageExtensions, St, 0, 1);
+      ConsiderList(St);
+    finally
+      St.Free;
+    end;
+    if CoverPickMediaDB<>nil then begin
+      St:=CoverPickMediaDB.GetScreenshotPaths(NormalizeExoMediaKey(Game.ResolveGameTitle));
+      try
+        ConsiderList(St);
+      finally
+        St.Free;
+      end;
+      St:=CoverPickMediaDB.GetOtherImagePaths(NormalizeExoMediaKey(Game.ResolveGameTitle));
+      try
+        ConsiderList(St);
+      finally
+        St.Free;
+      end;
+      ExtraRootPath:='';
+      if CoverPickGamesDB<>nil then
+        ExtraRootPath:=GetGameDataParamByName(CoverPickGamesDB,ExoDOSTitleWithoutYear(Game.ResolveGameTitle),'RootFolder');
+      if ExtraRootPath<>'' then begin
+        St:=GetExoGameExtrasPaths(PrgSetup.ExoDOSDir, ExtraRootPath, ImageExtensions);
+        try
+          ConsiderList(St);
+        finally
+          St.Free;
+        end;
+      end;
+    end;
+    if Keys.Count=0 then Exit;
+    Keys.Sort;
+    Result:=ExtractPathFromScreenshotPaneSortKey(Keys[0]);
+  finally
+    Keys.Free;
+  end;
+end;
+
+Function LoadCoverToImageLists(const Game : TGame; ImageList2 : TImageList; const UseBackgroundColor : Boolean; const BackgroundColor : TColor) : Boolean;
+Var T : String;
+    B : TBitmap;
+begin
+  result:=False;
+  if (Game=nil) or (ImageList2=nil) then exit;
+  if not Assigned(ScreenshotsCache) then exit;
+  if (ImageList2.Width<=0) or (ImageList2.Height<=0) then exit;
+
+  B:=nil;
+  T:=ResolveSelectedCoverImagePath(Game);
+  if T<>'' then
+    B:=ScreenshotsCache.GetThumbnail(T,ImageList2.Width,ImageList2.Height);
+
+  if B=nil then begin
+    T:=PickCoverImageForGame(Game,ImageList2.Width,ImageList2.Height);
+    if T<>'' then begin
+      Game.SelectedCoverImage:=MakeRelPath(T,PrgSetup.BaseDir);
+      B:=ScreenshotsCache.GetThumbnail(T,ImageList2.Width,ImageList2.Height);
+    end;
+  end;
+  if B=nil then exit;
+  try
+    ImageList2.AddMasked(B,clNone);
+    result:=True;
+  finally
+    B.Free;
+  end;
+end;
+
+Procedure AddGameToList(const AListView : TListView; var ItemsUsed : Integer; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const Game : TGame; const ShowExtraInfo : Boolean; const O,V : String; const VUserSt : TStringList; const T : String; const ScreenshotViewMode, ScummVMTemplate : Boolean; const UseBackgroundColor : Boolean; const BackgroundColor : TColor; const CoverViewMode : Boolean = False);
 Var IconNr,I,J,Nr : Integer;
-    B : Boolean;
+    B, LargeThumb : Boolean;
     S : String;
     L : TListItem;
     SubUsed,SubCount : Integer;
@@ -1047,7 +1180,11 @@ Var IconNr,I,J,Nr : Integer;
 begin
   {Set IconNr to the corrosponding icon in imagelist}
   B:=False; IconNr:=0;
-  If ScreenshotViewMode then begin
+  LargeThumb:=ScreenshotViewMode or CoverViewMode;
+  If CoverViewMode then begin
+    B:=LoadCoverToImageLists(Game,AListViewIconImageList,UseBackgroundColor,BackgroundColor);
+    If B then IconNr:=AListViewIconImageList.Count-1;
+  end else If ScreenshotViewMode then begin
     B:=LoadScreenshotToImageLists(Game,AListViewIconImageList,UseBackgroundColor,BackgroundColor);
     If B then IconNr:=AListViewIconImageList.Count-1;
   end;
@@ -1060,7 +1197,7 @@ begin
     B:=(Icon<>nil);
     If B then begin
       AListViewImageList.AddIcon(Icon);
-      If ScreenshotViewMode then begin
+      If LargeThumb then begin
         ScaleGraphicToImageList(Icon,AListViewIconImageList,True,UseBackgroundColor,BackgroundColor);
       end else begin
         If Icon.Width>=AListViewIconImageList.Width then begin
@@ -1077,14 +1214,14 @@ begin
   { DOSBox-mode profiles with no custom icon: default list icon by DOSBox kind. }
   If (not B) and DOSBoxMode(Game) then begin
     I:=AddDosBoxKindIconsToList(Game.DosBoxKind,AListViewImageList,AListViewIconImageList,
-      ScreenshotViewMode,UseBackgroundColor,BackgroundColor);
+      LargeThumb,UseBackgroundColor,BackgroundColor);
     If I>=0 then begin
       B:=True;
       IconNr:=I;
     end;
   end;
   If (not B) and ScummVMMode(Game) then begin
-    I:=AddScummListIcon(AListViewImageList,AListViewIconImageList);
+    I:=AddScummListIcon(AListViewImageList,AListViewIconImageList,UseBackgroundColor,BackgroundColor);
     If I>=0 then begin
       B:=True;
       IconNr:=I;
@@ -1098,7 +1235,10 @@ begin
   inc(ItemsUsed);
 
   {Set caption}
-  If (Game.CacheName='') and (not Game.OwnINI) then begin
+  If (CoverViewMode and (not PrgSetup.CoverListViewShowCaptions))
+     or (ScreenshotViewMode and (not PrgSetup.ScreenshotListViewShowCaptions)) then
+    L.Caption:=''
+  else If (Game.CacheName='') and (not Game.OwnINI) then begin
     If ScummVMTemplate
       then L.Caption:=LanguageSetup.TemplateFormDefaultScummVM
       else L.Caption:=LanguageSetup.TemplateFormDefault;
@@ -1164,7 +1304,7 @@ begin
   end;
 end;
 
-Procedure AddGameToList(const AListView : TListView; var ItemsUsed : Integer; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const Game : TGame; const ShowExtraInfo, ScreenshotViewMode, ScummVMTemplate : Boolean; const UseBackgroundColor : Boolean; const BackgroundColor : TColor);
+Procedure AddGameToList(const AListView : TListView; var ItemsUsed : Integer; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const Game : TGame; const ShowExtraInfo, ScreenshotViewMode, ScummVMTemplate : Boolean; const UseBackgroundColor : Boolean; const BackgroundColor : TColor; const CoverViewMode : Boolean = False);
 Var O,V,VUser,T : String;
     VUserSt : TStringList;
 begin
@@ -1172,15 +1312,15 @@ begin
   VUserSt:=ValueToList(VUser);
   try
     If Trim(PrgSetup.ValueForNotSet)='' then T:=LanguageSetup.NotSet else T:=Trim(PrgSetup.ValueForNotSet);
-    AddGameToList(AListView,ItemsUsed,AListViewImageList,AListViewIconImageList,AImageList,Game,ShowExtraInfo,O,V,VUserSt,T,ScreenshotViewMode,ScummVMTemplate,UseBackgroundColor,BackgroundColor);
+    AddGameToList(AListView,ItemsUsed,AListViewImageList,AListViewIconImageList,AImageList,Game,ShowExtraInfo,O,V,VUserSt,T,ScreenshotViewMode,ScummVMTemplate,UseBackgroundColor,BackgroundColor,CoverViewMode);
   finally
     VUserSt.Free;
   end;
 end;
 
-Procedure AddGamesToList(const AListView : TListView; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const GameDB : TGameDB; const Group, SubGroup, SearchString : String; const ShowExtraInfo : Boolean; const SortBy : TSortListBy; const ReverseOrder, HideScummVMProfiles, HideWindowsProfiles, HideDefaultProfile, ScreenshotViewMode : Boolean);
+Procedure AddGamesToList(const AListView : TListView; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const GameDB : TGameDB; const Group, SubGroup, SearchString : String; const ShowExtraInfo : Boolean; const SortBy : TSortListBy; const ReverseOrder, HideScummVMProfiles, HideWindowsProfiles, HideDefaultProfile, ScreenshotViewMode : Boolean; const CoverViewMode : Boolean = False);
 begin
-  AddGamesToList(AListView,AListViewImageList,AListViewIconImageList,AImageList,GameDB,nil,Group,SubGroup,SearchString,ShowExtraInfo,SortBy,ReverseOrder,HideScummVMProfiles,HideWindowsProfiles,HideDefaultProfile,ScreenshotViewMode);
+  AddGamesToList(AListView,AListViewImageList,AListViewIconImageList,AImageList,GameDB,nil,Group,SubGroup,SearchString,ShowExtraInfo,SortBy,ReverseOrder,HideScummVMProfiles,HideWindowsProfiles,HideDefaultProfile,ScreenshotViewMode,CoverViewMode);
 end;
 
 Function SortByStartCount(Item1, Item2: Pointer) : Integer;
@@ -1188,7 +1328,7 @@ begin
   result:=History.GameStartCount(TGame(Item2).CacheName)-History.GameStartCount(TGame(Item1).CacheName);
 end;
 
-Procedure AddGamesToList(const AListView : TListView; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const GameDB : TGameDB; const Game : TGame; const Group, SubGroup, SearchString : String; const ShowExtraInfo : Boolean; const SortBy : TSortListBy; const ReverseOrder, HideScummVMProfiles, HideWindowsProfiles, HideDefaultProfile,  ScreenshotViewMode : Boolean); overload;
+Procedure AddGamesToList(const AListView : TListView; const AListViewImageList, AListViewIconImageList, AImageList : TImageList; const GameDB : TGameDB; const Game : TGame; const Group, SubGroup, SearchString : String; const ShowExtraInfo : Boolean; const SortBy : TSortListBy; const ReverseOrder, HideScummVMProfiles, HideWindowsProfiles, HideDefaultProfile,  ScreenshotViewMode : Boolean; const CoverViewMode : Boolean = False); overload;
 Var I,J,K,Nr,ItemsUsed : Integer;
     GroupUpper, SubGroupUpper : String;
     B, FirstDefaultTemplate : Boolean;
@@ -1253,8 +1393,16 @@ begin
     AListView.Columns.EndUpdate;
   end;
   RecentlyStarted:=nil;
+  CoverPickMediaDB:=nil;
+  CoverPickGamesDB:=nil;
   List:=TList.Create;
   try
+    If CoverViewMode and PrgSetup.HasValidExoInstallation then begin
+      If FileExists(PrgDataDir+ExoDOSMediaDBFile) then
+        CoverPickMediaDB:=TExoDOSMediaDB.Create(PrgDataDir+ExoDOSMediaDBFile);
+      If ExoDOSGamesList.DBFileExists then
+        CoverPickGamesDB:=TExoDOSDB.Create(ExoDOSGamesList.DBPath);
+    end;
     {Select games to add}
     Filter:=TGamesListFilter.Create;
     try
@@ -1408,14 +1556,14 @@ begin
               For I:=St.Count-1 downto 0 do begin
                 If (I mod 25=0) and Assigned(F) then Application.ProcessMessages;
                 if (St.Objects[I]=nil) or (not (St.Objects[I] is TGame)) then continue;
-                AddGameToList(AListView,ItemsUsed,AListViewImageList,AListViewIconImageList,AImageList,TGame(St.Objects[I]),ShowExtraInfo,O,V,VUserSt,T,ScreenshotViewMode,FirstDefaultTemplate,UseBackgroundColor,BackgroundColor);
+                AddGameToList(AListView,ItemsUsed,AListViewImageList,AListViewIconImageList,AImageList,TGame(St.Objects[I]),ShowExtraInfo,O,V,VUserSt,T,ScreenshotViewMode,FirstDefaultTemplate,UseBackgroundColor,BackgroundColor,CoverViewMode);
                 If (TGame(St.Objects[I]).CacheName='') and (not TGame(St.Objects[I]).OwnINI) then FirstDefaultTemplate:=False;
               end;
             end else begin
               For I:=0 to St.Count-1 do begin
                 If (I mod 25=0) and Assigned(F) then Application.ProcessMessages;
                 if (St.Objects[I]=nil) or (not (St.Objects[I] is TGame)) then continue;
-                AddGameToList(AListView,ItemsUsed,AListViewImageList,AListViewIconImageList,AImageList,TGame(St.Objects[I]),ShowExtraInfo,O,V,VUserSt,T,ScreenshotViewMode, not FirstDefaultTemplate,UseBackgroundColor,BackgroundColor);
+                AddGameToList(AListView,ItemsUsed,AListViewImageList,AListViewIconImageList,AImageList,TGame(St.Objects[I]),ShowExtraInfo,O,V,VUserSt,T,ScreenshotViewMode, not FirstDefaultTemplate,UseBackgroundColor,BackgroundColor,CoverViewMode);
                 If (TGame(St.Objects[I]).CacheName='') and (not TGame(St.Objects[I]).OwnINI) then FirstDefaultTemplate:=False;
               end;
             end;
@@ -1437,6 +1585,8 @@ begin
     end;
   finally
    if RecentlyStarted<>nil then RecentlyStarted.Free;
+    FreeAndNil(CoverPickMediaDB);
+    FreeAndNil(CoverPickGamesDB);
     List.Free;
     AListView.Columns.BeginUpdate;
     try

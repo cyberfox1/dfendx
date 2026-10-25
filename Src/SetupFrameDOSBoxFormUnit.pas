@@ -42,6 +42,7 @@ type
     CustomSetsLoadButton: TBitBtn;
     CustomSetsSaveButton: TBitBtn;
     HelpButton: TBitBtn;
+    MonitorPortCheckBox: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure RestoreDefaultValuesButtonClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -58,6 +59,7 @@ type
     GameDB : TGameDB;
     Function ExtendLanguageName(const ShortName : String) : String;
     procedure UpdateWebserverCheckEnabled;
+    procedure UpdateMonitorPortCheckEnabled;
   public
     { Public-Deklarationen }
     DOSBoxData : TDOSBoxData;
@@ -101,6 +103,7 @@ begin
   DisableScreensaverCheckBox.Caption:=LanguageSetup.SetupFormDosBoxDisableScreensaver;
   WaitOnErrorCheckBox.Caption:=LanguageSetup.SetupFormDosBoxWaitOnError;
   WebserverCheckBox.Caption:=LanguageSetup.SetupFormDOSBoxWebserverEnabled;
+  MonitorPortCheckBox.Caption:=LanguageSetup.SetupFormDOSBoxMonitorPortEnabled;
   SDLVideodriverLabel.Caption:=LanguageSetup.SetupFormDosBoxSDLVideodriver;
   SDLVideodriverInfoLabel.Caption:=LanguageSetup.SetupFormDosBoxSDLVideodriverInfo;
   SDLVideoDriverComboBox.Items[0]:=SDLVideoDriverComboBox.Items[0]+' ('+LanguageSetup.Default+')';
@@ -172,6 +175,7 @@ begin
   DisableScreensaverCheckBox.Checked:=DOSBoxData.DisableScreensaver;
   WaitOnErrorCheckBox.Checked:=DOSBoxData.WaitOnError;
   WebserverCheckBox.Checked:=DOSBoxData.WebserverEnabled;
+  MonitorPortCheckBox.Checked:=DOSBoxData.MonitorPortEnabled;
   If Trim(ExtUpperCase(DOSBoxData.SDLVideodriver))='WINDIB' then SDLVideoDriverComboBox.ItemIndex:=1 else SDLVideoDriverComboBox.ItemIndex:=0;
 
   St:=StringToStringList(DOSBoxData.CustomSettings);
@@ -242,6 +246,21 @@ begin
   WebserverCheckBox.Enabled:=(Kind=dbkStaging) and (Trim(Version)<>'') and (CompareDOSBoxVersion(Version,'0.83.0.0')>=0);
 end;
 
+procedure TSetupFrameDOSBoxForm.UpdateMonitorPortCheckEnabled;
+Var AbsDir, Version: String;
+    Kind: TDOSBoxKind;
+begin
+  AbsDir:=Trim(DosBoxDirEdit.Text);
+  Version:='';
+  Kind:=dbkNone;
+  if AbsDir<>'' then begin
+    AbsDir:=MakeAbsPath(AbsDir,PrgSetup.BaseDir);
+    AbsDir:=IncludeTrailingPathDelimiter(AbsDir);
+    Kind:=DetermineDosBoxKind(AbsDir, Version);
+  end;
+  MonitorPortCheckBox.Enabled:=(Kind=dbkX);
+end;
+
 procedure TSetupFrameDOSBoxForm.DosBoxDirEditChange(Sender: TObject);
 Var S,S2,AbsDir,Version : String;
     I,J : Integer;
@@ -279,6 +298,7 @@ begin
   WarningButton.Visible:=OldDOSBoxVersion(Version);
   DosBoxDirEdit.Width:=IfThen(WarningButton.Visible,WarningButton.Left-4,WarningButton.Left+WarningButton.Width)-DosBoxDirEdit.Left;
   UpdateWebserverCheckEnabled;
+  UpdateMonitorPortCheckEnabled;
 end;
 
 procedure TSetupFrameDOSBoxForm.ButtonWork(Sender: TObject);
@@ -349,6 +369,7 @@ begin
   DOSBoxData.DisableScreensaver:=DisableScreensaverCheckBox.Checked;
   DOSBoxData.WaitOnError:=WaitOnErrorCheckBox.Checked;
   DOSBoxData.WebserverEnabled:=WebserverCheckBox.Checked;
+  DOSBoxData.MonitorPortEnabled:=MonitorPortCheckBox.Checked;
   If SDLVideoDriverComboBox.ItemIndex=1 then DOSBoxData.SDLVideodriver:='WinDIB' else DOSBoxData.SDLVideodriver:='DirectX';
   DOSBoxData.CustomSettings:=StringListToString(CustomSetsMemo.Lines);
 end;
@@ -373,6 +394,7 @@ begin
   CenterDOSBoxCheckBox.Checked:=False;
   DisableScreensaverCheckBox.Checked:=False;
   WebserverCheckBox.Checked:=False;
+  MonitorPortCheckBox.Checked:=False;
   If IsWindowsVista then SDLVideoDriverComboBox.ItemIndex:=1 else SDLVideoDriverComboBox.ItemIndex:=0;
 end;
 

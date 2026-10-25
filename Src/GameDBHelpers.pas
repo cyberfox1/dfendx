@@ -169,6 +169,7 @@ const NR_Name=1;
       NR_IgnoreWindowsFileWarnings=25;
       NR_NoDOSBoxFailedDialog=26;
       NR_SelectedTitleImage=27;
+      NR_SelectedCoverImage=28;
 
       NR_ExtraPrgFile=30; {30-79}
       NR_ExtraPrgFileParameter=80; {80-129}
@@ -586,6 +587,7 @@ Type TGameDBH=class;
     property NoDOSBoxFailedDialog : Boolean index NR_NoDOSBoxFailedDialog read GetBoolean write SetBoolean;
     { Cached path for main-form screenshot pane; empty = run pick algo. }
     property SelectedTitleImage : String index NR_SelectedTitleImage read GetString write SetString;
+    property SelectedCoverImage : String index NR_SelectedCoverImage read GetString write SetString;
 
     property ExtraPrgFile[I : Integer] : String read GetExtraPrgFile write SetExtraPrgFile;
     property ExtraPrgFileParameter[I : Integer] : String read GetExtraPrgFileParameter write SetExtraPrgFileParameter;
@@ -1220,6 +1222,7 @@ begin
   AddBooleanRec(NR_IgnoreWindowsFileWarnings,'Extras','IgnoreWindowsFileWarnings',False);
   AddBooleanRec(NR_NoDOSBoxFailedDialog,'Extras','NoDOSBoxFailedDialog',False);
   AddStringRec(NR_SelectedTitleImage,'Extra','SelectedTitleImage','');
+  AddStringRec(NR_SelectedCoverImage,'Extra','SelectedCoverImage','');
 
   For I:=0 to 49 do begin
     AddStringRec(NR_ExtraPrgFile+I,'Extra','ExtraExe'+IntToStr(I),'');

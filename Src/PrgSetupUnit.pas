@@ -18,7 +18,7 @@ omPortable=like omPrgDir, but DosBoxDir, BaseDir, GameDir and DataDir are stored
 Type TDOSBoxData=record
   Name, DosBoxDir, DosBoxMapperFile, DosBoxLanguage, SDLVideodriver, CommandLineParameters, CustomSettings : String;
   KeyboardLayout, Codepage : String;
-  HideDosBoxConsole, CenterDOSBoxWindow, DisableScreensaver, WaitOnError, WebserverEnabled : Boolean;
+  HideDosBoxConsole, CenterDOSBoxWindow, DisableScreensaver, WaitOnError, WebserverEnabled, MonitorPortEnabled : Boolean;
 end;
 
 Type TDOSBoxSetting=class
@@ -27,7 +27,7 @@ Type TDOSBoxSetting=class
     FNr : Integer;
     FName, FDosBoxDir, FDosBoxMapperFile, FDosBoxLanguage, FSDLVideodriver, FCommandLineParameters, FCustomSettings : String;
     FKeyboardLayout, FCodepage : String;
-    FHideDosBoxConsole, FCenterDOSBoxWindow, FDisableScreensaver, FWaitOnError, FWebserverEnabled : Boolean;
+    FHideDosBoxConsole, FCenterDOSBoxWindow, FDisableScreensaver, FWaitOnError, FWebserverEnabled, FMonitorPortEnabled : Boolean;
     FDosBoxKind : TDOSBoxKind;
     FDosBoxVersion : String;
     Procedure ReadSettings;
@@ -62,6 +62,7 @@ Type TDOSBoxSetting=class
     property DisableScreensaver : Boolean read FDisableScreensaver write FDisableScreensaver;
     property WaitOnError : Boolean read FWaitOnError write FWaitOnError;
     property WebserverEnabled : Boolean read FWebserverEnabled write FWebserverEnabled;
+    property MonitorPortEnabled : Boolean read FMonitorPortEnabled write FMonitorPortEnabled;
 
     property DosBoxKind : TDOSBoxKind read FDosBoxKind;
     { Normalized install version (e.g. 0.83.0.0); empty if unknown / not calculable. }
@@ -260,6 +261,9 @@ Type TPrgSetup=class(TBasePrgSetup)
     property ShowToolbarButtonEdit : Boolean index 41 read GetBoolean write SetBoolean;
     property ShowToolbarButtonDelete : Boolean index 42 read GetBoolean write SetBoolean;
     property ShowToolbarButtonHelp : Boolean index 43 read GetBoolean write SetBoolean;
+    property ShowToolbarButtonAutoplay : Boolean index 93 read GetBoolean write SetBoolean;
+    property ScreenshotListViewShowCaptions : Boolean index 94 read GetBoolean write SetBoolean;
+    property CoverListViewShowCaptions : Boolean index 95 read GetBoolean write SetBoolean;
     property RestoreWhenDOSBoxCloses : Boolean index 44 read GetBoolean write SetBoolean;
     property NonFavoritesBold : Boolean index 45 read GetBoolean write SetBoolean;
     property NonFavoritesItalic : Boolean index 46 read GetBoolean write SetBoolean;
@@ -328,6 +332,8 @@ Type TPrgSetup=class(TBasePrgSetup)
     property CompressionLevel : Integer index 15 read GetInteger write SetInteger;
     property ScreenshotListViewWidth : Integer index 16 read GetInteger write SetInteger;
     property ScreenshotListViewHeight : Integer index 17 read GetInteger write SetInteger;
+    property CoverListViewWidth : Integer index 40 read GetInteger write SetInteger;
+    property CoverListViewHeight : Integer index 41 read GetInteger write SetInteger;
     property QuickStarterLeft : Integer index 18 read GetInteger write SetInteger;
     property QuickStarterTop : Integer index 19 read GetInteger write SetInteger;
     property QuickStarterWidth : Integer index 20 read GetInteger write SetInteger;
@@ -380,6 +386,7 @@ constructor TDOSBoxSetting.Create(const APrgSetup: TBasePrgSetup; const ANr: Int
 begin
   inherited Create;
   FWebserverEnabled:=False;
+  FMonitorPortEnabled:=False;
   FPrgSetup:=APrgSetup;
   If not (Self is TEphemeralDOSBoxInstall) then begin
     FNr:=ANr;
@@ -419,6 +426,7 @@ begin
   FDisableScreensaver:=FPrgSetup.MemIni.ReadBool(Section,'DisableScreensaver',False);
   FWaitOnError:=FPrgSetup.MemIni.ReadBool(Section,'WaitOnError',True);
   FWebserverEnabled:=FPrgSetup.MemIni.ReadBool(Section,'WebserverEnabled',False);
+  FMonitorPortEnabled:=FPrgSetup.MemIni.ReadBool(Section,'MonitorPortEnabled',False);
 
   UpdateDosBoxKind;
 end;
@@ -445,6 +453,7 @@ begin
   FPrgSetup.MemIni.WriteBool(Section,'DisableScreensaver',FDisableScreensaver);
   FPrgSetup.MemIni.WriteBool(Section,'WaitOnError',FWaitOnError);
   FPrgSetup.MemIni.WriteBool(Section,'WebserverEnabled',FWebserverEnabled);
+  FPrgSetup.MemIni.WriteBool(Section,'MonitorPortEnabled',FMonitorPortEnabled);
 
   FPrgSetup.UpdateFile;
 end;
@@ -879,6 +888,9 @@ begin
   AddBooleanRec(41,'ProgramSets','ShowToolbarButtonEdit',True);
   AddBooleanRec(42,'ProgramSets','ShowToolbarButtonDelete',True);
   AddBooleanRec(43,'ProgramSets','ShowToolbarButtonHelp',True);
+  AddBooleanRec(93,'ProgramSets','ShowToolbarButtonAutoplay',True);
+  AddBooleanRec(94,'ProgramSets','ScreenshotsGamesList.ShowCaptions',True);
+  AddBooleanRec(95,'ProgramSets','CoverGamesList.ShowCaptions',False);
   AddBooleanRec(44,'ProgramSets','RestoreWindowWhenDOSBoxCloses',False);
   AddBooleanRec(45,'ProgramSets','NonFavorites.Bold',False);
   AddBooleanRec(46,'ProgramSets','NonFavorites.Italic',False);
@@ -948,6 +960,8 @@ begin
   AddIntegerRec(15,'ProgramSets','CompressionLevel',3);
   AddIntegerRec(16,'ProgramSets','ScreenshotsGamesList.Width',150);
   AddIntegerRec(17,'ProgramSets','ScreenshotsGamesList.Height',100);
+  AddIntegerRec(40,'ProgramSets','CoverGamesList.Width',150);
+  AddIntegerRec(41,'ProgramSets','CoverGamesList.Height',200);
   AddIntegerRec(18,'ProgramSets','QuickStarterLeft',-1);
   AddIntegerRec(19,'ProgramSets','QuickStarterTop',-1);
   AddIntegerRec(20,'ProgramSets','QuickStarterWidth',-1);
@@ -1197,6 +1211,7 @@ begin
   DOSBoxData.DisableScreensaver:=DOSBoxSetting.DisableScreensaver;
   DOSBoxData.WaitOnError:=DOSBoxSetting.WaitOnError;
   DOSBoxData.WebserverEnabled:=DOSBoxSetting.WebserverEnabled;
+  DOSBoxData.MonitorPortEnabled:=DOSBoxSetting.MonitorPortEnabled;
 end;
 
 Function DOSBoxDataToDOSBoxSetting(const DOSBoxData : TDOSBoxData; const DOSBoxSetting : TDOSBoxSetting) : String;
@@ -1217,6 +1232,7 @@ begin
   DOSBoxSetting.DisableScreensaver:=DOSBoxData.DisableScreensaver;
   DOSBoxSetting.WaitOnError:=DOSBoxData.WaitOnError;
   DOSBoxSetting.WebserverEnabled:=DOSBoxData.WebserverEnabled;
+  DOSBoxSetting.MonitorPortEnabled:=DOSBoxData.MonitorPortEnabled;
   if DirChanged then
     Result:=DOSBoxData.Name
   else
@@ -1240,6 +1256,7 @@ begin
     DisableScreensaver:=False;
     WaitOnError:=True;
     WebserverEnabled:=False;
+    MonitorPortEnabled:=False;
   end;
 end;
 

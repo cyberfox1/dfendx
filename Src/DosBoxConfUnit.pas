@@ -405,7 +405,7 @@ begin
     If S='' then S:='512';
     Dest.Add('memsize='+S);
     S:=Trim(Game.AWE32RomFile);
-    If S<>'' then Dest.Add('rompath='+S);
+    If S<>'' then Dest.Add('rompath='+MakeAbsPath(S,PrgSetup.BaseDir));
   end;
 
   Dest.Add('');
@@ -719,6 +719,8 @@ begin
     S:=Trim(Game.FloppyDiskSpeed);
     If S<>'' then Dest.Add('floppy_disk_speed='+S);
   end;
+  If Game.IsDBX and PrgSetup.DOSBoxSettings[DOSBoxNr].MonitorPortEnabled then
+    Dest.Add('enable monitor='+BoolToStr(True));
 end;
 
 Procedure GenerateDiskNoiseConf(const Game: TGame; const Dest: TStrings);

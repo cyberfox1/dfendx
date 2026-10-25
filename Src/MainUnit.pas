@@ -188,6 +188,7 @@ type
     N24: TMenuItem;
     ScreenshotPopupUseAsBackground: TMenuItem;
     ScreenshotPopupSetAsTitleImage: TMenuItem;
+    ScreenshotPopupSetAsCoverImage: TMenuItem;
     ScreenshotPopupRename: TMenuItem;
     SoundPopupRename: TMenuItem;
     MenuExtrasCreateISOImage: TMenuItem;
@@ -260,8 +261,11 @@ type
     MenuRunExtraFile: TMenuItem;
     PopupRunExtraFile: TMenuItem;
     MenuViewsScreenshots: TMenuItem;
+    MenuViewsCoverImages: TMenuItem;
     PopupScreenshots: TMenuItem;
+    PopupCoverImages: TMenuItem;
     ListviewScreenshotImageList: TImageList;
+    ListviewCoverImageList: TImageList;
     PopupMakeZipArchive: TMenuItem;
     N30: TMenuItem;
     MenuProfileMakeZipArchive: TMenuItem;
@@ -461,6 +465,7 @@ type
     Procedure LoadMenuLanguage;
     Procedure InitGUI(const FirstInit : Boolean);
     Procedure InitViewStyle;
+    Procedure ApplyListViewListColumnWidth;
     Procedure SelectGame(const AGame : TGame); overload;
     Procedure SelectGame(const AGameName : String); overload;
     Procedure LoadAbandonLinks;
@@ -492,6 +497,7 @@ type
     Procedure LoadGUISetup(const PrgStart : Boolean);
     Procedure SetupToolbarHints;
     Procedure SyncSoundtrackAutoplaySwitch;
+    Procedure SwitchOffSoundtrackAutoplayBeforeHide;
     Procedure LoadListViewGUISetup(const ListView : TListView; const Background, FontColor : String; const FontSize : Integer);
     Procedure LoadLabelGUISetup(const L : TPanel; const Background, FontColor : String; const FontSize : Integer);
     Procedure LoadRichEditGUISetup(const R : TRichEdit; const Background, FontColor : String; const FontSize : Integer);
@@ -573,6 +579,7 @@ Var LastDOSBoxCount : Integer=0;
     LastLeft : Integer = -1;
     LastTop : Integer = -1;
     ScreenshotPaneForm : TScreenshotPaneForm = nil;
+    ScreenshotPaneHiddenForMaximize : Boolean = False;
     DesiredLogLevel : TLogLevel;
 
 procedure TDFendReloadedMainForm.FormCreate(Sender: TObject);
@@ -580,6 +587,7 @@ Var S : String;
     B : Boolean;
     CacheDir : String;
     DOSBoxSearch : TDOSBoxSearchResult;
+    EmptyIcon : TBitmap;
 begin
   SetLogLevel(PrgSetup.LogLevel);
 
@@ -595,6 +603,14 @@ begin
   {Caption:=Caption+' THIS IS A TEST VERSION ! (Beta 1 of version 1.5)';}
   {Caption:=Caption+' (Release candidate 1 of version 1.4.4)';}
 
+  EmptyIcon:=TBitmap.Create;
+  try
+    EmptyIcon.Width:=ImageList.Width;
+    EmptyIcon.Height:=ImageList.Height;
+    While ImageList.Count<50 do ImageList.Add(EmptyIcon,EmptyIcon);
+  finally
+    EmptyIcon.Free;
+  end;
   MI_Count:=ImageList.Count;
   Height:=790;
   Width:=Min(Width,790);
@@ -697,6 +713,7 @@ Var G : TGame;
     S : String;
     St : TStringList;
     I : Integer;
+    B : TBitmap;
     CurrentExeVersion, CurrentINIVersion : String;
 begin
   If not JustStarted then exit;
@@ -845,6 +862,7 @@ begin
   except end;
 
   GamesListSaveColWidths(ListView);
+  If ListView.Selected<>nil then PrgSetup.LastSelectedProfile:=TGame(ListView.Selected.Data).CacheName;
   StopCaptureChangeNotify;
   RevokeDragDrop(Handle);
   RevokeDragDrop(GameNotesEdit.Handle);
@@ -864,7 +882,6 @@ begin
     LogInfo('Invalid configuration, exiting!');
     Exit;
   end;
-  If ListView.Selected<>nil then PrgSetup.LastSelectedProfile:=TGame(ListView.Selected.Data).CacheName else PrgSetup.LastSelectedProfile:='';
   PrgSetup.MainMaximized:=(WindowState=wsMaximized);
   PrgSetup.MainLeft:=Left;
   PrgSetup.MainTop:=Top;
@@ -932,6 +949,7 @@ begin
   MenuViewsSmallIcons.Caption:=LanguageSetup.MenuViewSmallIcons;
   MenuViewsIcons.Caption:=LanguageSetup.MenuViewIcons;
   MenuViewsScreenshots.Caption:=LanguageSetup.MenuViewScreenshots;
+  MenuViewsCoverImages.Caption:=LanguageSetup.MenuViewCoverImages;
   MenuViewsQuickStarter.Caption:=LanguageSetup.MenuViewQuickStarter;
   MenuRun.Caption:=LanguageSetup.MenuRun;
   MenuRunGame.Caption:=LanguageSetup.MenuRunGame;
@@ -1108,6 +1126,7 @@ begin
   PopupSmallIcons.Caption:=LanguageSetup.MenuViewSmallIcons;
   PopupIcons.Caption:=LanguageSetup.MenuViewIcons;
   PopupScreenshots.Caption:=LanguageSetup.MenuViewScreenshots;
+  PopupCoverImages.Caption:=LanguageSetup.MenuViewCoverImages;
 
   CaptureScreenshotsTab.Caption:=LanguageSetup.CaptureScreenshots;
   If ListView.Selected<>nil then begin
@@ -1147,6 +1166,7 @@ begin
   ScreenshotPopupDeleteAll.Caption:=LanguageSetup.ScreenshotPopupDeleteAll;
   ScreenshotPopupUseAsBackground.Caption:=LanguageSetup.ScreenshotPopupUseAsBackground;
   ScreenshotPopupSetAsTitleImage.Caption:=LanguageSetup.ScreenshotPopupSetAsTitleImage;
+  ScreenshotPopupSetAsCoverImage.Caption:=LanguageSetup.ScreenshotPopupSetAsCoverImage;
 
   SoundPopupOpen.Caption:=LanguageSetup.ScreenshotPopupOpen;
   SoundPopupOpenExternal.Caption:=LanguageSetup.SoundsPopupOpenExternal;
@@ -1392,6 +1412,9 @@ begin
   ButtonEdit.Visible:=PrgSetup.ShowToolbarButtonEdit;
   ButtonDelete.Visible:=PrgSetup.ShowToolbarButtonDelete;
   ButtonHelp.Visible:=PrgSetup.ShowToolbarButtonHelp;
+  SoundtrackAutoplaySwitch.Visible:=PrgSetup.ShowToolbarButtonAutoplay;
+  ToolButtonSoundtrackSep.Visible:=PrgSetup.ShowToolbarButtonAutoplay;
+  If (not PrgSetup.ShowToolbar) or (not PrgSetup.ShowToolbarButtonAutoplay) then SwitchOffSoundtrackAutoplayBeforeHide;
 
   SearchEdit.Visible:=PrgSetup.ShowSearchBox;
   MenuViewsShowSearchBox.Checked:=PrgSetup.ShowSearchBox;
@@ -1433,6 +1456,7 @@ begin
   If S='SMALLICONS' then I:=4;
   If S='ICONS' then I:=5;
   If S='SCREENSHOTS' then I:=6;
+  If S='COVERIMAGES' then I:=7;
 
   Case I of
     0 : begin
@@ -1486,13 +1510,39 @@ begin
           ListView.SmallImages:=nil;
           ListView.ViewStyle:=vsIcon;
         end;
+    7 : begin
+          MenuViewsCoverImages.Checked:=True;
+          PopupCoverImages.Checked:=True;
+          ListView.LargeImages:=ListviewCoverImageList;
+          ListView.SmallImages:=nil;
+          ListView.ViewStyle:=vsIcon;
+        end;
   end;
 
   TreeViewChange(TreeView,TreeView.Selected);
   { ViewStyle flip removed: expensive rebuild on large lists. }
+  ApplyListViewListColumnWidth;
 
   If ListView.ViewStyle=vsSmallIcon then
     ListView.Arrange(arDefault);
+end;
+
+procedure TDFendReloadedMainForm.ApplyListViewListColumnWidth;
+Var I, W, Need, Pad : Integer;
+    G : TGame;
+begin
+  If ListView.ViewStyle<>vsList then exit;
+  If ListView.Columns.Count=0 then exit;
+  If ListView.SmallImages<>nil then Pad:=ListView.SmallImages.Width+8 else Pad:=8;
+  Need:=120;
+  For I:=0 to GameDB.Count-1 do begin
+    G:=GameDB[I];
+    If G=nil then continue;
+    W:=ListView.Canvas.TextWidth(G.CacheName)+Pad;
+    If W>Need then Need:=W;
+  end;
+  ListView.Column[0].Width:=Need;
+  ListView_SetColumnWidth(ListView.Handle, 0, Need);
 end;
 
 Procedure TDFendReloadedMainForm.LoadAbandonLinks;
@@ -1752,7 +1802,7 @@ Var S : String;
 begin
   If Trim(AGameName)='' then exit;
   S:=Trim(ExtUpperCase(AGameName));
-  For I:=0 to ListView.Items.Count-1 do If TGame(ListView.Items[I].Data).CacheNameUpper=S then begin
+  For I:=0 to ListView.Items.Count-1 do If Trim(TGame(ListView.Items[I].Data).CacheNameUpper)=S then begin
     ListView.Selected:=ListView.Items[I];
     SelectGame(TGame(ListView.Items[I].Data));
   end;
@@ -1795,12 +1845,12 @@ begin
         If SearchEdit.Font.Color<>clGray then S:=SearchEdit.Text else S:='';
 
         If TreeView.Selected=nil then begin
-          AddGamesToList(ListView,IL2,IL1,ImageList,GameDB,RemoveUnderline(LanguageSetup.All),'',S,PrgSetup.ShowExtraInfo,ListSort,ListSortReverse,False,False,False,MenuViewsScreenshots.Checked);
+          AddGamesToList(ListView,IL2,IL1,ImageList,GameDB,RemoveUnderline(LanguageSetup.All),'',S,PrgSetup.ShowExtraInfo,ListSort,ListSortReverse,False,False,False,MenuViewsScreenshots.Checked,MenuViewsCoverImages.Checked);
         end else begin
           If TreeView.Selected.Parent=nil then begin
-            AddGamesToList(ListView,IL2,IL1,ImageList,GameDB,TreeView.Selected.Text,'',S,PrgSetup.ShowExtraInfo,ListSort,ListSortReverse,False,False,False,MenuViewsScreenshots.Checked);
+            AddGamesToList(ListView,IL2,IL1,ImageList,GameDB,TreeView.Selected.Text,'',S,PrgSetup.ShowExtraInfo,ListSort,ListSortReverse,False,False,False,MenuViewsScreenshots.Checked,MenuViewsCoverImages.Checked);
           end else begin
-            AddGamesToList(ListView,IL2,IL1,ImageList,GameDB,TreeView.Selected.Parent.Text,TreeView.Selected.Text,S,PrgSetup.ShowExtraInfo,ListSort,ListSortReverse,False,False,False,MenuViewsScreenshots.Checked);
+            AddGamesToList(ListView,IL2,IL1,ImageList,GameDB,TreeView.Selected.Parent.Text,TreeView.Selected.Text,S,PrgSetup.ShowExtraInfo,ListSort,ListSortReverse,False,False,False,MenuViewsScreenshots.Checked,MenuViewsCoverImages.Checked);
           end;
         end;
 
@@ -2306,6 +2356,10 @@ begin
   { Do not create here — pane is created when the first title image is ready. }
   if ScreenshotPaneForm=nil then exit;
   if WindowState=wsMinimized then exit;
+  if WindowState=wsMaximized then begin
+    ScreenshotPaneForm.Hide;
+    exit;
+  end;
   if not HandleAllocated then exit;
   PositionScreenshotPane;
   if not ScreenshotPaneForm.HandleAllocated then
@@ -2340,6 +2394,10 @@ begin
   if FMainClosing or (csDestroying in ComponentState) then exit;
   if not PrgSetup.ShowScreenshotPane then begin
     if ScreenshotPaneForm<>nil then ScreenshotPaneForm.ClearImage;
+    exit;
+  end;
+  if WindowState=wsMaximized then begin
+    if ScreenshotPaneForm<>nil then ScreenshotPaneForm.Hide;
     exit;
   end;
 
@@ -2889,7 +2947,7 @@ begin
 
   If (not PrgSetup.ShowToolbarButtonClose) and (not PrgSetup.ShowToolbarButtonRun) and (not PrgSetup.ShowToolbarButtonRunSetup)
   and (not PrgSetup.ShowToolbarButtonAdd) and (not PrgSetup.ShowToolbarButtonEdit) and (not PrgSetup.ShowToolbarButtonDelete)
-  and (not PrgSetup.ShowToolbarButtonHelp) and (not PrgSetup.ShowSearchBox) then PrgSetup.ShowToolbarButtonRun:=True;
+  and (not PrgSetup.ShowToolbarButtonHelp) and (not PrgSetup.ShowToolbarButtonAutoplay) and (not PrgSetup.ShowSearchBox) then PrgSetup.ShowToolbarButtonRun:=True;
 
   LogInfo('Loading icons for buttons');
   St:=TStringList.Create;
@@ -2910,6 +2968,8 @@ begin
   LogInfo('Setting list view size');
   ListviewScreenshotImageList.Width:=PrgSetup.ScreenshotListViewWidth;
   ListviewScreenshotImageList.Height:=PrgSetup.ScreenshotListViewHeight;
+  ListviewCoverImageList.Width:=PrgSetup.CoverListViewWidth;
+  ListviewCoverImageList.Height:=PrgSetup.CoverListViewHeight;
   ListviewIconImageList.Height:=PrgSetup.IconSize;
   ListviewIconImageList.Width:=PrgSetup.IconSize;
 
@@ -2965,6 +3025,9 @@ begin
   ButtonEdit.Visible:=PrgSetup.ShowToolbarButtonEdit;
   ButtonDelete.Visible:=PrgSetup.ShowToolbarButtonDelete;
   ButtonHelp.Visible:=PrgSetup.ShowToolbarButtonHelp;
+  SoundtrackAutoplaySwitch.Visible:=PrgSetup.ShowToolbarButtonAutoplay;
+  ToolButtonSoundtrackSep.Visible:=PrgSetup.ShowToolbarButtonAutoplay;
+  If (not PrgSetup.ShowToolbar) or (not PrgSetup.ShowToolbarButtonAutoplay) then SwitchOffSoundtrackAutoplayBeforeHide;
 
   SearchEdit.Visible:=PrgSetup.ShowSearchBox;
   MenuViewsShowExtraInfo.Checked:=PrgSetup.ShowExtraInfo;
@@ -3505,6 +3568,7 @@ begin
       2010 : begin PrgSetup.ListViewStyle:='SmallIcons'; InitViewStyle; end;
       2011 : begin PrgSetup.ListViewStyle:='Icons'; InitViewStyle; end;
       2012 : begin PrgSetup.ListViewStyle:='Screenshots'; InitViewStyle; end;
+      2018 : begin PrgSetup.ListViewStyle:='CoverImages'; InitViewStyle; end;
       2013 : If not JustShowingOrHidingQuickStartForm then begin
                JustShowingOrHidingQuickStartForm:=True;
                try
@@ -3545,6 +3609,7 @@ begin
                PrgSetup.ShowToolbar:=not PrgSetup.ShowToolbar;
                CoolBar.Visible:=PrgSetup.ShowToolbar;
                MenuViewShowToolbar.Checked:=PrgSetup.ShowToolbar;
+               If not PrgSetup.ShowToolbar then SwitchOffSoundtrackAutoplayBeforeHide;
              end;
       {Run}
       3001 : begin
@@ -4156,6 +4221,8 @@ begin
   ScreenshotPopupCopy.Enabled:=B;
   ScreenshotPopupSave.Enabled:=B;
   ScreenshotPopupUseAsBackground.Enabled:=B;
+  ScreenshotPopupSetAsTitleImage.Enabled:=B;
+  ScreenshotPopupSetAsCoverImage.Enabled:=B;
   ScreenshotPopupRename.Enabled:=B and (not ExtrasMode);
   ScreenshotPopupDelete.Enabled:=B and (not ExtrasMode);
   { Shared menu with Screenshots: capture folder is meaningless for eXo-only Extras. }
@@ -4504,6 +4571,17 @@ begin
           If PrgSetup.ShowScreenshotPane then UpdateScreenshotPaneImage;
           { List screenshot-mode icons use SelectedTitleImage; refresh when visible. }
           If MenuViewsScreenshots.Checked then TreeViewChange(Sender,TreeView.Selected);
+        end;
+    13: If LV.Selected<>nil then begin
+          If (ListView.Selected=nil) or (ListView.Selected.Data=nil) then exit;
+          G:=TGame(ListView.Selected.Data);
+          S:=Trim(G.CaptureFolder);
+          If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
+          T:=GetImageListItemFilePath(LV.Selected,S);
+          If T='' then exit;
+          G.SelectedCoverImage:=MakeRelPath(T,PrgSetup.BaseDir);
+          G.StoreAllValues;
+          If MenuViewsCoverImages.Checked then TreeViewChange(Sender,TreeView.Selected);
         end;
     11: If (not ExtrasMode) and (ListView.Selected<>nil) then
           If RenameMediaFiles(self,TGame(ListView.Selected.Data),GameDB,rfScreenshots) then TreeViewChange(Sender,TreeView.Selected);
@@ -4968,14 +5046,24 @@ begin
 
   PostMessage(Handle,WM_User+2,0,0);
 
-  If (WindowState=wsMinimized) or (WindowState=wsMaximized) then exit;
-  If (BoundsRect.Left<0) and (BoundsRect.Top<0) and (BoundsRect.Right>=Screen.WorkAreaWidth-2) and (BoundsRect.Bottom>=Screen.WorkAreaHeight-2) then exit;
+  If WindowState=wsMinimized then exit;
+  If WindowState=wsMaximized then begin
+    if ScreenshotPaneForm<>nil then ScreenshotPaneForm.Hide;
+    ScreenshotPaneHiddenForMaximize:=True;
+    exit;
+  end;
+  if ScreenshotPaneHiddenForMaximize then begin
+    ScreenshotPaneHiddenForMaximize:=False;
+    if Assigned(PrgSetup) and PrgSetup.ShowScreenshotPane then
+      UpdateScreenshotPaneImage;
+  end;
+  If (BoundsRect.Left<0) and (BoundsRect.Top<0) and Assigned(Screen) and (BoundsRect.Right>=Screen.WorkAreaWidth-2) and (BoundsRect.Bottom>=Screen.WorkAreaHeight-2) then exit;
 
   SaveBoundsRect:=BoundsRect;
   SaveMaximizedState:=(WindowState=wsMaximized);
 
   If (ListView<>nil) and (ListView.ViewStyle=vsSmallIcon) then ListView.Arrange(arDefault);
-  if (ScreenshotPaneForm<>nil) and ScreenshotPaneForm.Visible then
+  if Assigned(PrgSetup) and PrgSetup.ShowScreenshotPane and (ScreenshotPaneForm<>nil) then
     BringScreenshotPaneWithMain;
 end;
 
@@ -5447,6 +5535,7 @@ end;
 
 procedure TDFendReloadedMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  If ListView.Selected<>nil then PrgSetup.LastSelectedProfile:=TGame(ListView.Selected.Data).CacheName else PrgSetup.LastSelectedProfile:='';
   FMainClosing:=True;
   CloseScreenshotPaneEarly;
   If Action=caHide then HTMLhelpRouter.Free;
@@ -5516,6 +5605,22 @@ begin
   finally
     SoundtrackAutoplaySwitch.OnClick:=OldClick;
   end;
+end;
+
+Procedure TDFendReloadedMainForm.SwitchOffSoundtrackAutoplayBeforeHide;
+Var OldClick : TNotifyEvent;
+begin
+  If not PrgSetup.SoundtrackAutoplay then exit;
+  OldClick:=SoundtrackAutoplaySwitch.OnClick;
+  SoundtrackAutoplaySwitch.OnClick:=nil;
+  try
+    SoundtrackAutoplaySwitch.State:=tssOff;
+    SoundtrackAutoplaySwitch.ThumbColor:=clGray;
+  finally
+    SoundtrackAutoplaySwitch.OnClick:=OldClick;
+  end;
+  PrgSetup.SoundtrackAutoplay:=False;
+  UpdateAmbientSoundtrack;
 end;
 
 procedure TDFendReloadedMainForm.SoundtrackAutoplaySwitchClick(Sender: TObject);

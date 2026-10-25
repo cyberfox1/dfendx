@@ -48,15 +48,15 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
     ExplicitLeft = 787
   end
   object SDLVideodriverLabel: TLabel
-    Left = 15
-    Top = 326
+    Left = 16
+    Top = 342
     Width = 83
     Height = 13
     Caption = 'SDL Videotreiber:'
   end
   object SDLVideodriverInfoLabel: TLabel
     Left = 238
-    Top = 345
+    Top = 361
     Width = 433
     Height = 37
     Anchors = [akLeft, akTop, akRight]
@@ -160,8 +160,8 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
     Caption = 'DOSBoxCodepageLabel'
   end
   object CustomSetsLabel: TLabel
-    Left = 14
-    Top = 380
+    Left = 16
+    Top = 393
     Width = 82
     Height = 13
     Caption = 'CustomSetsLabel'
@@ -198,7 +198,7 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
   end
   object SDLVideoDriverComboBox: TComboBox
     Left = 14
-    Top = 345
+    Top = 361
     Width = 218
     Height = 21
     Style = csDropDownList
@@ -336,8 +336,8 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
     TabOrder = 3
   end
   object CustomSetsMemo: TRichEdit
-    Left = 14
-    Top = 396
+    Left = 16
+    Top = 412
     Width = 639
     Height = 100
     Anchors = [akLeft, akTop, akRight, akBottom]
@@ -354,8 +354,8 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
   end
   object CustomSetsClearButton: TBitBtn
     Tag = 3
-    Left = 14
-    Top = 502
+    Left = 16
+    Top = 518
     Width = 105
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -380,7 +380,7 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
   object CustomSetsLoadButton: TBitBtn
     Tag = 4
     Left = 127
-    Top = 502
+    Top = 518
     Width = 105
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -405,7 +405,7 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
   object CustomSetsSaveButton: TBitBtn
     Tag = 5
     Left = 238
-    Top = 502
+    Top = 518
     Width = 105
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -436,6 +436,16 @@ object SetupFrameDOSBoxForm: TSetupFrameDOSBoxForm
     NumGlyphs = 2
     TabOrder = 19
     OnClick = HelpButtonClick
+  end
+  object MonitorPortCheckBox: TCheckBox
+    Left = 16
+    Top = 315
+    Width = 667
+    Height = 17
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 'Enable Monitor Port'
+    Enabled = False
+    TabOrder = 20
   end
   object DosBoxTxtOpenDialog: TOpenDialog
     DefaultExt = 'txt'

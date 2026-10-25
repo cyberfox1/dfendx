@@ -513,10 +513,8 @@ begin
       For I:=0 to St.Count-1 do begin
         if not TryStrToInt(St[I],J) then continue;
         If J<1 then continue;
-        If J>IL.Count then begin
-          If not AddImages then continue;
+        If J>IL.Count then
           AddEmptyImages(IL,ImageLoaded,J-1);
-        end;
         LoadIconToImageList(IL,J-1,MakeExtAbsPath(Ini.ReadString(IniSectionName,IntToStr(J),''),RelBase));
         If AddImages then ImageLoaded[J-1]:=Pointer(1);
       end;
