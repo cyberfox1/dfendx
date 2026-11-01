@@ -77,6 +77,8 @@ const DI_OK=0;
       DI_Collapse=64;
       DI_Warning=65;
       DI_Information=66;
+      DI_UseAsScreenshot=69;
+      DI_CoverImage=70;
 
 Type TImageListRec=record
   ImageList, OriginalImageList : TImageList;

@@ -1,5 +1,17 @@
 DFendX Changelog
 
+Version 2.6.7 (11/01/2026)
+==========================
+- Add Pentium4 CPU type (X)
+- Add enable SSE2 option for some CPUs (X)
+- Add Entertainer option for Innovation (Staging)
+- Use as selected screenshot option
+- Data folder image selection options.
+- Dynamic spacing between cover/screenshot icons
+- Keep selected profile during list changes
+- [Fix] Background image display
+
+
 Version 2.6.6 (10/25/2026)
 ==========================
 - Cover Images main list view

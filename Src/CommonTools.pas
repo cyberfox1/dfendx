@@ -34,6 +34,7 @@ Function GetFileDateAsString : String;
 Procedure CreateLink(const TargetName, Parameters, LinkFile, IconFile, Description : String);
 Procedure SetStartWithWindows(const Enabled : Boolean);
 
+Function TryStringToColor(const S: String; out C: TColor): Boolean;
 function LoadIconFromExeFile(const AFileName: String): TIcon;
 Function LoadImageFromFile(const FileName : String) : TPicture;
 Function LoadImageAsIconFromFile(const FileName : String) : TIcon;
@@ -88,6 +89,25 @@ implementation
 uses CommonHelpers, SysUtils, Forms, ShellAPI, ShlObj, ActiveX, Messages, Dialogs, Math,
      Controls, ComObj, Registry, Vcl.Imaging.jpeg, GIFImage, Vcl.Imaging.pngimage, LanguageSetupUnit,
      PrgSetupUnit, PrgConsts, ImageStretch, System.UITypes, DOSBoxUnitHelpers;
+
+Function TryStringToColor(const S: String; out C: TColor): Boolean;
+Var
+  T: String;
+  Ident: Longint;
+  N: Integer;
+begin
+  Result:=False;
+  C:=clWindow;
+  T:=Trim(S);
+  If T='' then Exit;
+  If IdentToColor(T, Ident) then begin
+    C:=TColor(Ident);
+    Result:=True;
+    Exit;
+  end;
+  Result:=TryStrToInt(T, N);
+  If Result then C:=TColor(N);
+end;
 
 Function PrgDir : String;
 begin

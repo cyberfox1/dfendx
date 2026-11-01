@@ -187,6 +187,8 @@ type
     TreeViewPopupEditUserFilters: TMenuItem;
     N24: TMenuItem;
     ScreenshotPopupUseAsBackground: TMenuItem;
+    N29: TMenuItem;
+    ScreenshotPopupUseInScreenshotList: TMenuItem;
     ScreenshotPopupSetAsTitleImage: TMenuItem;
     ScreenshotPopupSetAsCoverImage: TMenuItem;
     ScreenshotPopupRename: TMenuItem;
@@ -393,6 +395,8 @@ type
     procedure ScreenshotMenuWork(Sender: TObject);
     procedure ScreenshotListViewSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
+    procedure ScreenshotListViewChange(Sender: TObject; Item: TListItem;
+      Change: TItemChange);
     procedure DocListViewDblClick(Sender: TObject);
     procedure DocListViewKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -465,6 +469,7 @@ type
     Procedure LoadMenuLanguage;
     Procedure InitGUI(const FirstInit : Boolean);
     Procedure InitViewStyle;
+    Procedure ApplyCoverListIconSpacing;
     Procedure ApplyListViewListColumnWidth;
     Procedure SelectGame(const AGame : TGame); overload;
     Procedure SelectGame(const AGameName : String); overload;
@@ -848,6 +853,10 @@ begin
   LogInfo('Freeing screenshots cache');
   FreeAndNil(ScreenshotsCache);
 
+  If ListView.Selected<>nil then
+    PrgSetup.LastSelectedProfile:=TGame(ListView.Selected.Data).CacheName
+  else If LastSelectedGame<>nil then
+    PrgSetup.LastSelectedProfile:=LastSelectedGame.CacheName;
   UpdateGameNotes; LastSelectedGame:=nil;
 
   try
@@ -862,7 +871,10 @@ begin
   except end;
 
   GamesListSaveColWidths(ListView);
-  If ListView.Selected<>nil then PrgSetup.LastSelectedProfile:=TGame(ListView.Selected.Data).CacheName;
+  If ListView.Selected<>nil then
+    PrgSetup.LastSelectedProfile:=TGame(ListView.Selected.Data).CacheName
+  else If LastSelectedGame<>nil then
+    PrgSetup.LastSelectedProfile:=LastSelectedGame.CacheName;
   StopCaptureChangeNotify;
   RevokeDragDrop(Handle);
   RevokeDragDrop(GameNotesEdit.Handle);
@@ -1165,6 +1177,7 @@ begin
   ScreenshotPopupDelete.Caption:=LanguageSetup.ScreenshotPopupDelete;
   ScreenshotPopupDeleteAll.Caption:=LanguageSetup.ScreenshotPopupDeleteAll;
   ScreenshotPopupUseAsBackground.Caption:=LanguageSetup.ScreenshotPopupUseAsBackground;
+  ScreenshotPopupUseInScreenshotList.Caption:=LanguageSetup.ScreenshotPopupUseInScreenshotList;
   ScreenshotPopupSetAsTitleImage.Caption:=LanguageSetup.ScreenshotPopupSetAsTitleImage;
   ScreenshotPopupSetAsCoverImage.Caption:=LanguageSetup.ScreenshotPopupSetAsCoverImage;
 
@@ -1443,6 +1456,46 @@ begin
   LogInfo('### End of InitGUI ###');
 end;
 
+procedure TDFendReloadedMainForm.ApplyCoverListIconSpacing;
+Var ViewW, CellW, CellH, DefPad, NewPad, N : Integer;
+    S : Double;
+begin
+  If not ListView.HandleAllocated then exit;
+  If (ListView.ViewStyle<>vsIcon) or
+     ((ListView.LargeImages<>ListviewCoverImageList) and (ListView.LargeImages<>ListviewScreenshotImageList)) then begin
+    If ListView.ViewStyle=vsIcon then
+      ListView_SetIconSpacing(ListView.Handle, Word(-1), Word(-1));
+    exit;
+  end;
+  ViewW:=ListView.ClientWidth;
+  CellW:=ListView.LargeImages.Width;
+  CellH:=ListView.LargeImages.Height;
+  If Assigned(PrgSetup) then begin
+    If (ListView.LargeImages=ListviewScreenshotImageList) and PrgSetup.ScreenshotListViewShowCaptions then
+      Inc(CellH,ListView.Canvas.TextHeight('Wy')+8)
+    else If (ListView.LargeImages=ListviewCoverImageList) and PrgSetup.CoverListViewShowCaptions then
+      Inc(CellH,ListView.Canvas.TextHeight('Wy')+8);
+  end;
+  DefPad:=GetSystemMetrics(SM_CXICONSPACING)-GetSystemMetrics(SM_CXICON);
+  If DefPad<0 then DefPad:=0;
+  NewPad:=DefPad;
+  If (ViewW>0) and (CellW>0) and (DefPad>0) then begin
+    N:=ViewW div (CellW+DefPad);
+    If Trunc(ViewW / (CellW+0.666*DefPad)) > N then begin
+      S:=(ViewW/(N+1)-CellW)/DefPad;
+      If S>=1 then S:=0.999;
+      If S<0.666 then S:=0.666;
+      NewPad:=Trunc(DefPad*S);
+      If (N+1)*(CellW+NewPad)>ViewW then NewPad:=ViewW div (N+1)-CellW;
+      If NewPad<0 then NewPad:=0;
+    end;
+  end;
+  ListView_SetIconSpacing(ListView.Handle, CellW+NewPad, CellH+NewPad);
+  ShowScrollBar(ListView.Handle, SB_HORZ, False);
+  ListView.Arrange(arAlignLeft);
+  RedrawWindow(ListView.Handle,nil,0,RDW_ERASE or RDW_INVALIDATE or RDW_FRAME);
+end;
+
 procedure TDFendReloadedMainForm.InitViewStyle;
 Var S : String;
     I : Integer;
@@ -1519,12 +1572,17 @@ begin
         end;
   end;
 
+  ApplyCoverListIconSpacing;
   TreeViewChange(TreeView,TreeView.Selected);
+  ApplyCoverListIconSpacing;
   { ViewStyle flip removed: expensive rebuild on large lists. }
   ApplyListViewListColumnWidth;
 
   If ListView.ViewStyle=vsSmallIcon then
     ListView.Arrange(arDefault);
+
+  If Assigned(PrgSetup) then
+    LoadListViewGUISetup(ListView,PrgSetup.GamesListViewBackground,PrgSetup.GamesListViewFontColor,PrgSetup.GamesListViewFontSize);
 end;
 
 procedure TDFendReloadedMainForm.ApplyListViewListColumnWidth;
@@ -1810,10 +1868,12 @@ end;
 
 Var TreeUpdateNeededAgain : Boolean = False;
     TreeUpdateInProgress : Boolean = False;
+    ScreenshotListUpdating : Boolean = False;
 
 procedure TDFendReloadedMainForm.TreeViewChange(Sender: TObject; Node: TTreeNode);
 Var S : String;
     IL1, IL2 : TImageList;
+    G : TGame;
 begin
   If TreeUpdateInProgress then begin
     TreeUpdateNeededAgain:=True;
@@ -1830,10 +1890,9 @@ begin
       If ListView.LargeImages=nil then IL1:=ListviewIconImageList else IL1:=ListView.LargeImages as TImageList;
       If ListView.SmallImages=nil then IL2:=ListviewImageList else IL2:=ListView.SmallImages as TImageList;
 
-      { Flush notes for the previously selected profile before we drop selection. }
-      UpdateGameNotes; LastSelectedGame:=nil;
+      UpdateGameNotes;
 
-      { Tree filter must not re-select a profile (avoids media-panel / SelectItem work). }
+      If ListView.Selected<>nil then G:=TGame(ListView.Selected.Data) else G:=LastSelectedGame;
       If ListView.Selected<>nil then begin
         ListView.Selected:=nil;
         ListView.ItemFocused:=nil;
@@ -1853,8 +1912,6 @@ begin
             AddGamesToList(ListView,IL2,IL1,ImageList,GameDB,TreeView.Selected.Parent.Text,TreeView.Selected.Text,S,PrgSetup.ShowExtraInfo,ListSort,ListSortReverse,False,False,False,MenuViewsScreenshots.Checked,MenuViewsCoverImages.Checked);
           end;
         end;
-
-        { Keep list unselected after rebuild so ListViewSelectItem media path never runs for filter. }
         If ListView.Selected<>nil then begin
           ListView.Selected:=nil;
           ListView.ItemFocused:=nil;
@@ -1862,6 +1919,7 @@ begin
       finally
         ListView.Items.EndUpdate;
       end;
+      If G<>nil then SelectGame(G);
     until not TreeUpdateNeededAgain;
   finally
     TreeUpdateInProgress:=False;
@@ -2205,6 +2263,7 @@ begin
   { ----- Screenshots tab -----
     Source A: CaptureFolder (non-eXo screenshots from game profile)
     Source B: MediaDB Images category, Kind LIKE 'Screenshot -%' }
+  ScreenshotListUpdating:=True;
   ScreenshotListView.Items.BeginUpdate;
   try
     ScreenshotListView.Items.Clear;
@@ -2217,6 +2276,7 @@ begin
     end;
   finally
     ScreenshotListView.Items.EndUpdate;
+    ScreenshotListUpdating:=False;
   end;
   ScreenshotPopupRenameAll.Enabled:=(ScreenshotListView.Items.Count>0);
   ScreenshotPopupDeleteAll.Enabled:=(ScreenshotListView.Items.Count>0);
@@ -2479,7 +2539,7 @@ begin
   GameNotesEdit.Visible:=(ListView.Selected<>nil) and (ListView.Selected.Data<>nil);
   GameNotesToolBar.Enabled:=GameNotesEdit.Visible;
 
-  If (LastSelectedGame<>nil) and (ListView.Items.Count>0) then begin
+  If (LastSelectedGame<>nil) and GameNotesEdit.Visible then begin
     S:=StringListToString(GameNotesEdit.Text);
     If LastSelectedGame.Notes<>S then begin
       LastSelectedGame.Notes:=S;
@@ -2487,7 +2547,7 @@ begin
     end;
   end;
 
-  If ListView.Selected<>nil then LastSelectedGame:=ListView.Selected.Data else LastSelectedGame:=nil;
+  If ListView.Selected<>nil then LastSelectedGame:=ListView.Selected.Data;
 
   If not GameNotesEdit.Visible then exit;
 
@@ -2777,16 +2837,18 @@ end;
 procedure TDFendReloadedMainForm.UpdateGamesListByViewFilesFrame(Sender: TObject);
 begin
   TreeViewChange(Sender,TreeView.Selected);
+  If Assigned(PrgSetup) and PrgSetup.ShowScreenshotPane then UpdateScreenshotPaneImage;
 end;
 
 Procedure TDFendReloadedMainForm.LoadListViewGUISetup(const ListView : TListView; const Background, FontColor : String; const FontSize : Integer);
 Var S : String;
+    C : TColor;
 begin
   S:=Trim(Background);
   If S='' then begin ListView.Color:=clWindow; SetListViewImage(ListView,'') end else begin
-    try
-      ListView.Color:=StringToColor(S); SetListViewImage(ListView,'');
-    except
+    If TryStringToColor(S, C) then begin
+      ListView.Color:=C; SetListViewImage(ListView,'');
+    end else begin
       ListView.Color:=clWindow; SetListViewImage(ListView,MakeAbsPath(S,PrgSetup.BaseDir));
     end;
   end;
@@ -2800,14 +2862,11 @@ end;
 
 Procedure TDFendReloadedMainForm.LoadLabelGUISetup(const L : TPanel; const Background, FontColor : String; const FontSize : Integer);
 Var S : String;
+    C : TColor;
 begin
   S:=Trim(Background);
   If S='' then L.Color:=clWindow else begin
-    try
-      L.Color:=StringToColor(S);
-    except
-      L.Color:=clWindow;
-    end;
+    If TryStringToColor(S, C) then L.Color:=C else L.Color:=clWindow;
   end;
 
   S:=Trim(FontColor);
@@ -2819,14 +2878,11 @@ end;
 
 Procedure TDFendReloadedMainForm.LoadRichEditGUISetup(const R : TRichEdit; const Background, FontColor : String; const FontSize : Integer);
 Var S : String;
+    C : TColor;
 begin
   S:=Trim(Background);
   If S='' then R.Color:=clWindow else begin
-    try
-      R.Color:=StringToColor(S);
-    except
-      R.Color:=clWindow;
-    end;
+    If TryStringToColor(S, C) then R.Color:=C else R.Color:=clWindow;
   end;
 
   S:=Trim(FontColor);
@@ -2972,6 +3028,7 @@ begin
   ListviewCoverImageList.Height:=PrgSetup.CoverListViewHeight;
   ListviewIconImageList.Height:=PrgSetup.IconSize;
   ListviewIconImageList.Width:=PrgSetup.IconSize;
+  ApplyCoverListIconSpacing;
 
   ListView.GridLines:=PrgSetup.GridLinesInGamesList;
 
@@ -4200,13 +4257,51 @@ begin
   AddProfile('','',(Sender as TComponent).Tag);
 end;
 
+procedure TDFendReloadedMainForm.ScreenshotListViewChange(Sender: TObject; Item: TListItem; Change: TItemChange);
+Var S, T : String;
+
+  procedure ApplyCheck(M: TMenuItem; IsOn: Boolean; Idx: Integer);
+  begin
+    M.Checked:=IsOn;
+    If IsOn then M.ImageIndex:=-1 else M.ImageIndex:=Idx;
+  end;
+
+begin
+  If ScreenshotListUpdating then exit;
+  ApplyCheck(ScreenshotPopupUseInScreenshotList,False,47);
+  ApplyCheck(ScreenshotPopupSetAsTitleImage,False,28);
+  ApplyCheck(ScreenshotPopupSetAsCoverImage,False,46);
+  If (ScreenshotListView.Selected<>nil) and (ListView.Selected<>nil) and (ListView.Selected.Data<>nil) then begin
+    S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
+    If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
+    T:=GetImageListItemFilePath(ScreenshotListView.Selected,S);
+    S:=Trim(TGame(ListView.Selected.Data).SelectedScreenshotImage);
+    ApplyCheck(ScreenshotPopupUseInScreenshotList,
+      (Trim(ExtUpperCase(ScreenshotListView.Selected.Caption))=Trim(ExtUpperCase(S)))
+      or ((T<>'') and (Trim(ExtUpperCase(T))=Trim(ExtUpperCase(MakeAbsPath(S,PrgSetup.BaseDir))))),47);
+    ApplyCheck(ScreenshotPopupSetAsTitleImage,
+      (Trim(ExtUpperCase(ScreenshotListView.Selected.Caption))=Trim(ExtUpperCase(TGame(ListView.Selected.Data).SelectedTitleImage)))
+      or ((T<>'') and (Trim(ExtUpperCase(T))=Trim(ExtUpperCase(MakeAbsPath(TGame(ListView.Selected.Data).SelectedTitleImage,PrgSetup.BaseDir))))),28);
+    ApplyCheck(ScreenshotPopupSetAsCoverImage,
+      (Trim(ExtUpperCase(ScreenshotListView.Selected.Caption))=Trim(ExtUpperCase(TGame(ListView.Selected.Data).SelectedCoverImage)))
+      or ((T<>'') and (Trim(ExtUpperCase(T))=Trim(ExtUpperCase(MakeAbsPath(TGame(ListView.Selected.Data).SelectedCoverImage,PrgSetup.BaseDir))))),46);
+  end;
+end;
+
 procedure TDFendReloadedMainForm.ScreenshotListViewSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
 Var B, ExtrasMode : Boolean;
-    S : String;
+    S, T : String;
     I,J : Integer;
     St1,St2 : TStringList;
     LV : TListView;
     Thumb : TBitmap;
+
+  procedure ApplyCheck(M: TMenuItem; IsOn: Boolean; Idx: Integer);
+  begin
+    M.Checked:=IsOn;
+    If IsOn then M.ImageIndex:=-1 else M.ImageIndex:=Idx;
+  end;
+
 begin
   If Sender=ExoExtraListView then
     ScreenshotPopupMenu.PopupComponent:=ExoExtraListView
@@ -4221,6 +4316,7 @@ begin
   ScreenshotPopupCopy.Enabled:=B;
   ScreenshotPopupSave.Enabled:=B;
   ScreenshotPopupUseAsBackground.Enabled:=B;
+  ScreenshotPopupUseInScreenshotList.Enabled:=B;
   ScreenshotPopupSetAsTitleImage.Enabled:=B;
   ScreenshotPopupSetAsCoverImage.Enabled:=B;
   ScreenshotPopupRename.Enabled:=B and (not ExtrasMode);
@@ -4237,6 +4333,27 @@ begin
     ScreenshotPopupImport.Enabled:=(S<>'');
     ScreenshotPopupRenameAll.Enabled:=(S<>'');
     ScreenshotPopupDeleteAll.Enabled:=(S<>'');
+  end;
+
+  If Sender<>ScreenshotListView then begin
+    ApplyCheck(ScreenshotPopupUseInScreenshotList,False,47);
+    ApplyCheck(ScreenshotPopupSetAsTitleImage,False,28);
+    ApplyCheck(ScreenshotPopupSetAsCoverImage,False,46);
+    If ScreenshotPopupUseInScreenshotList.Enabled and (LV.Selected<>nil) and (ListView.Selected<>nil) and (ListView.Selected.Data<>nil) then begin
+      S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
+      If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
+      T:=GetImageListItemFilePath(LV.Selected,S);
+      S:=Trim(TGame(ListView.Selected.Data).SelectedScreenshotImage);
+      ApplyCheck(ScreenshotPopupUseInScreenshotList,
+        (Trim(ExtUpperCase(LV.Selected.Caption))=Trim(ExtUpperCase(S)))
+        or ((T<>'') and (Trim(ExtUpperCase(T))=Trim(ExtUpperCase(MakeAbsPath(S,PrgSetup.BaseDir))))),47);
+      ApplyCheck(ScreenshotPopupSetAsTitleImage,
+        (Trim(ExtUpperCase(LV.Selected.Caption))=Trim(ExtUpperCase(TGame(ListView.Selected.Data).SelectedTitleImage)))
+        or ((T<>'') and (Trim(ExtUpperCase(T))=Trim(ExtUpperCase(MakeAbsPath(TGame(ListView.Selected.Data).SelectedTitleImage,PrgSetup.BaseDir))))),28);
+      ApplyCheck(ScreenshotPopupSetAsCoverImage,
+        (Trim(ExtUpperCase(LV.Selected.Caption))=Trim(ExtUpperCase(TGame(ListView.Selected.Data).SelectedCoverImage)))
+        or ((T<>'') and (Trim(ExtUpperCase(T))=Trim(ExtUpperCase(MakeAbsPath(TGame(ListView.Selected.Data).SelectedCoverImage,PrgSetup.BaseDir))))),46);
+    end;
   end;
 
   S:=Trim(ExtUpperCase(PrgSetup.ImageViewer));
@@ -4417,6 +4534,23 @@ Var S,T : String;
     St1, St2 : TStringList;
     LV : TListView;
     ExtrasMode : Boolean;
+
+  procedure RefreshScreenshotTicks;
+  Var Cap : String;
+      J : Integer;
+  begin
+    If ExtrasMode or (LV=nil) or (LV.Selected=nil) then exit;
+    Cap:=LV.Selected.Caption;
+    UpdateGamesListByViewFilesFrame(Sender);
+    For J:=0 to ScreenshotListView.Items.Count-1 do
+      If Trim(ExtUpperCase(ScreenshotListView.Items[J].Caption))=Trim(ExtUpperCase(Cap)) then begin
+        ScreenshotListView.Selected:=ScreenshotListView.Items[J];
+        ScreenshotListView.ItemFocused:=ScreenshotListView.Items[J];
+        break;
+      end;
+    ScreenshotListViewChange(ScreenshotListView, ScreenshotListView.Selected, ctState);
+  end;
+
 begin
   LV:=ImageMediaListView;
   ExtrasMode:=(LV=ExoExtraListView);
@@ -4544,6 +4678,25 @@ begin
             ScreenshotListViewSelectItem(LV,LV.Selected,LV.Selected<>nil);
           end;
         end;
+    9 : begin
+          If (LV.Selected=nil) or (ListView.Selected=nil) or (ListView.Selected.Data=nil) then exit;
+          G:=TGame(ListView.Selected.Data);
+          S:=Trim(G.CaptureFolder);
+          If S<>'' then S:=MakeAbsPath(S,PrgSetup.BaseDir);
+          T:=GetImageListItemFilePath(LV.Selected,S);
+          If T='' then exit;
+          If Trim(ExtUpperCase(T))=Trim(ExtUpperCase(MakeAbsPath(G.SelectedScreenshotImage,PrgSetup.BaseDir)))
+          then G.SelectedScreenshotImage:=''
+          else G.SelectedScreenshotImage:=MakeRelPath(T,PrgSetup.BaseDir);
+          If ExtrasMode then begin
+            If MenuViewsScreenshots.Checked then begin
+              TreeViewChange(Sender,TreeView.Selected);
+              SelectGame(G);
+            end;
+            ScreenshotListViewSelectItem(LV,LV.Selected,True);
+          end else
+            RefreshScreenshotTicks;
+        end;
     10: If LV.Selected<>nil then begin
           If (ListView.Selected=nil) or (ListView.Selected.Data=nil) then exit;
           S:=Trim(TGame(ListView.Selected.Data).CaptureFolder);
@@ -4568,9 +4721,13 @@ begin
           If T='' then exit;
           G.SelectedTitleImage:=MakeRelPath(T,PrgSetup.BaseDir);
           G.StoreAllValues;
-          If PrgSetup.ShowScreenshotPane then UpdateScreenshotPaneImage;
-          { List screenshot-mode icons use SelectedTitleImage; refresh when visible. }
-          If MenuViewsScreenshots.Checked then TreeViewChange(Sender,TreeView.Selected);
+          If ExtrasMode then begin
+            If PrgSetup.ShowScreenshotPane then UpdateScreenshotPaneImage;
+            If MenuViewsScreenshots.Checked then begin
+              TreeViewChange(Sender,TreeView.Selected);
+              SelectGame(G);
+            end;
+          end else RefreshScreenshotTicks;
         end;
     13: If LV.Selected<>nil then begin
           If (ListView.Selected=nil) or (ListView.Selected.Data=nil) then exit;
@@ -4581,7 +4738,12 @@ begin
           If T='' then exit;
           G.SelectedCoverImage:=MakeRelPath(T,PrgSetup.BaseDir);
           G.StoreAllValues;
-          If MenuViewsCoverImages.Checked then TreeViewChange(Sender,TreeView.Selected);
+          If ExtrasMode then begin
+            If MenuViewsCoverImages.Checked then begin
+              TreeViewChange(Sender,TreeView.Selected);
+              SelectGame(G);
+            end;
+          end else RefreshScreenshotTicks;
         end;
     11: If (not ExtrasMode) and (ListView.Selected<>nil) then
           If RenameMediaFiles(self,TGame(ListView.Selected.Data),GameDB,rfScreenshots) then TreeViewChange(Sender,TreeView.Selected);
@@ -5047,6 +5209,7 @@ begin
   PostMessage(Handle,WM_User+2,0,0);
 
   If WindowState=wsMinimized then exit;
+  If (ListView<>nil) and (ListView.ViewStyle=vsIcon) then ApplyCoverListIconSpacing;
   If WindowState=wsMaximized then begin
     if ScreenshotPaneForm<>nil then ScreenshotPaneForm.Hide;
     ScreenshotPaneHiddenForMaximize:=True;
@@ -5184,7 +5347,7 @@ Var I : Integer;
     St,St2 : TStringList;
     G,Game : TGame;
     Rec : TSearchRec;
-    NeedListUpdate : Boolean;
+    NeedListUpdate, B : Boolean;
 begin
   St:=TStringList.Create;
   St2:=TStringList.Create;
@@ -5198,6 +5361,16 @@ begin
       If St2.Count>0 then ListView.Items.Clear;
       If St.Count>0 then ShowCacheChooseDialog(self,St,GameDB);
       If St2.Count>0 then ShowRestoreDeletedDialog(self,St2,GameDB);
+      If LastSelectedGame<>nil then begin
+        B:=False;
+        For I:=0 to GameDB.Count-1 do If GameDB[I]=LastSelectedGame then begin B:=True; break; end;
+        If not B then LastSelectedGame:=nil;
+      end;
+      If G<>nil then begin
+        B:=False;
+        For I:=0 to GameDB.Count-1 do If GameDB[I]=G then begin B:=True; break; end;
+        If not B then G:=nil;
+      end;
       InitTreeViewForGamesList(TreeView,GameDB);
       TreeViewChange(self,TreeView.Selected);
       SelectGame(G);

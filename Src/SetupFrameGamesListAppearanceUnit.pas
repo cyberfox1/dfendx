@@ -107,9 +107,9 @@ begin
 
   S:=Trim(PrgSetup.GamesListViewBackground);
   If S='' then GamesListBackgroundRadioButton1.Checked:=True else begin
-    try
-      C:=StringToColor(S); GamesListBackgroundRadioButton2.Checked:=True; GamesListBackgroundColorBox.Selected:=C;
-    except
+    If TryStringToColor(S, C) then begin
+      GamesListBackgroundRadioButton2.Checked:=True; GamesListBackgroundColorBox.Selected:=C;
+    end else begin
       GamesListBackgroundRadioButton3.Checked:=True; GamesListBackgroundEdit.Text:=S;
     end;
   end;

@@ -520,12 +520,15 @@ begin
           Dest.Add('sidmodel=none');
       end
       else begin
-        { 0.83+: innovation bool, innovation_sid_filter % (replaces 6581filter), filter off. }
-        Dest.Add('innovation='+BoolToStr(Game.Innova));
         If Game.Innova then begin
+          If Game.InnovaEntertainer then
+            Dest.Add('innovation=entertainer')
+          else
+            Dest.Add('innovation=on');
           Dest.Add('innovation_sid_filter='+IntToStr(I));
           Dest.Add('innovation_filter=off');
-        end;
+        end else
+          Dest.Add('innovation=off');
       end;
     end
     else begin
@@ -720,7 +723,7 @@ begin
     If S<>'' then Dest.Add('floppy_disk_speed='+S);
   end;
   If Game.IsDBX and PrgSetup.DOSBoxSettings[DOSBoxNr].MonitorPortEnabled then
-    Dest.Add('enable monitor='+BoolToStr(True));
+    Dest.Add('monitor socket=on');
 end;
 
 Procedure GenerateDiskNoiseConf(const Game: TGame; const Dest: TStrings);
@@ -1032,6 +1035,8 @@ begin
   end;
   Dest.Add('cycleup='+IntToStr(Game.CyclesUp));
   Dest.Add('cycledown='+IntToStr(Game.CyclesDown));
+  If Game.IsDBX and Game.EnableSSE2 then
+    Dest.Add('enable sse2='+BoolToStr(True));
 end;
 
 Procedure GenerateAutoExecKeyboardConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer);

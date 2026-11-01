@@ -14,20 +14,23 @@ type
     CyclesMaxRadioButton: TRadioButton;
     CyclesValueRadioButton: TRadioButton;
     CyclesComboBox: TComboBox;
-    CyclesUpLabel: TLabel;
-    CyclesDownLabel: TLabel;
-    CyclesUpEdit: TSpinEdit;
-    CyclesDownEdit: TSpinEdit;
     CyclesInfoLabel: TLabel;
     CPUTypeLabel: TLabel;
     CPUTypeComboBox: TComboBox;
     InfoLabel: TLabel;
-    CyclesUpComboBox: TComboBox;
-    CyclesDownComboBox: TComboBox;
     CyclesMaxLimitCheckBox: TCheckBox;
+    GroupBox1: TGroupBox;
+    cbEnableSSE2: TCheckBox;
+    CyclesUpLabel: TLabel;
+    CyclesDownEdit: TSpinEdit;
+    CyclesUpComboBox: TComboBox;
+    CyclesDownLabel: TLabel;
+    CyclesUpEdit: TSpinEdit;
+    CyclesDownComboBox: TComboBox;
     procedure CPUCyclesChange(Sender: TObject);
     procedure CyclesUpComboBoxChange(Sender: TObject);
     procedure CyclesDownComboBoxChange(Sender: TObject);
+    procedure CPUTypeComboBoxChange(Sender: TObject);
   private
     { Private-Deklarationen }
     SaveCycles : String;
@@ -36,6 +39,7 @@ type
     FLoadedCPUType : String;
     Procedure CheckValue(Sender : TObject; var OK : Boolean);
     Procedure ApplyLists;
+    Procedure ApplySSE2Enabled;
     Procedure ShowFrame(Sender : TObject);
     Procedure Invalidate(Sender : TObject);
   public
@@ -78,6 +82,8 @@ begin
   NoFlicker(CyclesDownComboBox);
   NoFlicker(CPUTypeComboBox);
   NoFlicker(CyclesMaxLimitCheckBox);
+  NoFlicker(GroupBox1);
+  NoFlicker(cbEnableSSE2);
 
   CPUCoreRadioGroup.Caption:=LanguageSetup.GameCore;
   CPUCyclesGroupBox.Caption:=LanguageSetup.GameCycles;
@@ -117,6 +123,9 @@ begin
 
   CPUTypeLabel.Caption:=LanguageSetup.GameCPUType;
   InfoLabel.Caption:=LanguageSetup.GameCPUInfo;
+  GroupBox1.Caption:=LanguageSetup.GameCPUFeatures;
+  cbEnableSSE2.Caption:=LanguageSetup.GameCPUEnableSSE2;
+  CPUTypeComboBox.OnChange:=CPUTypeComboBoxChange;
 
   FCPUTypeConfOpt:=InitData.GameDB.ConfOpt.CPUType;
   FCPUTypeStagingConfOpt:=InitData.GameDB.ConfOpt.CPUTypeStaging;
@@ -169,6 +178,7 @@ begin
   CyclesDownEdit.Value:=Game.CyclesDown;
 
   FLoadedCPUType:=Trim(Game.CPUType);
+  cbEnableSSE2.Checked:=Game.EnableSSE2;
   ShowFrame(nil);
 end;
 
@@ -186,9 +196,22 @@ begin
   ReloadComboFromConfOpt(CPUTypeComboBox,TypeList,True,FLoadedCPUType);
 end;
 
+procedure TModernProfileEditorCPUFrame.ApplySSE2Enabled;
+Var S : String;
+begin
+  S:=Trim(ExtUpperCase(CPUTypeComboBox.Text));
+  cbEnableSSE2.Enabled:=FTempGame.IsDBX and ((S='PENTIUM_III') or (S='EXPERIMENTAL'));
+end;
+
 procedure TModernProfileEditorCPUFrame.ShowFrame(Sender: TObject);
 begin
   ApplyLists;
+  ApplySSE2Enabled;
+end;
+
+procedure TModernProfileEditorCPUFrame.CPUTypeComboBoxChange(Sender: TObject);
+begin
+  ApplySSE2Enabled;
 end;
 
 procedure TModernProfileEditorCPUFrame.Invalidate(Sender: TObject);
@@ -259,6 +282,7 @@ begin
 
   If CPUTypeComboBox.ItemIndex>=0 then
     Game.CPUType:=CPUTypeComboBox.Text;
+  Game.EnableSSE2:=cbEnableSSE2.Checked;
 end;
 
 end.

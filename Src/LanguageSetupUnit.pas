@@ -452,6 +452,7 @@ const NR_Author=1;
       NR_ScreenshotPopupUseAsBackground=38115;
       NR_ScreenshotPopupSetAsTitleImage=38117;
       NR_ScreenshotPopupSetAsCoverImage=38116;
+      NR_ScreenshotPopupUseInScreenshotList=38118;
 
       NR_SoundsPopupOpenExternal=38151;
       NR_SoundsPopupSaveMp3=38152;
@@ -604,6 +605,7 @@ const NR_Author=1;
       NR_ProfileEditorSoundSBCMS=40697;
       NR_ProfileEditorSoundSBGoldplay=40698;
       NR_ProfileEditorSoundSBExtraFeatures=40720;
+      NR_ProfileEditorSoundInnovaEntertainer=40721;
       NR_ProfileEditorSoundMiscPCSpeakerMode=40699;
       NR_ProfileEditorSoundMiscLptDac=40700;
       NR_ProfileEditorSoundSBFilter=40662;
@@ -1664,6 +1666,8 @@ const NR_Author=1;
       NR_GameReportedDOSVersion=62046;
       NR_GameLFN=62047;
       NR_GameUTF8FileNames=62048;
+      NR_GameCPUFeatures=62049;
+      NR_GameCPUEnableSSE2=62050;
 
       NR_GameEnablePrinterEmulation=62135;
       NR_GamePrinterResolution=62136;
@@ -2814,6 +2818,7 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property ScreenshotPopupUseAsBackground : String index NR_ScreenshotPopupUseAsBackground read GetString write SetString;
     property ScreenshotPopupSetAsTitleImage : String index NR_ScreenshotPopupSetAsTitleImage read GetString write SetString;
     property ScreenshotPopupSetAsCoverImage : String index NR_ScreenshotPopupSetAsCoverImage read GetString write SetString;
+    property ScreenshotPopupUseInScreenshotList : String index NR_ScreenshotPopupUseInScreenshotList read GetString write SetString;
     property SoundsPopupOpenExternal : String index NR_SoundsPopupOpenExternal read GetString write SetString;
 
     property SoundsPopupSaveMp3 : String index NR_SoundsPopupSaveMp3 read GetString write SetString;
@@ -3031,6 +3036,7 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property ProfileEditorSoundInnovaSampleRate : String index NR_ProfileEditorSoundInnovaSampleRate read GetString write SetString;
     property ProfileEditorSoundInnovaBaseAddress : String index NR_ProfileEditorSoundInnovaBaseAddress read GetString write SetString;
     property ProfileEditorSoundInnovaQuality : String index NR_ProfileEditorSoundInnovaQuality read GetString write SetString;
+    property ProfileEditorSoundInnovaEntertainer : String index NR_ProfileEditorSoundInnovaEntertainer read GetString write SetString;
     property ProfileEditorAutoexecSheet : String index NR_ProfileEditorAutoexecSheet read GetString write SetString;
     property ProfileEditorAutoexecOverrideGameStart : String index NR_ProfileEditorAutoexecOverrideGameStart read GetString write SetString;
     property ProfileEditorAutoexecOverrideMounting : String index NR_ProfileEditorAutoexecOverrideMounting read GetString write SetString;
@@ -3985,6 +3991,8 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property GameCyclesTypePercent : String index NR_GameCyclesTypePercent read GetString write SetString;
     property GameCPUType : String index NR_GameCPUType read GetString write SetString;
     property GameCPUInfo : String index NR_GameCPUInfo read GetString write SetString;
+    property GameCPUFeatures : String index NR_GameCPUFeatures read GetString write SetString;
+    property GameCPUEnableSSE2 : String index NR_GameCPUEnableSSE2 read GetString write SetString;
     property GameVideoCard : String index NR_GameVideoCard read GetString write SetString;
     property GameVGASettings : String index NR_GameVGASettings read GetString write SetString;
     property GameVGASettingsInfo : String index NR_GameVGASettingsInfo read GetString write SetString;
@@ -5248,6 +5256,7 @@ begin
   AddStringRec(NR_ScreenshotPopupUseAsBackground,'Menu','ScreenshotPopup.UseAsBackground','Use as &background...');
   AddStringRec(NR_ScreenshotPopupSetAsTitleImage,'Menu','ScreenshotPopup.SetAsTitleImage','Set as &title image');
   AddStringRec(NR_ScreenshotPopupSetAsCoverImage,'Menu','ScreenshotPopup.SetAsCoverImage','Set as &cover image');
+  AddStringRec(NR_ScreenshotPopupUseInScreenshotList,'Menu','ScreenshotPopup.UseInScreenshotList','Use as screenshot in profiles list');
   AddStringRec(NR_SoundsPopupOpenExternal,'Menu','SoundsPopup.OpenExternal','Open in default media player...');
   AddStringRec(NR_SoundsPopupSaveMp3,'Menu','SoundsPopup.SaveMp3','Save as &mp3 file...');
   AddStringRec(NR_SoundsPopupSaveOgg,'Menu','SoundsPopup.SaveOgg','Save as &ogg file...');
@@ -5468,6 +5477,7 @@ begin
   AddStringRec(NR_ProfileEditorSoundInnovaSampleRate,'ProfileEditorForm','Sound.Innova.SampleRate','Innovation SSI-2001 sample rate');
   AddStringRec(NR_ProfileEditorSoundInnovaBaseAddress,'ProfileEditorForm','Sound.Innova.BaseAddress','Innovation SSI-2001 base address');
   AddStringRec(NR_ProfileEditorSoundInnovaQuality,'ProfileEditorForm','Sound.Innova.Quality','Innovation SSI-2001 emulation quality');
+  AddStringRec(NR_ProfileEditorSoundInnovaEntertainer,'ProfileEditorForm','Sound.Innova.Entertainer','Enable Entertainer');
   AddStringRec(NR_ProfileEditorAutoexecSheet,'ProfileEditorForm','AutoexecSheet','Autoexec');
   AddStringRec(NR_ProfileEditorAutoexecOverrideGameStart,'ProfileEditorForm','Autoexec.OverrideGameStart','Override game start');
   AddStringRec(NR_ProfileEditorAutoexecOverrideMounting,'ProfileEditorForm','Autoexec.OverrideMounting','Override mounting');
@@ -6444,6 +6454,8 @@ begin
   AddStringRec(NR_GameCyclesTypePercent,'GameSetup','Cycles.Type.Percent','Percent value');
   AddStringRec(NR_GameCPUType,'GameSetup','CPUType','CPU Type');
   AddStringRec(NR_GameCPUInfo,'GameSetup','CPUInfo','Emulation core "dynamic" can be used for very CPU demanding games. Other CPU types than "auto" should only be used if a game is not working with CPU type "auto".');
+  AddStringRec(NR_GameCPUFeatures,'GameSetup','CPUFeatures','CPU Features');
+  AddStringRec(NR_GameCPUEnableSSE2,'GameSetup','CPUEnableSSE2','Enable SSE2');
   AddStringRec(NR_GameVideoCard,'GameSetup','VideoCard','Video card');
   AddStringRec(NR_GameVGASettings,'GameSetup','VGASettings','Settings for VGA class machines');
   AddStringRec(NR_GameVGASettingsInfo,'GameSetup','VGASettings.Info','This settings are only used if video card type is "vga".');

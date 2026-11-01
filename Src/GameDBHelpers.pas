@@ -166,6 +166,7 @@ const NR_Name=1;
       NR_ExtraDirs=21;
       NR_ExtraFiles=22;
       NR_LastModification=23;
+      NR_SelectedScreenshotImage=24;
       NR_IgnoreWindowsFileWarnings=25;
       NR_NoDOSBoxFailedDialog=26;
       NR_SelectedTitleImage=27;
@@ -363,6 +364,8 @@ const NR_Name=1;
       NR_GUSMasterVolume=350;
       NR_GUSMixer=436;
       NR_VideoComposite=437;
+      NR_EnableSSE2=438;
+      NR_InnovaEntertainer=439;
       NR_MixerSwapStereo=357;
       NR_MixerSampleAccurate=358;
       NR_MixerDCBiasCorrection=359;
@@ -583,6 +586,7 @@ Type TGameDBH=class;
     property ExtraDirs : String index NR_ExtraDirs read GetString write SetString;
     property ExtraFiles : String index NR_ExtraFiles read GetString write SetString;
     property LastModification : String index NR_LastModification read GetString write SetString;
+    property SelectedScreenshotImage : String index NR_SelectedScreenshotImage read GetString write SetString;
     property IgnoreWindowsFileWarnings : Boolean index NR_IgnoreWindowsFileWarnings read GetBoolean write SetBoolean;
     property NoDOSBoxFailedDialog : Boolean index NR_NoDOSBoxFailedDialog read GetBoolean write SetBoolean;
     { Cached path for main-form screenshot pane; empty = run pick algo. }
@@ -652,6 +656,7 @@ Type TGameDBH=class;
     property CyclesUp : Integer index NR_CyclesUp read GetInteger write SetInteger;
     property CyclesDown : Integer index NR_CyclesDown read GetInteger write SetInteger;
     property CPUType : String index NR_CPUType read GetString write SetString;
+    property EnableSSE2 : Boolean index NR_EnableSSE2 read GetBoolean write SetBoolean;
     property FrameSkip : Integer index NR_FrameSkip read GetInteger write SetInteger;
     property VideoCard : String index NR_VideoCard read GetString write SetString;
     property KeyboardLayout : String index NR_KeyboardLayout read GetString write SetString;
@@ -837,6 +842,7 @@ Type TGameDBH=class;
     property InnovaRate : Integer index NR_InnovaRate read GetInteger write SetInteger;
     property InnovaBase : String index NR_InnovaBase read GetString write SetString;
     property InnovaQuality : Integer index NR_InnovaQuality read GetInteger write SetInteger;
+    property InnovaEntertainer : Boolean index NR_InnovaEntertainer read GetBoolean write SetBoolean;
 
     property Autoexec : String index NR_Autoexec read GetString write SetString;
     property AutoexecOverridegamestart : Boolean index NR_AutoexecOverridegamestart read GetBoolean write SetBoolean;
@@ -1219,6 +1225,7 @@ begin
   AddStringRec(NR_ExtraDirs,'Extra','ExtraDirs','');
   AddStringRec(NR_ExtraFiles,'Extra','ExtraFiles','');
   AddStringRec(NR_LastModification,'Extra','LastModification','');
+  AddStringRec(NR_SelectedScreenshotImage,'Extra','SelectedScreenshotImage','');
   AddBooleanRec(NR_IgnoreWindowsFileWarnings,'Extras','IgnoreWindowsFileWarnings',False);
   AddBooleanRec(NR_NoDOSBoxFailedDialog,'Extras','NoDOSBoxFailedDialog',False);
   AddStringRec(NR_SelectedTitleImage,'Extra','SelectedTitleImage','');
@@ -1303,6 +1310,7 @@ begin
   AddIntegerRec(NR_CyclesUp,'cpu','cyclesup',10);
   AddIntegerRec(NR_CyclesDown,'cpu','cyclesdown',20);
   AddStringRec(NR_CPUType,'cpu','type','auto');
+  AddBooleanRec(NR_EnableSSE2,'cpu','enable sse2',false);
   AddIntegerRec(NR_FrameSkip,'render','frameskip',0);
   AddStringRec(NR_VideoCard,'dosbox','machine','svga_s3');
   AddStringRec(NR_KeyboardLayout,'dos','keyboardlayout','default');
@@ -1481,6 +1489,7 @@ begin
   AddIntegerRec(NR_InnovaRate,'Innova','rate',22050);
   AddStringRec(NR_InnovaBase,'Innova','base','280');
   AddIntegerRec(NR_InnovaQuality,'Innova','quality',0);
+  AddBooleanRec(NR_InnovaEntertainer,'Innova','Entertainer',false);
 
   AddStringRec(NR_Autoexec,'Extra','autoexec','');
   AddBooleanRec(NR_AutoexecOverridegamestart,'Extra','Overridegamestart',False);

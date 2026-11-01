@@ -10,15 +10,19 @@ type
   TModernProfileEditorInnovaFrame=class(TFrame, IModernProfileEditorFrame)
     EnableInnovaCheckBox: TCheckBox;
     InnovaSampleRateLabel: TLabel;
-    InnovaSampleRateComboBox: TComboBox;
     InnovaBaseLabel: TLabel;
-    InnovaBaseComboBox: TComboBox;
     InnovaQualityLabel: TLabel;
+    InnovaSampleRateComboBox: TComboBox;
+    InnovaBaseComboBox: TComboBox;
     InnovaQualityComboBox: TComboBox;
+    cbInnovationEntertainer: TCheckBox;
   private
     { Private-Deklarationen }
+    FTempGame : TGame;
+    Procedure ShowFrame(Sender : TObject);
   public
     { Public-Deklarationen }
+    Constructor Create(AOwner : TComponent); override;
     Procedure InitGUI(var InitData : TModernProfileEditorInitData);
     Procedure SetGame(const Game : TGame; const LoadFromTemplate : Boolean);
     Procedure GetGame(const Game : TGame);
@@ -32,6 +36,12 @@ uses VistaToolsUnit, LanguageSetupUnit, CommonHelpers, HelpConsts;
 
 { TModernProfileEditorInnovaFrame }
 
+constructor TModernProfileEditorInnovaFrame.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FTempGame:=TModernProfileEditorForm(AOwner).TempGame;
+end;
+
 procedure TModernProfileEditorInnovaFrame.InitGUI(var InitData: TModernProfileEditorInitData);
 Var St : TStringList;
 begin
@@ -39,8 +49,10 @@ begin
   NoFlicker(InnovaSampleRateComboBox);
   NoFlicker(InnovaBaseComboBox);
   NoFlicker(InnovaQualityComboBox);
+  NoFlicker(cbInnovationEntertainer);
 
   EnableInnovaCheckBox.Caption:=LanguageSetup.ProfileEditorSoundInnovaEnable;
+  cbInnovationEntertainer.Caption:=LanguageSetup.ProfileEditorSoundInnovaEntertainer;
   InnovaSampleRateLabel.Caption:=LanguageSetup.ProfileEditorSoundInnovaSampleRate;
   InnovaBaseLabel.Caption:=LanguageSetup.ProfileEditorSoundInnovaBaseAddress;
   InnovaQualityLabel.Caption:=LanguageSetup.ProfileEditorSoundInnovaQuality;
@@ -69,7 +81,13 @@ begin
     St.Free;
   end;
 
+  InitData.OnShowFrame:=ShowFrame;
   HelpContext:=ID_ProfileEditSoundInnova;
+end;
+
+procedure TModernProfileEditorInnovaFrame.ShowFrame(Sender: TObject);
+begin
+  cbInnovationEntertainer.Enabled:=FTempGame.IsNewStaging;
 end;
 
 procedure TModernProfileEditorInnovaFrame.SetGame(const Game: TGame; const LoadFromTemplate: Boolean);
@@ -77,6 +95,7 @@ Var I : Integer;
     S : String;
 begin
   EnableInnovaCheckBox.Checked:=Game.Innova;
+  cbInnovationEntertainer.Checked:=Game.InnovaEntertainer;
 
   InnovaSampleRateComboBox.ItemIndex:=0;
   S:=Trim(ExtUpperCase(IntToStr(Game.InnovaRate)));
@@ -101,6 +120,7 @@ procedure TModernProfileEditorInnovaFrame.GetGame(const Game: TGame);
 Var I : Integer;
 begin
   Game.Innova:=EnableInnovaCheckBox.Checked;
+  Game.InnovaEntertainer:=cbInnovationEntertainer.Checked;
   If TryStrToInt(InnovaSampleRateComboBox.Items[InnovaSampleRateComboBox.ItemIndex],I) then Game.InnovaRate:=I;
   Game.InnovaBase:=InnovaBaseComboBox.Items[InnovaBaseComboBox.ItemIndex];
   If TryStrToInt(InnovaQualityComboBox.Items[InnovaQualityComboBox.ItemIndex],I) then Game.InnovaQuality:=I;

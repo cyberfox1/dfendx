@@ -4610,6 +4610,7 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
           OnDragDrop = CaptureDragDrop
           OnKeyDown = ScreenshotListViewKeyDown
           OnSelectItem = ScreenshotListViewSelectItem
+          OnChange = ScreenshotListViewChange
         end
         object ScreenshotsInfoPanel: TPanel
           Left = 0
@@ -9497,6 +9498,15 @@ object DFendReloadedMainForm: TDFendReloadedMainForm
       Tag = 7
       Caption = 'Use as &desktop wallpaper...'
       ImageIndex = 35
+      OnClick = ScreenshotMenuWork
+    end
+    object N29: TMenuItem
+      Caption = '-'
+    end
+    object ScreenshotPopupUseInScreenshotList: TMenuItem
+      Tag = 9
+      Caption = 'Use as screenshot in profiles list'
+      ImageIndex = 47
       OnClick = ScreenshotMenuWork
     end
     object ScreenshotPopupSetAsTitleImage: TMenuItem

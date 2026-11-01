@@ -7,24 +7,10 @@ object ModernProfileEditorCPUFrame: TModernProfileEditorCPUFrame
   DesignSize = (
     601
     559)
-  object CyclesUpLabel: TLabel
-    Left = 32
-    Top = 312
-    Width = 69
-    Height = 13
-    Caption = 'CyclesUpLabel'
-  end
-  object CyclesDownLabel: TLabel
-    Left = 32
-    Top = 368
-    Width = 83
-    Height = 13
-    Caption = 'CyclesDownLabel'
-  end
   object CyclesInfoLabel: TLabel
     Left = 32
-    Top = 431
-    Width = 545
+    Top = 439
+    Width = 513
     Height = 97
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
@@ -34,15 +20,15 @@ object ModernProfileEditorCPUFrame: TModernProfileEditorCPUFrame
   object CPUTypeLabel: TLabel
     Left = 312
     Top = 24
-    Width = 69
-    Height = 13
+    Width = 76
+    Height = 15
     Caption = 'CPUTypeLabel'
   end
   object InfoLabel: TLabel
     Left = 312
-    Top = 80
-    Width = 265
-    Height = 121
+    Top = 72
+    Width = 233
+    Height = 217
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
     Caption = 'InfoLabel'
@@ -60,9 +46,23 @@ object ModernProfileEditorCPUFrame: TModernProfileEditorCPUFrame
     Left = 24
     Top = 176
     Width = 273
-    Height = 113
+    Height = 247
     Caption = 'CPUCyclesGroupBox'
     TabOrder = 2
+    object CyclesUpLabel: TLabel
+      Left = 16
+      Top = 121
+      Width = 77
+      Height = 15
+      Caption = 'CyclesUpLabel'
+    end
+    object CyclesDownLabel: TLabel
+      Left = 16
+      Top = 180
+      Width = 93
+      Height = 15
+      Caption = 'CyclesDownLabel'
+    end
     object CyclesAutoRadioButton: TRadioButton
       Left = 16
       Top = 32
@@ -94,8 +94,7 @@ object ModernProfileEditorCPUFrame: TModernProfileEditorCPUFrame
       Left = 112
       Top = 76
       Width = 104
-      Height = 21
-      ItemHeight = 13
+      Height = 23
       TabOrder = 4
     end
     object CyclesMaxLimitCheckBox: TCheckBox
@@ -107,54 +106,67 @@ object ModernProfileEditorCPUFrame: TModernProfileEditorCPUFrame
       TabOrder = 2
       OnClick = CPUCyclesChange
     end
-  end
-  object CyclesUpEdit: TSpinEdit
-    Left = 32
-    Top = 328
-    Width = 69
-    Height = 22
-    MaxValue = 50000
-    MinValue = 1
-    TabOrder = 3
-    Value = 500
-  end
-  object CyclesDownEdit: TSpinEdit
-    Left = 32
-    Top = 387
-    Width = 69
-    Height = 22
-    MaxValue = 50000
-    MinValue = 1
-    TabOrder = 5
-    Value = 20
+    object CyclesDownEdit: TSpinEdit
+      Left = 16
+      Top = 201
+      Width = 69
+      Height = 24
+      MaxValue = 50000
+      MinValue = 1
+      TabOrder = 7
+      Value = 20
+    end
+    object CyclesUpComboBox: TComboBox
+      Left = 112
+      Top = 143
+      Width = 145
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 6
+      OnChange = CyclesUpComboBoxChange
+    end
+    object CyclesUpEdit: TSpinEdit
+      Left = 16
+      Top = 142
+      Width = 69
+      Height = 24
+      MaxValue = 50000
+      MinValue = 1
+      TabOrder = 5
+      Value = 500
+    end
+    object CyclesDownComboBox: TComboBox
+      Left = 112
+      Top = 201
+      Width = 145
+      Height = 23
+      Style = csDropDownList
+      TabOrder = 8
+      OnChange = CyclesDownComboBoxChange
+    end
   end
   object CPUTypeComboBox: TComboBox
     Left = 312
     Top = 43
     Width = 145
-    Height = 21
+    Height = 23
     Style = csDropDownList
-    ItemHeight = 13
     TabOrder = 1
   end
-  object CyclesUpComboBox: TComboBox
-    Left = 107
-    Top = 328
-    Width = 145
-    Height = 21
-    Style = csDropDownList
-    ItemHeight = 13
-    TabOrder = 4
-    OnChange = CyclesUpComboBoxChange
-  end
-  object CyclesDownComboBox: TComboBox
-    Left = 107
-    Top = 387
-    Width = 145
-    Height = 21
-    Style = csDropDownList
-    ItemHeight = 13
-    TabOrder = 6
-    OnChange = CyclesDownComboBoxChange
+  object GroupBox1: TGroupBox
+    Left = 303
+    Top = 295
+    Width = 242
+    Height = 128
+    Caption = 'CPU Features'
+    TabOrder = 3
+    object cbEnableSSE2: TCheckBox
+      Left = 16
+      Top = 32
+      Width = 193
+      Height = 17
+      Caption = 'Enable SSE2'
+      TabOrder = 0
+    end
   end
 end

@@ -40,8 +40,10 @@ function DetermineImagePriority(const FileNameOrPath: String; const IsPortrait: 
   const ImageW, ImageH: Integer): Integer;
 function DetermineCoverImagePriority(const FileNameOrPath: String; const IsPortrait: Boolean;
   const ImageW, ImageH: Integer): Integer;
+function DetermineScreenshotImagePriority(const FileNameOrPath: String; const IsPortrait: Boolean;
+  const ImageW, ImageH: Integer): Integer;
 function BuildScreenshotPaneSortKey(const Prio: Integer; const FileSize: Int64; const FilePath: String;
-  const ImageW, ImageH: Integer): String;
+  const ImageW, ImageH: Integer; const ApplyPortraitSizeBoost: Boolean = True): String;
 function ExtractPathFromScreenshotPaneSortKey(const SortKey: String): String;
 
 implementation
@@ -480,6 +482,26 @@ begin
   Result := Prio;
 end;
 
+function DetermineScreenshotImagePriority(const FileNameOrPath: String; const IsPortrait: Boolean;
+  const ImageW, ImageH: Integer): Integer;
+var
+  R, Dist: Double;
+begin
+  if (ImageW < 1) or (ImageH < 1) or (ImageW + ImageH < 300) then begin
+    Result := 4000;
+    Exit;
+  end;
+  R := ImageW / ImageH;
+  if (ImageW >= ImageH) and (Int64(ImageW) * 5 <= Int64(ImageH) * 8) then begin
+    Dist := Abs(R - (4.0 / 3.0));
+    Result := Round(Dist * 1000);
+  end else if ImageW > ImageH then
+    Result := 1000 + Round((R - 1.6) * 1000)
+  else
+    Result := 2000 + Round((1.0 - R) * 1000);
+  If Result>9999 then Result:=9999;
+end;
+
 function DetermineCoverImagePriority(const FileNameOrPath: String; const IsPortrait: Boolean;
   const ImageW, ImageH: Integer): Integer;
 var
@@ -531,7 +553,7 @@ begin
 end;
 
 function BuildScreenshotPaneSortKey(const Prio: Integer; const FileSize: Int64; const FilePath: String;
-  const ImageW, ImageH: Integer): String;
+  const ImageW, ImageH: Integer; const ApplyPortraitSizeBoost: Boolean = True): String;
 var
   Inv: Int64;
   ScaleF, R: Double;
@@ -540,6 +562,8 @@ begin
   { Ascending key: lower prio first; inverted size (MaxInt-size) so larger files sort first. }
   if (ImageW < 1) or (ImageH < 1) then
     Size := 0
+  else if not ApplyPortraitSizeBoost then
+    Size := FileSize
   else begin
     ScaleF := Min(ImageH, ImageW) / Max(ImageH, ImageW);
     R := ImageH / ImageW;
@@ -553,7 +577,7 @@ begin
   Inv := Int64(High(Integer)) - Size;
   if Inv < 0 then
     Inv := 0;
-  Result := IntToStr(Prio) + ',' + Format('%.10d', [Inv]) + ',' + FilePath;
+  Result := Format('%.4d', [Prio]) + ',' + Format('%.10d', [Inv]) + ',' + FilePath;
 end;
 
 function ExtractPathFromScreenshotPaneSortKey(const SortKey: String): String;

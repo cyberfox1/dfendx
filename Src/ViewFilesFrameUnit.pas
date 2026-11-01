@@ -36,6 +36,10 @@ type
     ListOpenInDefaultViewer: TMenuItem;
     TreeCreateFolder: TMenuItem;
     ListCreateFolder: TMenuItem;
+    N1: TMenuItem;
+    ListUseInScreenshotList: TMenuItem;
+    ListSetAsTitleImage: TMenuItem;
+    ListSetAsCoverImage: TMenuItem;
     procedure SetupDataDirButtonClick(Sender: TObject);
     procedure ButtonWork(Sender: TObject);
     procedure TreeChange(Sender: TObject; Node: TTreeNode);
@@ -121,6 +125,7 @@ begin
 end;
 
 procedure TViewFilesFrame.LoadLanguage;
+Var B : TBitmap;
 begin
   SetupDataDirButton.Caption:=LanguageSetup.ViewDataFilesSetup;
   InfoLabel.Caption:=LanguageSetup.ViewDataFilesSetupInfo;
@@ -142,6 +147,9 @@ begin
   ListRename.Caption:=LanguageSetup.ViewDataFilesRename;
   ListDelete.Caption:=LanguageSetup.ViewDataFilesDelete;
   ListExplorer.Caption:=LanguageSetup.ViewDataFilesOpen;
+  ListUseInScreenshotList.Caption:=LanguageSetup.ScreenshotPopupUseInScreenshotList;
+  ListSetAsTitleImage.Caption:=LanguageSetup.ScreenshotPopupSetAsTitleImage;
+  ListSetAsCoverImage.Caption:=LanguageSetup.ScreenshotPopupSetAsCoverImage;
 
   UserIconLoader.DialogImage(DI_Folder,ImageList,0);
   UserIconLoader.DialogImage(DI_SelectFolder,ImageList,1);
@@ -154,6 +162,17 @@ begin
   UserIconLoader.DialogImage(DI_InternetPage,ImageList,8);
   UserIconLoader.DialogImage(DI_Edit,ImageList,9);
   UserIconLoader.DialogImage(DI_Delete,ImageList,10);
+  B:=TBitmap.Create;
+  try
+    B.Width:=ImageList.Width;
+    B.Height:=ImageList.Height;
+    While ImageList.Count<14 do ImageList.Add(B,B);
+  finally
+    B.Free;
+  end;
+  UserIconLoader.DialogImage(DI_UseAsScreenshot,ImageList,11);
+  UserIconLoader.DialogImage(DI_Image,ImageList,12);
+  UserIconLoader.DialogImage(DI_CoverImage,ImageList,13);
 
   ToolBar.Font.Size:=PrgSetup.ToolbarFontSize;
 end;
@@ -391,6 +410,13 @@ end;
 
 procedure TViewFilesFrame.ListChange(Sender: TObject; Item: TListItem; Change: TItemChange);
 Var S,T : String;
+
+  procedure ApplyCheck(M: TMenuItem; IsOn: Boolean; Idx: Integer);
+  begin
+    M.Checked:=IsOn;
+    If IsOn then M.ImageIndex:=-1 else M.ImageIndex:=Idx;
+  end;
+
 begin
   ListRun.Visible:=(List.Selected<>nil);
   ListDelete.Visible:=(List.Selected<>nil);
@@ -416,6 +442,31 @@ begin
     ListOpenInDefaultViewer.Visible:=(T='') or (T='INTERNAL');
   end;
 
+  If OpenFileButton.Enabled then begin
+    S:=ExtUpperCase(ExtractFileExt(List.Selected.Caption));
+    ListUseInScreenshotList.Visible:=(S='.JPG') or (S='.JPEG') or (S='.BMP') or (S='.PNG') or (S='.GIF');
+    ListSetAsTitleImage.Visible:=ListUseInScreenshotList.Visible;
+    ListSetAsCoverImage.Visible:=ListUseInScreenshotList.Visible;
+    N1.Visible:=ListUseInScreenshotList.Visible;
+    If ListUseInScreenshotList.Visible and (Game<>nil) then begin
+      S:=GetCurrentPath+List.Selected.Caption;
+      T:=Trim(Game.SelectedScreenshotImage);
+      ApplyCheck(ListUseInScreenshotList,
+        (Trim(ExtUpperCase(List.Selected.Caption))=Trim(ExtUpperCase(T)))
+        or (Trim(ExtUpperCase(S))=Trim(ExtUpperCase(MakeAbsPath(T,PrgSetup.BaseDir)))),11);
+      ApplyCheck(ListSetAsTitleImage,
+        (Trim(ExtUpperCase(List.Selected.Caption))=Trim(ExtUpperCase(Game.SelectedTitleImage)))
+        or (Trim(ExtUpperCase(S))=Trim(ExtUpperCase(MakeAbsPath(Game.SelectedTitleImage,PrgSetup.BaseDir)))),12);
+      ApplyCheck(ListSetAsCoverImage,
+        (Trim(ExtUpperCase(List.Selected.Caption))=Trim(ExtUpperCase(Game.SelectedCoverImage)))
+        or (Trim(ExtUpperCase(S))=Trim(ExtUpperCase(MakeAbsPath(Game.SelectedCoverImage,PrgSetup.BaseDir)))),13);
+    end;
+  end else begin
+    ListUseInScreenshotList.Visible:=False;
+    ListSetAsTitleImage.Visible:=False;
+    ListSetAsCoverImage.Visible:=False;
+    N1.Visible:=False;
+  end;
 end;
 
 procedure TViewFilesFrame.ListDblClick(Sender: TObject);
@@ -538,6 +589,27 @@ begin
            ButtonWork(UpdateButton);
          end;
     34 : RunFile(True);
+    35 : If (List.Selected<>nil) and (Game<>nil) then begin
+          S:=GetCurrentPath+List.Selected.Caption;
+          T:=Trim(Game.SelectedScreenshotImage);
+          If (Trim(ExtUpperCase(List.Selected.Caption))=Trim(ExtUpperCase(T)))
+            or (Trim(ExtUpperCase(S))=Trim(ExtUpperCase(MakeAbsPath(T,PrgSetup.BaseDir))))
+            then Game.SelectedScreenshotImage:=''
+            else Game.SelectedScreenshotImage:=MakeRelPath(S,PrgSetup.BaseDir);
+          If Assigned(FOnUpdateGamesList) then FOnUpdateGamesList(self);
+        end;
+    36 : If (List.Selected<>nil) and (Game<>nil) then begin
+          S:=GetCurrentPath+List.Selected.Caption;
+          Game.SelectedTitleImage:=MakeRelPath(S,PrgSetup.BaseDir);
+          Game.StoreAllValues;
+          If Assigned(FOnUpdateGamesList) then FOnUpdateGamesList(self);
+        end;
+    37 : If (List.Selected<>nil) and (Game<>nil) then begin
+          S:=GetCurrentPath+List.Selected.Caption;
+          Game.SelectedCoverImage:=MakeRelPath(S,PrgSetup.BaseDir);
+          Game.StoreAllValues;
+          If Assigned(FOnUpdateGamesList) then FOnUpdateGamesList(self);
+        end;
   end;
 end;
 

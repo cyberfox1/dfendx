@@ -31,6 +31,7 @@ Procedure AddExoExtrasToList(const MediaDB : TExoDOSMediaDB; const AListView : T
 Function GetImageListItemFilePath(const Item : TListItem; const CaptureDir : String) : String;
 { Absolute path for Game.SelectedTitleImage if set and the file exists; else ''. }
 Function ResolveSelectedTitleImagePath(const Game : TGame) : String;
+Function ResolveSelectedScreenshotListPath(const Game : TGame) : String;
 { After Screenshots + Extras lists are built: score each image, sort, first key wins. }
 Function PickScreenshotPaneSourceFromLists(const ScreenshotsList, ExtrasList : TListView; const CaptureDir : String) : String;
 Procedure AddSoundsToList(const AListView : TListView; Dir : String; ImageListIndex : TMediaListImageIndex);
@@ -185,6 +186,7 @@ var
 const
   { Skip full-decode of huge sources on UI thread (e.g. MI1 covers ~16MB). }
   MaxThumbSourceBytes = 20 * 1024 * 1024;
+  MaxListViewAutoDetectBytes = 4 * 1024 * 1024;
   TooBigThumbCacheKey = 'res:TOOBIGTHUMB';
 
 function EnsureTooBigListImage(const AImageList: TImageList;
@@ -986,22 +988,23 @@ begin
   FKindIconIndex[Kind] := Result;
 end;
 
-Function ResolveSelectedTitleImagePath(const Game : TGame) : String;
+Function ResolveGameStoredImagePath(const Game : TGame; const Stored : String) : String;
 Var Candidate, CaptureDir : String;
 begin
   result:='';
   if Game=nil then exit;
-  Candidate:=Trim(Game.SelectedTitleImage);
+  Candidate:=Trim(Stored);
   if Candidate='' then exit;
 
   CaptureDir:=Trim(Game.CaptureFolder);
   if CaptureDir<>'' then CaptureDir:=MakeAbsPath(CaptureDir,PrgSetup.BaseDir);
 
   if Pos('\',Candidate)=0 then begin
-    { bare filename: prefer capture dir }
-    if CaptureDir<>'' then
-      Candidate:=IncludeTrailingPathDelimiter(CaptureDir)+Candidate
-    else
+    if CaptureDir<>'' then begin
+      Candidate:=IncludeTrailingPathDelimiter(CaptureDir)+Candidate;
+      if not FileExists(Candidate) then
+        Candidate:=MakeAbsPath(Trim(Stored),PrgSetup.BaseDir);
+    end else
       Candidate:=MakeAbsPath(Candidate,PrgSetup.BaseDir);
   end else
     Candidate:=MakeAbsPath(Candidate,PrgSetup.BaseDir);
@@ -1009,9 +1012,131 @@ begin
   if FileExists(Candidate) then result:=Candidate;
 end;
 
+Function ResolveSelectedTitleImagePath(const Game : TGame) : String;
+begin
+  result:=ResolveGameStoredImagePath(Game, Game.SelectedTitleImage);
+end;
+
+Function ResolveSelectedScreenshotListPath(const Game : TGame) : String;
+begin
+  result:=ResolveGameStoredImagePath(Game, Game.SelectedScreenshotImage);
+end;
+
+Function CollectListViewPickImagePaths(const Game : TGame) : TStringList;
+Var CaptureDir, ExtraRootPath : String;
+    St : TStringList;
+
+  procedure AppendList(const Src : TStringList);
+  Var I : Integer;
+  begin
+    if Src=nil then exit;
+    for I:=0 to Src.Count-1 do
+      if Trim(Src[I])<>'' then Result.Add(Src[I]);
+  end;
+
+begin
+  Result:=TStringList.Create;
+  if Game=nil then exit;
+  CaptureDir:=Trim(Game.CaptureFolder);
+  if CaptureDir<>'' then CaptureDir:=MakeAbsPath(CaptureDir,PrgSetup.BaseDir);
+  if CaptureDir<>'' then
+    CollectMedia(IncludeTrailingPathDelimiter(CaptureDir), ImageExtensions, Result, 0, 1);
+  if CoverPickMediaDB=nil then exit;
+  St:=CoverPickMediaDB.GetScreenshotPaths(NormalizeExoMediaKey(Game.ResolveGameTitle));
+  try
+    AppendList(St);
+  finally
+    St.Free;
+  end;
+  St:=CoverPickMediaDB.GetOtherImagePaths(NormalizeExoMediaKey(Game.ResolveGameTitle));
+  try
+    AppendList(St);
+  finally
+    St.Free;
+  end;
+  ExtraRootPath:='';
+  if CoverPickGamesDB<>nil then
+    ExtraRootPath:=GetGameDataParamByName(CoverPickGamesDB,ExoDOSTitleWithoutYear(Game.ResolveGameTitle),'RootFolder');
+  if ExtraRootPath<>'' then begin
+    St:=GetExoGameExtrasPaths(PrgSetup.ExoDOSDir, ExtraRootPath, ImageExtensions);
+    try
+      AppendList(St);
+    finally
+      St.Free;
+    end;
+  end;
+end;
+
+Function GetListViewPickImageStat(const Path : String; out FileSz : Int64; out ImageW, ImageH : Integer) : Boolean;
+Var Wic : TWICImage;
+begin
+  Result:=False;
+  FileSz:=0;
+  ImageW:=0;
+  ImageH:=0;
+  if Path='' then exit;
+  FileSz:=GetFileSize(Path);
+  if (FileSz<=0) or (FileSz>MaxListViewAutoDetectBytes) then exit;
+  Wic:=TWICImage.Create;
+  try
+    try
+      Wic.LoadFromFile(Path);
+    except
+      exit;
+    end;
+    if Wic.Empty or (Wic.Width<=0) or (Wic.Height<=0) then exit;
+    ImageW:=Wic.Width;
+    ImageH:=Wic.Height;
+    Result:=True;
+  finally
+    Wic.Free;
+  end;
+end;
+
+Function PickScreenshotImageForGame(const Game : TGame; const TW, TH : Integer) : String;
+Var
+  Keys, St : TStringList;
+
+  procedure ConsiderPath(const Path : String);
+  Var Sz : Int64;
+      OW, OH, Prio : Integer;
+      IsPortrait : Boolean;
+  begin
+    if not GetListViewPickImageStat(Path,Sz,OW,OH) then exit;
+    IsPortrait:=ImageIsPortrait(OW,OH);
+    Prio:=DetermineScreenshotImagePriority(Path,IsPortrait,OW,OH);
+    Keys.Add(BuildScreenshotPaneSortKey(Prio,Sz,Path,OW,OH));
+  end;
+
+  procedure ConsiderList(const List : TStringList);
+  Var I : Integer;
+  begin
+    if List=nil then exit;
+    for I:=0 to List.Count-1 do ConsiderPath(List[I]);
+  end;
+
+begin
+  Result:='';
+  if Game=nil then exit;
+  if not Assigned(ScreenshotsCache) then exit;
+  Keys:=TStringList.Create;
+  try
+    Keys.Sorted:=False;
+    St:=CollectListViewPickImagePaths(Game);
+    try
+      ConsiderList(St);
+    finally
+      St.Free;
+    end;
+    if Keys.Count=0 then Exit;
+    Keys.Sort;
+    Result:=ExtractPathFromScreenshotPaneSortKey(Keys[0]);
+  finally
+    Keys.Free;
+  end;
+end;
+
 Function LoadScreenshotToImageLists(const Game : TGame; ImageList2 : TImageList; const UseBackgroundColor : Boolean; const BackgroundColor : TColor) : Boolean;
-{ Screenshot-mode list icons: SelectedTitleImage only (no pick). Sized from ImageList2
-  (PrgSetup.ScreenshotListViewWidth/Height). ScreenshotsCache with cache ON. }
 Var T : String;
     B : TBitmap;
 begin
@@ -1020,10 +1145,18 @@ begin
   if not Assigned(ScreenshotsCache) then exit;
   if (ImageList2.Width<=0) or (ImageList2.Height<=0) then exit;
 
-  T:=ResolveSelectedTitleImagePath(Game);
-  if T='' then exit;
+  B:=nil;
+  T:=ResolveSelectedScreenshotListPath(Game);
+  if T<>'' then
+    B:=ScreenshotsCache.GetThumbnail(T,ImageList2.Width,ImageList2.Height);
 
-  B:=ScreenshotsCache.GetThumbnail(T,ImageList2.Width,ImageList2.Height);
+  if B=nil then begin
+    T:=PickScreenshotImageForGame(Game,ImageList2.Width,ImageList2.Height);
+    if T<>'' then begin
+      Game.SelectedScreenshotImage:=MakeRelPath(T,PrgSetup.BaseDir);
+      B:=ScreenshotsCache.GetThumbnail(T,ImageList2.Width,ImageList2.Height);
+    end;
+  end;
   if B=nil then exit;
   try
     ImageList2.AddMasked(B,clNone);
@@ -1034,49 +1167,20 @@ begin
 end;
 
 Function ResolveSelectedCoverImagePath(const Game : TGame) : String;
-Var Candidate, CaptureDir : String;
 begin
-  result:='';
-  if Game=nil then exit;
-  Candidate:=Trim(Game.SelectedCoverImage);
-  if Candidate='' then exit;
-
-  CaptureDir:=Trim(Game.CaptureFolder);
-  if CaptureDir<>'' then CaptureDir:=MakeAbsPath(CaptureDir,PrgSetup.BaseDir);
-
-  if Pos('\',Candidate)=0 then begin
-    if CaptureDir<>'' then
-      Candidate:=IncludeTrailingPathDelimiter(CaptureDir)+Candidate
-    else
-      Candidate:=MakeAbsPath(Candidate,PrgSetup.BaseDir);
-  end else
-    Candidate:=MakeAbsPath(Candidate,PrgSetup.BaseDir);
-
-  if FileExists(Candidate) then result:=Candidate;
+  result:=ResolveGameStoredImagePath(Game, Game.SelectedCoverImage);
 end;
 
 Function PickCoverImageForGame(const Game : TGame; const TW, TH : Integer) : String;
 Var
   Keys, St : TStringList;
-  ExtraRootPath, CaptureDir : String;
 
   procedure ConsiderPath(const Path : String);
-  Var B : TBitmap;
-      Sz : Int64;
+  Var Sz : Int64;
       OW, OH, Prio : Integer;
       IsPortrait : Boolean;
   begin
-    if Path='' then exit;
-    if not Assigned(ScreenshotsCache) then exit;
-    if (TW<=0) or (TH<=0) then exit;
-    if not ScreenshotsCache.GetCachedMeta(Path,TW,TH,Sz,OW,OH) then begin
-      Sz:=GetFileSize(Path);
-      if (Sz<=0) or (Sz>MaxThumbSourceBytes) then exit;
-      B:=ScreenshotsCache.GetThumbnail(Path,TW,TH);
-      if B=nil then exit;
-      B.Free;
-      if not ScreenshotsCache.GetCachedMeta(Path,TW,TH,Sz,OW,OH) then exit;
-    end;
+    if not GetListViewPickImageStat(Path,Sz,OW,OH) then exit;
     IsPortrait:=ImageIsPortrait(OW,OH);
     Prio:=DetermineCoverImagePriority(Path,IsPortrait,OW,OH);
     Keys.Add(BuildScreenshotPaneSortKey(Prio,Sz,Path,OW,OH));
@@ -1096,40 +1200,11 @@ begin
   Keys:=TStringList.Create;
   try
     Keys.Sorted:=False;
-    St:=TStringList.Create;
+    St:=CollectListViewPickImagePaths(Game);
     try
-      CaptureDir:=Trim(Game.CaptureFolder);
-      if CaptureDir<>'' then CaptureDir:=MakeAbsPath(CaptureDir,PrgSetup.BaseDir);
-      if CaptureDir<>'' then
-        CollectMedia(IncludeTrailingPathDelimiter(CaptureDir), ImageExtensions, St, 0, 1);
       ConsiderList(St);
     finally
       St.Free;
-    end;
-    if CoverPickMediaDB<>nil then begin
-      St:=CoverPickMediaDB.GetScreenshotPaths(NormalizeExoMediaKey(Game.ResolveGameTitle));
-      try
-        ConsiderList(St);
-      finally
-        St.Free;
-      end;
-      St:=CoverPickMediaDB.GetOtherImagePaths(NormalizeExoMediaKey(Game.ResolveGameTitle));
-      try
-        ConsiderList(St);
-      finally
-        St.Free;
-      end;
-      ExtraRootPath:='';
-      if CoverPickGamesDB<>nil then
-        ExtraRootPath:=GetGameDataParamByName(CoverPickGamesDB,ExoDOSTitleWithoutYear(Game.ResolveGameTitle),'RootFolder');
-      if ExtraRootPath<>'' then begin
-        St:=GetExoGameExtrasPaths(PrgSetup.ExoDOSDir, ExtraRootPath, ImageExtensions);
-        try
-          ConsiderList(St);
-        finally
-          St.Free;
-        end;
-      end;
     end;
     if Keys.Count=0 then Exit;
     Keys.Sort;
@@ -1352,8 +1427,8 @@ begin
   {$IFDEF SpeedTest}Ca:=GetTickCount;{$ENDIF}
 
   S:=Trim(PrgSetup.GamesListViewBackground);
-  UseBackgroundColor:=(S<>''); BackgroundColor:=clWhite;
-  If UseBackgroundColor then try BackgroundColor:=StringToColor(S); except UseBackgroundColor:=False; end;
+  UseBackgroundColor:=TryStringToColor(S, BackgroundColor);
+  If not UseBackgroundColor then BackgroundColor:=clWhite;
 
   {Prepare ListView}
   InvalidateDosBoxKindListIconCache;
@@ -1397,7 +1472,7 @@ begin
   CoverPickGamesDB:=nil;
   List:=TList.Create;
   try
-    If CoverViewMode and PrgSetup.HasValidExoInstallation then begin
+    If (CoverViewMode or ScreenshotViewMode) and PrgSetup.HasValidExoInstallation then begin
       If FileExists(PrgDataDir+ExoDOSMediaDBFile) then
         CoverPickMediaDB:=TExoDOSMediaDB.Create(PrgDataDir+ExoDOSMediaDBFile);
       If ExoDOSGamesList.DBFileExists then

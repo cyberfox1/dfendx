@@ -622,5 +622,26 @@ object ViewFilesFrame: TViewFilesFrame
       ImageIndex = 3
       OnClick = MenuWork
     end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object ListUseInScreenshotList: TMenuItem
+      Tag = 35
+      Caption = 'Use as screenshot in profiles list'
+      ImageIndex = 11
+      OnClick = MenuWork
+    end
+    object ListSetAsTitleImage: TMenuItem
+      Tag = 36
+      Caption = 'Set as &title image'
+      ImageIndex = 12
+      OnClick = MenuWork
+    end
+    object ListSetAsCoverImage: TMenuItem
+      Tag = 37
+      Caption = 'Set as &cover image'
+      ImageIndex = 13
+      OnClick = MenuWork
+    end
   end
 end

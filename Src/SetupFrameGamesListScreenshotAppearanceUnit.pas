@@ -43,7 +43,7 @@ type
 
 implementation
 
-uses Math, LanguageSetupUnit, VistaToolsUnit, PrgSetupUnit, CommonHelpers,
+uses Math, LanguageSetupUnit, VistaToolsUnit, PrgSetupUnit, CommonHelpers, CommonTools,
      HelpConsts, IconLoaderUnit;
 
 {$R *.dfm}
@@ -75,9 +75,9 @@ begin
 
   S:=Trim(PrgSetup.ScreenshotsListViewBackground);
   If S='' then ScreenshotsListBackgroundRadioButton1.Checked:=True else begin
-    try
-      C:=StringToColor(S); ScreenshotsListBackgroundRadioButton2.Checked:=True; ScreenshotsListBackgroundColorBox.Selected:=C;
-    except
+    If TryStringToColor(S, C) then begin
+      ScreenshotsListBackgroundRadioButton2.Checked:=True; ScreenshotsListBackgroundColorBox.Selected:=C;
+    end else begin
       ScreenshotsListBackgroundRadioButton3.Checked:=True; ScreenshotsListBackgroundEdit.Text:=S;
     end;
   end;
