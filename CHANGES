@@ -1,5 +1,15 @@
 DFendX Changelog
 
+Version 2.6.8 (11/08/2026)
+==========================
+- Disable mouse axis option (Pure)
+- Mouse sensitivity config (Pure)
+- Historic/modern locales (Staging)
+- Default country/layout values (Staging)
+- [Removed] Default values page
+- [Fix] DBGL archive import paths
+
+
 Version 2.6.7 (11/01/2026)
 ==========================
 - Add Pentium4 CPU type (X)

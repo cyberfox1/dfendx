@@ -1,7 +1,8 @@
 object ZipPackageDBGLForm: TZipPackageDBGLForm
   Left = 0
   Top = 0
-  BorderIcons = [biSystemMenu, biMaximize]
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
   Caption = 'ZipPackageDBGLForm'
   ClientHeight = 520
   ClientWidth = 436
@@ -94,5 +95,26 @@ object ZipPackageDBGLForm: TZipPackageDBGLForm
     Anchors = [akLeft, akBottom]
     TabOrder = 5
     Kind = bkCancel
+  end
+  object SelectAllButton: TBitBtn
+    Left = 226
+    Top = 490
+    Width = 97
+    Height = 25
+    Anchors = [akRight, akBottom]
+    Caption = 'SelectAllButton'
+    TabOrder = 6
+    OnClick = SelectButtonClick
+  end
+  object SelectNoneButton: TBitBtn
+    Tag = 1
+    Left = 328
+    Top = 490
+    Width = 97
+    Height = 25
+    Anchors = [akRight, akBottom]
+    Caption = 'SelectNoneButton'
+    TabOrder = 7
+    OnClick = SelectButtonClick
   end
 end

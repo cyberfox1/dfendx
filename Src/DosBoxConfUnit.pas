@@ -14,6 +14,7 @@ Procedure GenerateCoreDOSBoxConf(const Game: TGame; const Dest: TStrings; const 
 Procedure GenerateDiskNoiseConf(const Game: TGame; const Dest: TStrings);
 Procedure GenerateGlideConf(const Game: TGame; const Dest: TStrings);
 Procedure GeneratePureGlideCfg(const Game: TGame; const Cfg: TStrings);
+Procedure GeneratePureMouseCfg(const Game: TGame; const Cfg: TStrings);
 Procedure GenerateNetworkConf(const Game: TGame; const Dest: TStrings);
 Procedure GenerateMSDOSConf(const Game: TGame; const Dest: TStrings; const DOSBoxNr: Integer);
 Procedure GenerateSpecialMachineConf(const Game: TGame; const Dest: TStrings);
@@ -136,12 +137,20 @@ begin
 end;
 
 Procedure GenerateMouseConf(const Game: TGame; const Dest: TStrings);
-Var S: String;
+Var S, Sens: String;
+    Ax: String;
 begin
+  Ax:=Trim(ExtLowerCase(Game.DisableMouseAxis));
+  If (Game.IsStaging or Game.IsDBX) and (Ax='x') then
+    Sens:='0,'+IntToStr(Game.MouseSensitivity)
+  else If (Game.IsStaging or Game.IsDBX) and (Ax='y') then
+    Sens:=IntToStr(Game.MouseSensitivity)+',0'
+  else
+    Sens:=IntToStr(Game.MouseSensitivity);
   If Game.IsStaging then begin
     Dest.Add('');
     Dest.Add('[mouse]');
-    Dest.Add('mouse_sensitivity='+IntToStr(Game.MouseSensitivity));
+    Dest.Add('mouse_sensitivity='+Sens);
     If Game.AutoLockMouse
       then Dest.Add('mouse_capture=onclick')
       else Dest.Add('mouse_capture=seamless');
@@ -167,7 +176,7 @@ begin
     Dest.Add('virtualbox_mouse='+BoolToStr(Game.VirtualBoxMouse));
   end else begin
     Dest.Add('autolock='+BoolToStr(Game.AutoLockMouse));
-    Dest.Add('sensitivity='+IntToStr(Game.MouseSensitivity));
+    Dest.Add('sensitivity='+Sens);
   end;
   If Game.IsDBX then begin
     Dest.Add('');
@@ -877,6 +886,44 @@ begin
     Cfg.Add('"dosbox_pure_voodoo_gamma" : "'+Gamma+'"');
 end;
 
+Procedure GeneratePureMouseCfg(const Game: TGame; const Cfg: TStrings);
+const
+  Steps: array[0..41] of Double = (
+    0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65,
+    0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.1, 1.2, 1.3,
+    1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.2, 2.4, 2.6,
+    2.8, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0, 4.2, 4.4, 4.6, 4.8, 5.0);
+  StepStr: array[0..41] of String = (
+    '0.2','0.25','0.3','0.35','0.4','0.45','0.5','0.55','0.6','0.65',
+    '0.7','0.75','0.8','0.85','0.9','0.95','1.0','1.1','1.2','1.3',
+    '1.4','1.5','1.6','1.7','1.8','1.9','2.0','2.2','2.4','2.6',
+    '2.8','3.0','3.2','3.4','3.6','3.8','4.0','4.2','4.4','4.6','4.8','5.0');
+Var
+  V, BestDiff, Diff : Double;
+  I, Best : Integer;
+  Ax : String;
+begin
+  If (Game.MouseSensitivity<>100) and (Game.MouseSensitivity>0) then begin
+    V:=Game.MouseSensitivity/100.0;
+    If V<0.2 then V:=0.2 else If V>5.0 then V:=5.0;
+    Best:=0;
+    BestDiff:=Abs(Steps[0]-V);
+    for I:=1 to High(Steps) do begin
+      Diff:=Abs(Steps[I]-V);
+      if Diff<BestDiff then begin
+        BestDiff:=Diff;
+        Best:=I;
+      end;
+    end;
+    Cfg.Add('"dosbox_pure_mouse_speed_factor" : "'+StepStr[Best]+'"');
+  end;
+  Ax:=Trim(ExtLowerCase(Game.DisableMouseAxis));
+  If Ax='x' then
+    Cfg.Add('"dosbox_pure_mouse_speed_factor_x" : "0"')
+  else If Ax='y' then
+    Cfg.Add('"dosbox_pure_mouse_speed_factor_x" : "only"');
+end;
+
 Procedure GenerateNetworkConf(const Game: TGame; const Dest: TStrings);
 Var S: String;
 begin
@@ -944,12 +991,16 @@ begin
   If ExtUpperCase(T)='NONE' then T:='none'; {DOSBox keyb accepts GR and gr but not NONE}
   { Staging 0.83+: keyboardlayout renamed to keyboard_layout.
     Staging/X: always country with layout (auto or explicit); no autoexec keyb. }
-  If Game.IsNewStaging then
-    Dest.Add('keyboard_layout='+T)
-  else
+  If Game.IsNewStaging then begin
+    If ExtUpperCase(T)<>'AUTO' then
+      Dest.Add('keyboard_layout='+T);
+  end else
     Dest.Add('keyboardlayout='+T); {classic: also via keyb in autoexec if keyb fails on codepage}
-  If Game.IsStaging or (Game.DosBoxKind=dbkX) then
+  If (Game.IsStaging or (Game.DosBoxKind=dbkX)) and not Game.IsNewStaging then
     Dest.Add('country=auto');
+  S:=Trim(Game.LocalePeriod);
+  If Game.IsStaging and (S<>'') then
+    Dest.Add('locale_period='+S);
 
   { Staging/X: modern [dos] ver= (same key both forks; 0.82 and 0.83 Staging).
     Standard keeps autoexec "ver set". Empty/default/auto → omit. }

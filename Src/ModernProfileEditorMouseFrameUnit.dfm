@@ -72,6 +72,13 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Height = 15
     Caption = 'Ps2ReportRateLabel'
   end
+  object lblDisableMouseAxis: TLabel
+    Left = 192
+    Top = 88
+    Width = 101
+    Height = 15
+    Caption = 'Disable Mouse Axis'
+  end
   object LockMouseCheckBox: TCheckBox
     Left = 16
     Top = 24
@@ -97,7 +104,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Width = 473
     Height = 17
     Caption = 'Force2ButtonsCheckBox'
-    TabOrder = 2
+    TabOrder = 3
     OnClick = Force2ButtonsCheckBoxClick
   end
   object SwapButtonsCheckBox: TCheckBox
@@ -106,7 +113,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Width = 473
     Height = 17
     Caption = 'SwapButtonsCheckBox'
-    TabOrder = 3
+    TabOrder = 4
   end
   object MouseDriverModelComboBox: TComboBox
     Left = 17
@@ -114,7 +121,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Width = 160
     Height = 23
     Style = csDropDownList
-    TabOrder = 4
+    TabOrder = 5
     Visible = False
   end
   object MouseMoveThresholdComboBox: TComboBox
@@ -123,7 +130,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Width = 80
     Height = 23
     Style = csDropDownList
-    TabOrder = 5
+    TabOrder = 6
     Visible = False
   end
   object MouseDriverOptionsGroupBox: TGroupBox
@@ -132,7 +139,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Width = 489
     Height = 60
     Caption = 'MouseDriverOptionsGroupBox'
-    TabOrder = 6
+    TabOrder = 7
     Visible = False
     object MouseImmediateCheckBox: TCheckBox
       Left = 16
@@ -165,7 +172,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Width = 250
     Height = 17
     Caption = 'Ps2CheckBox'
-    TabOrder = 7
+    TabOrder = 8
     OnClick = Ps2CheckBoxClick
   end
   object CtmouseCheckBox: TCheckBox
@@ -174,7 +181,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Width = 197
     Height = 17
     Caption = 'CtmouseCheckBox'
-    TabOrder = 8
+    TabOrder = 9
   end
   object Ps2ModelComboBox: TComboBox
     Left = 16
@@ -182,7 +189,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Width = 200
     Height = 23
     Style = csDropDownList
-    TabOrder = 9
+    TabOrder = 10
   end
   object Ps2ReportRateComboBox: TComboBox
     Left = 292
@@ -190,7 +197,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Width = 100
     Height = 23
     Style = csDropDownList
-    TabOrder = 10
+    TabOrder = 11
   end
   object VMwareCheckBox: TCheckBox
     Left = 16
@@ -198,7 +205,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Width = 160
     Height = 17
     Caption = 'VMwareCheckBox'
-    TabOrder = 11
+    TabOrder = 12
   end
   object VirtualBoxCheckBox: TCheckBox
     Left = 16
@@ -206,7 +213,7 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Width = 160
     Height = 17
     Caption = 'VirtualBoxCheckBox'
-    TabOrder = 12
+    TabOrder = 13
   end
   object BiosPs2CheckBox: TCheckBox
     Left = 292
@@ -214,6 +221,14 @@ object ModernProfileEditorMouseFrame: TModernProfileEditorMouseFrame
     Width = 197
     Height = 17
     Caption = 'BiosPs2CheckBox'
-    TabOrder = 13
+    TabOrder = 14
+  end
+  object cbMouseAxis: TComboBox
+    Left = 192
+    Top = 109
+    Width = 80
+    Height = 23
+    Style = csDropDownList
+    TabOrder = 2
   end
 end

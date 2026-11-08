@@ -209,6 +209,7 @@ begin
     AGame.UMB:=StrToBool(INI.ReadString('dos','umb','true'));
     AGame.KeyboardLayout:=INI.ReadString('dos','keyboardlayout','none');
     If ExtUpperCase(AGame.KeyboardLayout)='AUTO' then AGame.KeyboardLayout:='default';
+    AGame.LocalePeriod:=Trim(INI.ReadString('dos','locale_period',''));
     S:=Trim(INI.ReadString('dos','lfn','auto'));
     If (S='') or SameText(S,'default') then S:='auto';
     AGame.LFN:=S;

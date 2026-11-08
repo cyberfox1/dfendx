@@ -724,6 +724,7 @@ const NR_Author=1;
       NR_ProfileEditorMouseBiosPs2=41217;
       NR_ProfileEditorMousePs2ReportRate=41218;
       NR_ProfileEditorMouseCtmouse=41219;
+      NR_ProfileEditorMouseDisableAxis=41220;
       NR_ProfileEditorKeyboardSheet=40907;
       NR_ProfileEditorMouseSheet=40908;
       NR_ProfileEditorSerialPortsSheet=40909;
@@ -1668,6 +1669,9 @@ const NR_Author=1;
       NR_GameUTF8FileNames=62048;
       NR_GameCPUFeatures=62049;
       NR_GameCPUEnableSSE2=62050;
+      NR_GameLocalePeriod=62051;
+      NR_GameLocalePeriodHistoric=62052;
+      NR_GameLocalePeriodModern=62053;
 
       NR_GameEnablePrinterEmulation=62135;
       NR_GamePrinterResolution=62136;
@@ -3950,6 +3954,7 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property ProfileEditorMouseBiosPs2 : String index NR_ProfileEditorMouseBiosPs2 read GetString write SetString;
     property ProfileEditorMousePs2ReportRate : String index NR_ProfileEditorMousePs2ReportRate read GetString write SetString;
     property ProfileEditorMouseCtmouse : String index NR_ProfileEditorMouseCtmouse read GetString write SetString;
+    property ProfileEditorMouseDisableAxis : String index NR_ProfileEditorMouseDisableAxis read GetString write SetString;
     property GameUseDoublebuffering : String index NR_GameUseDoublebuffering read GetString write SetString;
     property GameAspectCorrection : String index NR_GameAspectCorrection read GetString write SetString;
     property GameGlideEmulation : String index NR_GameGlideEmulation read GetString write SetString;
@@ -4003,6 +4008,9 @@ Type TLanguageSetup=class(TBasePrgSetup)
     property GameKeyboardLayoutInfo : String index NR_GameKeyboardLayoutInfo read GetString write SetString;
     property GameKeyboardCodepage : String index NR_GameKeyboardCodepage read GetString write SetString;
     property GameKeyboardCodepageDefault : String index NR_GameKeyboardCodepageDefault read GetString write SetString;
+    property GameLocalePeriod : String index NR_GameLocalePeriod read GetString write SetString;
+    property GameLocalePeriodHistoric : String index NR_GameLocalePeriodHistoric read GetString write SetString;
+    property GameLocalePeriodModern : String index NR_GameLocalePeriodModern read GetString write SetString;
     property GameKeyboardCountryDefault : String index NR_GameKeyboardCountryDefault read GetString write SetString;
     property GameKeyboardNumLock : String index NR_GameKeyboardNumLock read GetString write SetString;
     property GameKeyboardCapsLock : String index NR_GameKeyboardCapsLock read GetString write SetString;
@@ -6413,6 +6421,7 @@ begin
   AddStringRec(NR_ProfileEditorMouseBiosPs2,'ProfileEditorForm','Mouse.BiosPs2','BIOS PS/2 mouse services');
   AddStringRec(NR_ProfileEditorMousePs2ReportRate,'ProfileEditorForm','Mouse.Ps2ReportRate','Report rate');
   AddStringRec(NR_ProfileEditorMouseCtmouse,'ProfileEditorForm','Mouse.Ctmouse','Enable CTMOUSE');
+  AddStringRec(NR_ProfileEditorMouseDisableAxis,'ProfileEditorForm','Mouse.DisableAxis','Disable Mouse Axis');
   AddStringRec(NR_GameUseDoublebuffering,'GameSetup','UseDoublebuffering','Use double buffering');
   AddStringRec(NR_GameAspectCorrection,'GameSetup','AspectCorrection','Keep correct aspect');
   AddStringRec(NR_GameGlideEmulation,'GameSetup','GlideEmulation','Glide emulation');
@@ -6466,6 +6475,9 @@ begin
   AddStringRec(NR_GameKeyboardLayoutInfo,'GameSetup','KeyboardLayout.Info','If you select "default" as keyboard layout or codepage, the default value of the chosen DOSBox installation or the DFendX language file will be used (language file: "US (US)" and "437").');
   AddStringRec(NR_GameKeyboardCodepage,'GameSetup','Codepage','Codepage');
   AddStringRec(NR_GameKeyboardCodepageDefault,'GameSetup','Codepage.Default','437');
+  AddStringRec(NR_GameLocalePeriod,'GameSetup','LocalePeriod','Locale period');
+  AddStringRec(NR_GameLocalePeriodHistoric,'GameSetup','LocalePeriod.Historic','Historic');
+  AddStringRec(NR_GameLocalePeriodModern,'GameSetup','LocalePeriod.Modern','Modern');
   AddStringRec(NR_GameKeyboardCountryDefault,'GameSetup','Country.Default','001');
   AddStringRec(NR_GameKeyboardNumLock,'GameSetup','Keyboard.NumLock','Num lock status');
   AddStringRec(NR_GameKeyboardCapsLock,'GameSetup','Keyboard.CapsLock','Caps lock status');

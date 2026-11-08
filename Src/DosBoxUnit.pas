@@ -1737,6 +1737,7 @@ begin
     end;
     GeneratePureMidiCfg(Game,Cfg,WorkDir);
     GeneratePureGraphicsCfg(Game,Cfg);
+    GeneratePureMouseCfg(Game,Cfg);
     if Game.GUS then
       Cfg.Add('"dosbox_pure_gus" : "true"')
     else

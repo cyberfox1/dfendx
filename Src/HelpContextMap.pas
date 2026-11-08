@@ -41,7 +41,6 @@ begin
  1112 : Result := 'FileOptionsAppearanceTree.html';
  1113 : Result := 'FileOptionsAppearanceScreenshots.html';
  1114 : Result := 'FileOptionsProfileEditor.html';
- 1115 : Result := 'FileOptionsDefaultValues.html';
  1116 : Result := 'FileOptionsDOSBox.html';
  1117 : Result := 'FileOptionsDOSBoxCVSFeatures.html';
  1118 : Result := 'FileOptionsFreeDOS.html';

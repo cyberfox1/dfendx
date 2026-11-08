@@ -16,7 +16,10 @@ type
     GamesLabel: TLabel;
     OKButton: TBitBtn;
     CancelButton: TBitBtn;
+    SelectAllButton: TBitBtn;
+    SelectNoneButton: TBitBtn;
     procedure FormCreate(Sender: TObject);
+    procedure SelectButtonClick(Sender: TObject);
   private
     { Private-Deklarationen }
   public
@@ -50,9 +53,17 @@ begin
   GamesLabel.Caption:=LanguageSetup.ImportDBGLPackageGames;
   OKButton.Caption:=LanguageSetup.OK;
   CancelButton.Caption:=LanguageSetup.Cancel;
+  SelectAllButton.Caption:=LanguageSetup.All;
+  SelectNoneButton.Caption:=LanguageSetup.None;
 
   UserIconLoader.DialogImage(DI_OK,OKButton);
   UserIconLoader.DialogImage(DI_Cancel,CancelButton);
+end;
+
+procedure TZipPackageDBGLForm.SelectButtonClick(Sender: TObject);
+Var I : Integer;
+begin
+  For I:=0 to GamesListBox.Items.Count-1 do GamesListBox.Checked[I]:=((Sender as TComponent).Tag=0);
 end;
 
 { global }

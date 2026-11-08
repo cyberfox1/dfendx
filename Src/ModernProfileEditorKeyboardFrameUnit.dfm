@@ -2,31 +2,30 @@ object ModernProfileEditorKeyboardFrame: TModernProfileEditorKeyboardFrame
   Left = 0
   Top = 0
   Width = 641
-  Height = 478
+  Height = 639
   TabOrder = 0
   DesignSize = (
     641
-    478)
+    639)
   object KeyboardLayoutLabel: TLabel
     Left = 24
     Top = 56
-    Width = 104
-    Height = 13
+    Width = 114
+    Height = 15
     Caption = 'KeyboardLayoutLabel'
   end
   object KeyboardLayoutInfoLabel: TLabel
     Left = 24
     Top = 102
-    Width = 601
-    Height = 51
-    Anchors = [akLeft, akTop, akRight]
+    Width = 250
+    Height = 123
     AutoSize = False
     Caption = 'KeyboardLayoutInfoLabel'
     WordWrap = True
   end
   object KeyLockInfoLabel: TLabel
     Left = 24
-    Top = 271
+    Top = 343
     Width = 489
     Height = 42
     AutoSize = False
@@ -36,13 +35,13 @@ object ModernProfileEditorKeyboardFrame: TModernProfileEditorKeyboardFrame
   object CodepageLabel: TLabel
     Left = 288
     Top = 56
-    Width = 74
-    Height = 13
+    Width = 82
+    Height = 15
     Caption = 'CodepageLabel'
   end
   object CustomKeyMapperButton: TSpeedButton
     Left = 608
-    Top = 374
+    Top = 470
     Width = 23
     Height = 22
     Anchors = [akTop, akRight]
@@ -68,9 +67,8 @@ object ModernProfileEditorKeyboardFrame: TModernProfileEditorKeyboardFrame
     Left = 24
     Top = 75
     Width = 233
-    Height = 21
+    Height = 23
     Style = csDropDownList
-    ItemHeight = 13
     TabOrder = 1
   end
   object UseScancodesCheckBox: TCheckBox
@@ -84,7 +82,7 @@ object ModernProfileEditorKeyboardFrame: TModernProfileEditorKeyboardFrame
   end
   object NumLockRadioGroup: TRadioGroup
     Left = 24
-    Top = 176
+    Top = 240
     Width = 153
     Height = 89
     Caption = 'NumLockRadioGroup'
@@ -93,11 +91,11 @@ object ModernProfileEditorKeyboardFrame: TModernProfileEditorKeyboardFrame
       'Do not change'
       'off'
       'on')
-    TabOrder = 3
+    TabOrder = 4
   end
   object CapsLockRadioGroup: TRadioGroup
     Left = 193
-    Top = 176
+    Top = 240
     Width = 153
     Height = 89
     Caption = 'CapsLockRadioGroup'
@@ -106,11 +104,11 @@ object ModernProfileEditorKeyboardFrame: TModernProfileEditorKeyboardFrame
       'Do not change'
       'off'
       'on')
-    TabOrder = 4
+    TabOrder = 5
   end
   object ScrollLockRadioGroup: TRadioGroup
     Left = 360
-    Top = 176
+    Top = 240
     Width = 153
     Height = 89
     Caption = 'ScrollLockRadioGroup'
@@ -119,47 +117,78 @@ object ModernProfileEditorKeyboardFrame: TModernProfileEditorKeyboardFrame
       'Do not change'
       'off'
       'on')
-    TabOrder = 5
+    TabOrder = 6
   end
   object CodepageComboBox: TComboBox
     Left = 288
     Top = 75
     Width = 233
-    Height = 21
+    Height = 23
     Style = csDropDownList
-    ItemHeight = 13
     TabOrder = 2
+  end
+  object LocalePeriodGroupBox: TGroupBox
+    Left = 288
+    Top = 104
+    Width = 233
+    Height = 105
+    Caption = 'LocalePeriodGroupBox'
+    TabOrder = 3
+    object LocalePeriodHistoricRadioButton: TRadioButton
+      Left = 13
+      Top = 49
+      Width = 204
+      Height = 17
+      Caption = 'Historic'
+      TabOrder = 0
+    end
+    object LocalePeriodModernRadioButton: TRadioButton
+      Left = 13
+      Top = 72
+      Width = 204
+      Height = 17
+      Caption = 'Modern'
+      TabOrder = 1
+    end
+    object LocalePeriodNoneRadioButton: TRadioButton
+      Left = 13
+      Top = 26
+      Width = 204
+      Height = 17
+      Caption = 'None'
+      TabOrder = 2
+    end
   end
   object DefaultKeyMapperFileRadioButton: TRadioButton
     Left = 24
-    Top = 328
+    Top = 424
     Width = 578
     Height = 17
     Anchors = [akLeft, akTop, akRight]
     Caption = 'DefaultKeyMapperFileRadioButton'
-    TabOrder = 6
+    TabOrder = 7
   end
   object CustomKeyMapperFileRadioButton: TRadioButton
     Left = 24
-    Top = 351
+    Top = 447
     Width = 578
     Height = 17
     Anchors = [akLeft, akTop, akRight]
     Caption = 'CustomKeyMapperFileRadioButton'
-    TabOrder = 7
+    TabOrder = 8
   end
   object CustomKeyMapperEdit: TEdit
     Left = 40
-    Top = 374
+    Top = 470
     Width = 562
-    Height = 21
+    Height = 23
     Anchors = [akLeft, akTop, akRight]
-    TabOrder = 8
+    TabOrder = 9
     OnChange = CustomKeyMapperEditChange
   end
   object DosBoxTxtOpenDialog: TOpenDialog
     DefaultExt = 'txt'
     Left = 24
-    Top = 409
+    Top = 505
   end
 end

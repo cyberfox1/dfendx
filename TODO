@@ -1,3 +1,4 @@
-- 64-bit build
-- Lazurus port (cross-platform builds)
+* Lazurus port (cross-platform builds)
+- 64-bit windows build
+- High DPI scaling
 ? WinXP support

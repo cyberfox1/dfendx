@@ -33,6 +33,7 @@ Procedure FixFileNamesForWindowsProfiles(const Game : TGame);
 Function CreateGameFromDFRPackageFolder(const Dir : String; const GameDB : TGameDB; const TempProfFile : String; const MoveFiles : Boolean) : TGame;
 Function TextNodeNotEmpty(const Node : IXMLNode) : Boolean;
 Function RealPathFromDOSBoxPath(const Game : TGame; const LocalPath : String) : String;
+Function FixDBGLMountFolder(const Folder : String) : String;
 Function GetGameFileFromAutoexec(const Game : TGame; const Autoexec : TStringList) : String;
 Procedure GetRunCommandFromAutoexec(const Game : TGame);
 Function CreateGameFromDBGLPackage(const Dir : String; const GameDB : TGameDB; const GameNode : IXMLNode; const CustomNames : TStringList; const MoveFiles : Boolean) : TGame;
@@ -1116,6 +1117,28 @@ begin
   end;
 end;
 
+Function FixDBGLMountFolder(const Folder : String) : String;
+Var S,GameDirRel : String;
+    I : Integer;
+begin
+  result:=Folder;
+
+  S:=Trim(Folder);
+  If S='' then begin result:=''; exit; end;
+  For I:=1 to Length(S) do If S[I]='/' then S[I]:='\';
+  result:=S;
+  If ExtUpperCase(Copy(S,1,7))='DOSBOX:' then exit;
+  If (length(S)>=2) and ((S[2]=':') or (Copy(S,1,2)='\\')) then exit;
+  If Copy(S,1,1)='\' then exit;
+  If (S='..') or (Copy(S,1,3)='..\') then exit;
+
+  If (S='.') or (S='.\') then S:='' else If Copy(S,1,2)='.\' then S:=Copy(S,3,MaxInt);
+  If (S='..') or (Copy(S,1,3)='..\') then begin result:=S; exit; end;
+
+  GameDirRel:=IncludeTrailingPathDelimiter(MakeRelPath(PrgSetup.GameDir,PrgSetup.BaseDir,True));
+  result:=GameDirRel+S;
+end;
+
 Function GetGameFileFromAutoexec(const Game : TGame; const Autoexec : TStringList) : String;
 Var I,J : Integer;
     Lines : TList;
@@ -1286,8 +1309,8 @@ begin
   For I:=0 to result.NrOfMounts-1 do begin
     St:=ValueToList(result.Mount[I]);
     try
-      If (St.Count>0) and ((Trim(St[0])='.') or (Trim(St[0])='.\')) then begin
-        St[0]:=MakeRelPath(PrgSetup.GameDir,PrgSetup.BaseDir);
+      If St.Count>0 then begin
+        St[0]:=FixDBGLMountFolder(St[0]);
         result.Mount[I]:=ListToValue(St);
       end;
     finally

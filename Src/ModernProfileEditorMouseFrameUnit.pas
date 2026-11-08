@@ -33,6 +33,8 @@ type
     VirtualBoxCheckBox: TCheckBox;
     BiosPs2CheckBox: TCheckBox;
     CtmouseCheckBox: TCheckBox;
+    lblDisableMouseAxis: TLabel;
+    cbMouseAxis: TComboBox;
     procedure Force2ButtonsCheckBoxClick(Sender: TObject);
     procedure Ps2CheckBoxClick(Sender: TObject);
   private
@@ -44,6 +46,7 @@ type
     FPs2ModelXConfOpt: String;
     FPs2ReportRateStagingConfOpt: String;
     FPs2ReportRateXConfOpt: String;
+    FLoadedMouseAxis: String;
     function GetSelectedDosBoxKind: TDOSBoxKind;
     function IsNewStaging: Boolean;
     function CaptionFromMouseModelToken(const Token: String): String;
@@ -51,9 +54,11 @@ type
     function Ps2ModelConfOpt: String;
     function Ps2ReportRateConfOpt: String;
     procedure ReloadPs2Combos(const KeepState: Boolean);
+    procedure ReloadMouseAxisCombo(const KeepState: Boolean);
     procedure FillMouseModelCombo;
     procedure SelectMouseModel(const Token: String);
     procedure ApplyStagingMouseVisible;
+    procedure ApplyMouseAxisEnable;
     procedure ApplyPs2Enable;
     procedure ShowFrame(Sender: TObject);
     procedure Invalidate(Sender: TObject);
@@ -176,6 +181,15 @@ begin
   MouseDriverModelComboBox.Enabled := True;
 end;
 
+procedure TModernProfileEditorMouseFrame.ApplyMouseAxisEnable;
+var
+  OnAxis: Boolean;
+begin
+  OnAxis := GetSelectedDosBoxKind in [dbkPure, dbkStaging, dbkX];
+  lblDisableMouseAxis.Enabled := OnAxis;
+  cbMouseAxis.Enabled := OnAxis;
+end;
+
 function TModernProfileEditorMouseFrame.Ps2ModelConfOpt: String;
 begin
   case GetSelectedDosBoxKind of
@@ -192,6 +206,20 @@ begin
     dbkX: Result := FPs2ReportRateXConfOpt;
     else Result := '';
   end;
+end;
+
+procedure TModernProfileEditorMouseFrame.ReloadMouseAxisCombo(const KeepState: Boolean);
+var
+  S, GameVal: String;
+begin
+  S := Trim(ExtLowerCase(FLoadedMouseAxis));
+  if S = 'x' then
+    GameVal := 'X'
+  else if S = 'y' then
+    GameVal := 'Y'
+  else
+    GameVal := LanguageSetup.Off;
+  ReloadComboFromConfOpt(cbMouseAxis, LanguageSetup.Off+',X,Y', KeepState, GameVal);
 end;
 
 procedure TModernProfileEditorMouseFrame.ReloadPs2Combos(const KeepState: Boolean);
@@ -248,21 +276,26 @@ end;
 procedure TModernProfileEditorMouseFrame.ShowFrame(Sender: TObject);
 begin
   ApplyStagingMouseVisible;
+  ApplyMouseAxisEnable;
   ApplyPs2Enable;
   ReloadPs2Combos(True);
+  ReloadMouseAxisCombo(True);
 end;
 
 procedure TModernProfileEditorMouseFrame.Invalidate(Sender: TObject);
 begin
   ApplyStagingMouseVisible;
+  ApplyMouseAxisEnable;
   ApplyPs2Enable;
   ReloadPs2Combos(True);
+  ReloadMouseAxisCombo(True);
 end;
 
 procedure TModernProfileEditorMouseFrame.InitGUI(var InitData: TModernProfileEditorInitData);
 begin
   NoFlicker(LockMouseCheckBox);
   NoFlicker(MouseSensitivityEdit);
+  NoFlicker(cbMouseAxis);
   NoFlicker(Force2ButtonsCheckBox);
   NoFlicker(SwapButtonsCheckBox);
   NoFlicker(MouseDriverModelComboBox);
@@ -289,6 +322,17 @@ begin
   LockMouseCheckBox.Caption := LanguageSetup.GameAutoLockMouse;
   LockMouseLabel.Caption := LanguageSetup.GameAutoLockMouseInfo;
   MouseSensitivityLabel.Caption := LanguageSetup.GameMouseSensitivity;
+  lblDisableMouseAxis.Caption := LanguageSetup.ProfileEditorMouseDisableAxis;
+  cbMouseAxis.Items.BeginUpdate;
+  try
+    cbMouseAxis.Items.Clear;
+    cbMouseAxis.Items.Add(LanguageSetup.Off);
+    cbMouseAxis.Items.Add('X');
+    cbMouseAxis.Items.Add('Y');
+  finally
+    cbMouseAxis.Items.EndUpdate;
+  end;
+  cbMouseAxis.ItemIndex := 0;
   Force2ButtonsCheckBox.Caption := LanguageSetup.GameForce2ButtonMouseMode;
   Force2ButtonsInfoLabel.Caption := 'This feature will enable the CTMOUSE mouse driver in autoexec.bat';
   if DirectoryExists(IncludeTrailingPathDelimiter(MakeAbsPath(PrgSetup.PathToFREEDOS, PrgSetup.BaseDir))) then
@@ -329,6 +373,7 @@ var
   S: String;
 begin
   FGame := Game;
+  FLoadedMouseAxis := Game.DisableMouseAxis;
   LockMouseCheckBox.Checked := Game.AutoLockMouse;
   MouseSensitivityEdit.Value := Game.MouseSensitivity;
   Force2ButtonsCheckBox.Checked := Game.Force2ButtonMouseMode;
@@ -352,8 +397,10 @@ begin
   CtmouseCheckBox.Checked := Game.CtmouseEnabled;
 
   ApplyStagingMouseVisible;
+  ApplyMouseAxisEnable;
   ApplyPs2Enable;
   ReloadPs2Combos(False);
+  ReloadMouseAxisCombo(False);
 end;
 
 procedure TModernProfileEditorMouseFrame.GetGame(const Game: TGame);
@@ -362,6 +409,13 @@ var
 begin
   Game.AutoLockMouse := LockMouseCheckBox.Checked;
   Game.MouseSensitivity := Min(1000, Max(1, MouseSensitivityEdit.Value));
+  if GetSelectedDosBoxKind in [dbkPure, dbkStaging, dbkX] then begin
+    case cbMouseAxis.ItemIndex of
+      0: Game.DisableMouseAxis := '';
+      1: Game.DisableMouseAxis := 'x';
+      2: Game.DisableMouseAxis := 'y';
+    end;
+  end;
   if Force2ButtonsCheckBox.Enabled then
     Game.Force2ButtonMouseMode := Force2ButtonsCheckBox.Checked;
   if SwapButtonsCheckBox.Enabled then

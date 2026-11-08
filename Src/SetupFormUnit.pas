@@ -116,7 +116,7 @@ uses Math, VistaToolsUnit, LanguageSetupUnit, CommonHelpers, CommonTools, PrgSet
      SetupFrameToolbarUnit, SetupFrameGamesListColumnsUnit,
      SetupFrameGamesListAppearanceUnit, SetupFrameGamesListTreeAppearanceUnit,
      SetupFrameGamesListScreenshotAppearanceUnit, SetupFrameProfileEditorUnit,
-     SetupFrameDefaultValuesUnit, SetupFrameProgramsUnit, SetupFrameDOSBoxUnit,
+     SetupFrameProgramsUnit, SetupFrameDOSBoxUnit,
      SetupFrameDOSBoxExtUnit, SetupFrameFreeDOSUnit, SetupFrameScummVMUnit,
      SetupFrameQBasicUnit, SetupFrameWaveEncoderUnit, SetupFrameSecurityUnit,
      SetupFrameServiceUnit, SetupFrameUpdateUnit, SetupFrameWineUnit,
@@ -255,7 +255,6 @@ begin
   F:=TSetupFrameGamesListScreenshotAppearance.Create(self); AddTreeNode(Root,F,TSetupFrameGamesListScreenshotAppearance(F),True,18);
 
   F:=TSetupFrameProfileEditor.Create(self); AddTreeNode(nil,F,TSetupFrameProfileEditor(F),True,8); Root:=F;
-  F:=TSetupFrameDefaultValues.Create(self); AddTreeNode(Root,F,TSetupFrameDefaultValues(F),True,6);
   F:=TSetupFrameAutomaticConfiguration.Create(self); AddTreeNode(Root,F,TSetupFrameAutomaticConfiguration(F),True,24);
 
   F:=TSetupFramePrograms.Create(self); AddTreeNode(nil,F,TSetupFramePrograms(F),False,0,True); Root:=F;

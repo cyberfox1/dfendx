@@ -18,17 +18,22 @@ type
     KeyLockInfoLabel: TLabel;
     CodepageComboBox: TComboBox;
     CodepageLabel: TLabel;
+    LocalePeriodGroupBox: TGroupBox;
+    LocalePeriodHistoricRadioButton: TRadioButton;
+    LocalePeriodModernRadioButton: TRadioButton;
     DefaultKeyMapperFileRadioButton: TRadioButton;
     CustomKeyMapperFileRadioButton: TRadioButton;
     CustomKeyMapperEdit: TEdit;
     CustomKeyMapperButton: TSpeedButton;
     DosBoxTxtOpenDialog: TOpenDialog;
+    LocalePeriodNoneRadioButton: TRadioButton;
     procedure CustomKeyMapperButtonClick(Sender: TObject);
     procedure CustomKeyMapperEditChange(Sender: TObject);
   private
     { Private-Deklarationen }
     FTempGame : TGame;
     Function CheckIsDOSBOXDefaultMapperFile(const MapperFile : String) : Boolean;
+    procedure ApplyEnabled;
     procedure ShowFrame(Sender : TObject);
   public
     { Public-Deklarationen }
@@ -59,6 +64,10 @@ begin
   NoFlicker(UseScancodesCheckBox);
   NoFlicker(KeyboardLayoutComboBox);
   NoFlicker(CodepageComboBox);
+  NoFlicker(LocalePeriodGroupBox);
+  NoFlicker(LocalePeriodNoneRadioButton);
+  NoFlicker(LocalePeriodHistoricRadioButton);
+  NoFlicker(LocalePeriodModernRadioButton);
   NoFlicker(NumLockRadioGroup);
   NoFlicker(CapsLockRadioGroup);
   NoFlicker(ScrollLockRadioGroup);
@@ -70,6 +79,10 @@ begin
   St:=ValueToList(InitData.GameDB.ConfOpt.KeyboardLayout,';,'); try KeyboardLayoutComboBox.Items.AddStrings(St); finally St.Free; end;
   CodepageLabel.Caption:=LanguageSetup.GameKeyboardCodepage;
   St:=ValueToList(InitData.GameDB.ConfOpt.Codepage,';,'); try CodepageComboBox.Items.AddStrings(St); finally St.Free; end;
+  LocalePeriodGroupBox.Caption:=LanguageSetup.GameLocalePeriod;
+  LocalePeriodNoneRadioButton.Caption:=LanguageSetup.None;
+  LocalePeriodHistoricRadioButton.Caption:=LanguageSetup.GameLocalePeriodHistoric;
+  LocalePeriodModernRadioButton.Caption:=LanguageSetup.GameLocalePeriodModern;
   KeyboardLayoutInfoLabel.Caption:=LanguageSetup.GameKeyboardLayoutInfo;
   UseScancodesCheckBox.Caption:=LanguageSetup.GameUseScanCodes;
   with NumLockRadioGroup do begin
@@ -117,8 +130,22 @@ begin
   result:=ExtUpperCase(MapperFile)=ExtUpperCase(S);
 end;
 
+procedure TModernProfileEditorKeyboardFrame.ApplyEnabled;
+Var Staging : Boolean;
+    CapColor : TColor;
+begin
+  Staging:=FTempGame.IsStaging;
+  If Staging then CapColor:=clWindowText else CapColor:=clGrayText;
+  LocalePeriodGroupBox.Enabled:=Staging;
+  LocalePeriodGroupBox.Font.Color:=CapColor;
+  LocalePeriodNoneRadioButton.Enabled:=Staging;
+  LocalePeriodHistoricRadioButton.Enabled:=Staging;
+  LocalePeriodModernRadioButton.Enabled:=Staging;
+end;
+
 procedure TModernProfileEditorKeyboardFrame.ShowFrame(Sender : TObject);
 begin
+  ApplyEnabled;
 end;
 
 procedure TModernProfileEditorKeyboardFrame.SetGame(const Game: TGame; const LoadFromTemplate: Boolean);
@@ -153,6 +180,15 @@ begin
       If Trim(Copy(T,1,Pos('(',T)-1))=S then begin CodepageComboBox.ItemIndex:=I; break; end;
     end;
   end;
+
+  LocalePeriodNoneRadioButton.Checked:=False;
+  LocalePeriodHistoricRadioButton.Checked:=False;
+  LocalePeriodModernRadioButton.Checked:=False;
+  S:=Trim(ExtUpperCase(Game.LocalePeriod));
+  If S='HISTORIC' then LocalePeriodHistoricRadioButton.Checked:=True
+  else If S='MODERN' then LocalePeriodModernRadioButton.Checked:=True
+  else LocalePeriodNoneRadioButton.Checked:=True;
+  ApplyEnabled;
 
   UseScancodesCheckBox.Checked:=Game.UseScanCodes;
 
@@ -193,6 +229,9 @@ procedure TModernProfileEditorKeyboardFrame.GetGame(const Game: TGame);
 begin
   Game.KeyboardLayout:=KeyboardLayoutComboBox.Text;
   Game.Codepage:=CodepageComboBox.Text;
+  If LocalePeriodHistoricRadioButton.Checked then Game.LocalePeriod:='historic'
+  else If LocalePeriodModernRadioButton.Checked then Game.LocalePeriod:='modern'
+  else Game.LocalePeriod:='';
   Game.UseScanCodes:=UseScancodesCheckBox.Checked;
   Case NumLockRadioGroup.ItemIndex of
     0 : Game.NumLockStatus:='';

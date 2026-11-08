@@ -195,10 +195,6 @@
 					</OBJECT>
 				<UL>
 					<LI> <OBJECT type="text/sitemap">
-						<param name="Name" value="Vorgabewerte">
-						<param name="Local" value="FileOptionsDefaultValues.html">
-						</OBJECT>
-					<LI> <OBJECT type="text/sitemap">
 						<param name="Name" value="Automatische Spielekonfiguration">
 						<param name="Local" value="FileOptionsAutomaticConfiguration.html">
 						</OBJECT>
@@ -818,10 +814,6 @@
 				<param name="Local" value="FileOptionsProfileEditor.html">
 				</OBJECT>
 			<UL>
-				<LI> <OBJECT type="text/sitemap">
-					<param name="Name" value="Vorgabewerte">
-					<param name="Local" value="FileOptionsDefaultValues.html">
-					</OBJECT>
 			</UL>
 			<LI> <OBJECT type="text/sitemap">
 				<param name="Name" value="Externe Programme">

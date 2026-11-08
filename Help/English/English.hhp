@@ -57,7 +57,6 @@ FileOptionsListInIconsMode.html
 FileOptionsAppearanceTree.html
 FileOptionsAppearanceScreenshots.html
 FileOptionsProfileEditor.html
-FileOptionsDefaultValues.html
 FileOptionsAutomaticConfiguration.html
 FileOptionsDOSBox.html
 FileOptionsDOSBoxGeneral.html
@@ -208,7 +207,6 @@ GPL3.html
 #define FileOptionsAppearanceTree 1112
 #define FileOptionsAppearanceScreenshots 1113
 #define FileOptionsProfileEditor 1114
-#define FileOptionsDefaultValues 1115
 #define FileOptionsDOSBox 1116
 #define FileOptionsDOSBoxGeneral 1135
 #define FileOptionsDOSBoxCVSFeatures 1117
