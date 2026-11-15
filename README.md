@@ -16,7 +16,7 @@ A D-Fend Reloaded fork and modernization effort.
 
 DFendX has first level support for these modern DOSBox forks. This includes:
 
-* Inbuilt MT32 and SoundFont MIDI emulation configuration.
+* Inbuilt MT32, SC55 and SoundFont MIDI emulation configuration.
 * VSync options.
 * Inactive screen behaviour options.
 * Ouput render, pixel shaders and preset selection.

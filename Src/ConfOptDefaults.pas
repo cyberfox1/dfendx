@@ -1,8 +1,8 @@
 unit ConfOptDefaults;
 interface
 
-Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x432,640x480,720x480,800x600,1024x768,1152x864,1280x720,1280x768,1280x960,1280x1024,1366x760,1366x768,1600x1200,1680x1050,1920x1080,1920x1200,0x0';
-      DefaultValuesResolutionWindow='original,320x200,320x240,640x432,640x480,720x480,800x600,1024x768,1152x864,1280x720,1280x768,1280x960,1280x1024,1366x760,1366x768,1600x1200,1920x1080,1920x1200';
+Const DefaultValuesResolutionFullscreen='original,320x200,320x240,640x400,640x432,640x480,720x480,800x600,960x600,1024x768,1152x864,1280x720,1280x768,1280x800,1280x960,1280x1024,1366x760,1366x768,1600x1000,1600x1200,1680x1050,1920x1080,1920x1200,0x0';
+      DefaultValuesResolutionWindow='original,320x200,320x240,640x400,640x432,640x480,720x480,800x600,960x600,1024x768,1152x864,1280x720,1280x768,1280x800,1280x960,1280x1024,1366x760,1366x768,1600x1000,1600x1200,1920x1080,1920x1200';
       DefaultValuesJoysticks='none,auto,2axis,4axis,4axis_2,fcs,ch';
       DefaultValuesScale='No Scaling (none),Nearest neighbor upscaling with factor 2 (normal2x),Nearest neighbor upscaling with factor 3 (normal3x),'+
                          'Advanced upscaling with factor 2 (advmame2x),Advanced upscaling with factor 3 (advmame3x),'+
